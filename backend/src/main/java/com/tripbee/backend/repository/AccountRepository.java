@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface AccountRepository extends JpaRepository<Account, String> {
 
     // Spring Data JPA sẽ tự động hiểu phương thức này
-    // và tạo truy vấn: SELECT * FROM "Account" WHERE "userName" = ?
+    // và tạo truy vấn: SELECT * FROM "accounts" WHERE "user_name" = ?
     Optional<Account> findByUserName(String userName);
 }
