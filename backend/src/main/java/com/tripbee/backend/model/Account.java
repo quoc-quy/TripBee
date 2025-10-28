@@ -6,15 +6,15 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails; // THÊM IMPORT
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection; // THÊM IMPORT
-import java.util.List; // THÊM IMPORT
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "accounts")
-public class Account implements UserDetails { // IMPLEMENT UserDetails
+public class Account implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,7 +24,7 @@ public class Account implements UserDetails { // IMPLEMENT UserDetails
     private String userName;
 
     @Column(nullable = false)
-    private String password; // Nhớ mã hóa mật khẩu này!
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,10 +39,13 @@ public class Account implements UserDetails { // IMPLEMENT UserDetails
 
     private boolean isLocked = false;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    // (1) SỬA LỖI TẠI ĐÂY
+    // Thay vì LAZY, chúng ta dùng EAGER
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "userID", nullable = false)
     private User user;
 
+    // --- (Getters và Setters cũ của bạn) ---
     public String getAccountID() {
         return accountID;
     }
@@ -103,13 +106,13 @@ public class Account implements UserDetails { // IMPLEMENT UserDetails
         this.user = user;
     }
 
+    // --- (Kết thúc Getters/Setters cũ) ---
 
 
-    // --- THÊM CÁC PHƯƠNG THỨC CỦA UserDetails ---
+    // --- (Các phương thức của UserDetails) ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Trả về quyền của user (ví dụ: "ADMIN", "CUSTOMER")
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
@@ -120,7 +123,7 @@ public class Account implements UserDetails { // IMPLEMENT UserDetails
 
     @Override
     public String getUsername() {
-        return userName; // Spring Security dùng "username"
+        return userName;
     }
 
     @Override
@@ -130,7 +133,7 @@ public class Account implements UserDetails { // IMPLEMENT UserDetails
 
     @Override
     public boolean isAccountNonLocked() {
-        return !isLocked; // Trả về true nếu KHÔNG bị khóa
+        return !isLocked;
     }
 
     @Override

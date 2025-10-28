@@ -6,9 +6,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-// XÓA 2 IMPORT CỦA PasswordEncoder
-// import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-// import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -24,14 +21,6 @@ public class SecurityConfig {
         this.authenticationProvider = authenticationProvider;
     }
 
-    // (1) XÓA HOÀN TOÀN BEAN passwordEncoder() KHỎI FILE NÀY
-    /*
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-    */
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -40,10 +29,18 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // (1) SỬA LỖI TẠI ĐÂY:
+                        // Chỉ cho phép 2 API này công khai
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
+
+                        // (2) Các API xem tour công khai (chúng ta sẽ làm sau)
                         .requestMatchers("/api/tours/**").permitAll()
                         .requestMatchers("/api/destinations/**").permitAll()
                         .requestMatchers("/api/tour-types/**").permitAll()
+
+                        // (3) Bất kỳ request nào khác (BAO GỒM /api/auth/me)
+                        // đều cần phải xác thực (authenticated)
                         .anyRequest().authenticated()
                 );
 

@@ -3,10 +3,13 @@ package com.tripbee.backend.controller;
 import com.tripbee.backend.dto.LoginRequest;
 import com.tripbee.backend.dto.LoginResponse;
 import com.tripbee.backend.dto.RegisterRequest;
+import com.tripbee.backend.dto.UserProfileResponse; // (1) THÊM IMPORT
+import com.tripbee.backend.model.Account; // (2) THÊM IMPORT
 import com.tripbee.backend.service.AuthService;
-// import lombok.RequiredArgsConstructor; // <-- XÓA DÒNG NÀY
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // (3) THÊM IMPORT
+import org.springframework.web.bind.annotation.GetMapping; // (4) THÊM IMPORT
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,23 +17,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
-// @RequiredArgsConstructor // <-- XÓA DÒNG NÀY
 public class AuthController {
 
     private final AuthService authService;
 
-    // (1) THÊM CONSTRUCTOR NÀY VÀO
-    // Spring sẽ tự động "tiêm" bean AuthService vào đây
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
-
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         LoginResponse response = authService.login(loginRequest);
 
-        // (2) Chúng ta đã thêm isSuccess() vào LoginResponse ở bước trước
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
@@ -42,12 +40,28 @@ public class AuthController {
     public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest registerRequest) {
         LoginResponse response = authService.register(registerRequest);
 
-        // (3) Tương tự, dùng isSuccess()
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } else {
-            // 409 Conflict (Username/Email đã tồn tại)
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
+    }
+
+    // (5) THÊM PHƯƠNG THỨC MỚI
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getMyProfile(
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        // @AuthenticationPrincipal sẽ tự động lấy thông tin user đã được xác thực
+        // từ token (thông qua JwtAuthFilter) và tiêm vào biến currentUser.
+
+        if (currentUser == null) {
+            // Trường hợp này hiếm khi xảy ra vì SecurityConfig sẽ chặn
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Dùng DTO mới của chúng ta để tạo response
+        UserProfileResponse response = new UserProfileResponse(currentUser);
+        return ResponseEntity.ok(response);
     }
 }
