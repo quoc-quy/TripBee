@@ -4,11 +4,17 @@ import com.tripbee.backend.model.enums.RoleType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails; // THÊM IMPORT
+
 import java.time.LocalDateTime;
+import java.util.Collection; // THÊM IMPORT
+import java.util.List; // THÊM IMPORT
 
 @Entity
 @Table(name = "accounts")
-public class Account {
+public class Account implements UserDetails { // IMPLEMENT UserDetails
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,7 +37,11 @@ public class Account {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    private boolean isLocked = false; // Hỗ trợ khóa tài khoản
+    private boolean isLocked = false;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "userID", nullable = false)
+    private User user;
 
     public String getAccountID() {
         return accountID;
@@ -47,10 +57,6 @@ public class Account {
 
     public void setUserName(String userName) {
         this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public void setPassword(String password) {
@@ -97,81 +103,43 @@ public class Account {
         this.user = user;
     }
 
-    // --- Mối quan hệ ---
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "userID", nullable = false)
-    private User user;
+
+    // --- THÊM CÁC PHƯƠNG THỨC CỦA UserDetails ---
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Trả về quyền của user (ví dụ: "ADMIN", "CUSTOMER")
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return userName; // Spring Security dùng "username"
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !isLocked; // Trả về true nếu KHÔNG bị khóa
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
-
-
-
-// package com.tripbee.backend.model;
-//
-//import jakarta.persistence.Column;
-//import jakarta.persistence.Entity;
-//import jakarta.persistence.Id;
-//import jakarta.persistence.Table;
-//import lombok.Data;
-//
-//@Data // Annotation của Lombok để tự động tạo getters, setters, toString, v.v.
-//@Entity
-//@Table(name = "\"Account\"") // Phải có dấu ngoặc kép vì tên bảng của bạn viết hoa
-//public class Account {
-//
-//    @Id
-//    @Column(name = "\"accountID\"") // Tương tự, tên cột cũng cần dấu ngoặc kép
-//    private String accountID;
-//
-//    @Column(name = "\"userID\"")
-//    private String userID;
-//
-//    @Column(name = "\"userName\"")
-//    private String userName;
-//
-//    @Column(name = "\"password\"")
-//    private String password;
-//
-//    @Column(name = "\"role\"")
-//    private String role;
-//
-//    public String getAccountID() {
-//        return accountID;
-//    }
-//
-//    public void setAccountID(String accountID) {
-//        this.accountID = accountID;
-//    }
-//
-//    public String getUserID() {
-//        return userID;
-//    }
-//
-//    public void setUserID(String userID) {
-//        this.userID = userID;
-//    }
-//
-//    public String getPassword() {
-//        return password;
-//    }
-//
-//    public void setPassword(String password) {
-//        this.password = password;
-//    }
-//
-//    public String getUserName() {
-//        return userName;
-//    }
-//
-//    public void setUserName(String userName) {
-//        this.userName = userName;
-//    }
-//
-//    public String getRole() {
-//        return role;
-//    }
-//
-//    public void setRole(String role) {
-//        this.role = role;
-//    }
-//}
