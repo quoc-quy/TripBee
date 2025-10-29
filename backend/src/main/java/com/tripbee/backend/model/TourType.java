@@ -10,8 +10,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "tour_types")
-@Getter
-@Setter
 public class TourType {
 
     @Id
@@ -30,6 +28,54 @@ public class TourType {
 
     @UpdateTimestamp
     private LocalDateTime updateDate;
+
+    public String getTourTypeID() {
+        return tourTypeID;
+    }
+
+    public void setTourTypeID(String tourTypeID) {
+        this.tourTypeID = tourTypeID;
+    }
+
+    public String getNameType() {
+        return nameType;
+    }
+
+    public void setNameType(String nameType) {
+        this.nameType = nameType;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdateDate() {
+        return updateDate;
+    }
+
+    public void setUpdateDate(LocalDateTime updateDate) {
+        this.updateDate = updateDate;
+    }
+
+    public Set<Tour> getTours() {
+        return tours;
+    }
+
+    public void setTours(Set<Tour> tours) {
+        this.tours = tours;
+    }
 
     // --- Mối quan hệ ---
 

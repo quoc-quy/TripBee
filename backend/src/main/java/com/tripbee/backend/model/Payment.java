@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payments")
-@Getter
-@Setter
 public class Payment {
 
     @Id
@@ -30,7 +28,63 @@ public class Payment {
 
     private String paymentMethod; // (VNPAY, MOMO, CREDIT_CARD...)
 
-    private String transactionCode; // Mã giao dịch từ cổng thanh toán
+    private String transactionCode; // Mã giao dịch từ cổng thanh
+
+    public String getPaymentID() {
+        return paymentID;
+    }
+
+    public void setPaymentID(String paymentID) {
+        this.paymentID = paymentID;
+    }
+
+    public Double getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(Double amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public LocalDateTime getPaymentDate() {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
+    }
+
+    public PaymentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(PaymentStatus status) {
+        this.status = status;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getTransactionCode() {
+        return transactionCode;
+    }
+
+    public void setTransactionCode(String transactionCode) {
+        this.transactionCode = transactionCode;
+    }
+
+    public Invoice getInvoice() {
+        return invoice;
+    }
+
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
+    }
 
     // --- Mối quan hệ ---
 

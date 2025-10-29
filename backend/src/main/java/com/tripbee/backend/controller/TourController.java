@@ -1,13 +1,11 @@
 package com.tripbee.backend.controller;
 
+import com.tripbee.backend.dto.TourDetailsResponse;
 import com.tripbee.backend.dto.TourSummaryResponse;
 import com.tripbee.backend.service.TourService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tours") // API này đã được permitAll() trong SecurityConfig
@@ -40,6 +38,15 @@ public class TourController {
 
         // (4) Trả về Page (đã bao gồm thông tin phân trang)
         return ResponseEntity.ok(tourPage);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TourDetailsResponse> getTourById(@PathVariable String id) {
+        // Lấy ID từ đường dẫn (ví dụ: /api/tours/uuid-cua-tour)
+        TourDetailsResponse tourDetails = tourService.getTourDetails(id);
+        // Service sẽ ném ResourceNotFoundException nếu không tìm thấy,
+        // tự động trả về lỗi 404 cho client.
+        return ResponseEntity.ok(tourDetails);
     }
 
     // TODO: Thêm API GET /api/tours/{id} (Lấy chi tiết 1 tour) ở đây

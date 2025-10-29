@@ -6,8 +6,6 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "itineraries")
-@Getter
-@Setter
 public class Itinerary {
 
     @Id
@@ -22,6 +20,46 @@ public class Itinerary {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    public String getItineraryID() {
+        return itineraryID;
+    }
+
+    public void setItineraryID(String itineraryID) {
+        this.itineraryID = itineraryID;
+    }
+
+    public int getDayNumber() {
+        return dayNumber;
+    }
+
+    public void setDayNumber(int dayNumber) {
+        this.dayNumber = dayNumber;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Tour getTour() {
+        return tour;
+    }
+
+    public void setTour(Tour tour) {
+        this.tour = tour;
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tour_id", nullable = false)

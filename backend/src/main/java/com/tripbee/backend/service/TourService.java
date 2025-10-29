@@ -1,5 +1,6 @@
 package com.tripbee.backend.service;
 
+import com.tripbee.backend.dto.TourDetailsResponse;
 import com.tripbee.backend.dto.TourSummaryResponse;
 import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination; // Cần để join
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import com.tripbee.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -45,6 +47,15 @@ public class TourService {
 
         // (5) Chuyển đổi Page<Tour> sang Page<TourSummaryResponse>
         return tourPage.map(TourSummaryResponse::new);
+    }
+
+    public TourDetailsResponse getTourDetails(String tourId) {
+        // Tìm tour bằng ID, nếu không thấy thì ném lỗi 404
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tour not found with id: " + tourId));
+
+        // Chuyển đổi Tour Entity sang DTO chi tiết
+        return new TourDetailsResponse(tour);
     }
 
     private Specification<Tour> buildSpecification(

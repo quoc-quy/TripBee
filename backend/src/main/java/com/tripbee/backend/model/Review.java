@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reviews")
-@Getter
-@Setter
 public class Review {
 
     @Id
@@ -29,6 +27,62 @@ public class Review {
 
     @Enumerated(EnumType.STRING)
     private ReviewStatus status = ReviewStatus.PENDING; // Chờ admin duyệt
+
+    public String getReviewID() {
+        return reviewID;
+    }
+
+    public void setReviewID(String reviewID) {
+        this.reviewID = reviewID;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public ReviewStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ReviewStatus status) {
+        this.status = status;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Tour getTour() {
+        return tour;
+    }
+
+    public void setTour(Tour tour) {
+        this.tour = tour;
+    }
 
     // --- Mối quan hệ ---
 

@@ -9,8 +9,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "invoices")
-@Getter
-@Setter
 public class Invoice {
 
     @Id
@@ -25,6 +23,54 @@ public class Invoice {
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    public String getInvoiceID() {
+        return invoiceID;
+    }
+
+    public void setInvoiceID(String invoiceID) {
+        this.invoiceID = invoiceID;
+    }
+
+    public Double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public Double getTaxPercentage() {
+        return taxPercentage;
+    }
+
+    public void setTaxPercentage(Double taxPercentage) {
+        this.taxPercentage = taxPercentage;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public void setBooking(Booking booking) {
+        this.booking = booking;
+    }
+
+    public Set<Payment> getPayments() {
+        return payments;
+    }
+
+    public void setPayments(Set<Payment> payments) {
+        this.payments = payments;
+    }
 
     // --- Mối quan hệ ---
 

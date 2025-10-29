@@ -6,8 +6,6 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "tour_destinations")
-@Getter
-@Setter
 public class TourDestination {
 
     @Id
@@ -21,4 +19,28 @@ public class TourDestination {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "destination_id", nullable = false)
     private Destination destination;
+
+    public String getTourDestinationID() {
+        return tourDestinationID;
+    }
+
+    public void setTourDestinationID(String tourDestinationID) {
+        this.tourDestinationID = tourDestinationID;
+    }
+
+    public Tour getTour() {
+        return tour;
+    }
+
+    public void setTour(Tour tour) {
+        this.tour = tour;
+    }
+
+    public Destination getDestination() {
+        return destination;
+    }
+
+    public void setDestination(Destination destination) {
+        this.destination = destination;
+    }
 }
