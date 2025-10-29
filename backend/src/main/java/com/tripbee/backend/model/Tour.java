@@ -9,8 +9,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "tours")
-@Getter
-@Setter
 public class Tour {
 
     @Id
@@ -50,6 +48,190 @@ public class Tour {
     private TourStatus status;
 
     private Integer ranking;
+
+    public String getTourID() {
+        return tourID;
+    }
+
+    public void setTourID(String tourID) {
+        this.tourID = tourID;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public int getDurationDays() {
+        return durationDays;
+    }
+
+    public void setDurationDays(int durationDays) {
+        this.durationDays = durationDays;
+    }
+
+    public int getDurationNights() {
+        return durationNights;
+    }
+
+    public void setDurationNights(int durationNights) {
+        this.durationNights = durationNights;
+    }
+
+    public String getDeparturePlace() {
+        return departurePlace;
+    }
+
+    public void setDeparturePlace(String departurePlace) {
+        this.departurePlace = departurePlace;
+    }
+
+    public Double getPriceAdult() {
+        return priceAdult;
+    }
+
+    public void setPriceAdult(Double priceAdult) {
+        this.priceAdult = priceAdult;
+    }
+
+    public Double getPriceChild() {
+        return priceChild;
+    }
+
+    public void setPriceChild(Double priceChild) {
+        this.priceChild = priceChild;
+    }
+
+    public int getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(int maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
+
+    public int getMinParticipants() {
+        return minParticipants;
+    }
+
+    public void setMinParticipants(int minParticipants) {
+        this.minParticipants = minParticipants;
+    }
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
+    }
+
+    public TourStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TourStatus status) {
+        this.status = status;
+    }
+
+    public Integer getRanking() {
+        return ranking;
+    }
+
+    public void setRanking(Integer ranking) {
+        this.ranking = ranking;
+    }
+
+    public TourType getTourType() {
+        return tourType;
+    }
+
+    public void setTourType(TourType tourType) {
+        this.tourType = tourType;
+    }
+
+    public Set<TourDestination> getTourDestinations() {
+        return tourDestinations;
+    }
+
+    public void setTourDestinations(Set<TourDestination> tourDestinations) {
+        this.tourDestinations = tourDestinations;
+    }
+
+    public Set<TourImage> getTourImages() {
+        return tourImages;
+    }
+
+    public void setTourImages(Set<TourImage> tourImages) {
+        this.tourImages = tourImages;
+    }
+
+    public Set<Itinerary> getItineraries() {
+        return itineraries;
+    }
+
+    public void setItineraries(Set<Itinerary> itineraries) {
+        this.itineraries = itineraries;
+    }
+
+    public Set<Booking> getBookings() {
+        return bookings;
+    }
+
+    public void setBookings(Set<Booking> bookings) {
+        this.bookings = bookings;
+    }
+
+    public Set<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(Set<Review> reviews) {
+        this.reviews = reviews;
+    }
+
+    public Set<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(Set<Favorite> favorites) {
+        this.favorites = favorites;
+    }
+
+    public Set<TourPromotion> getTourPromotions() {
+        return tourPromotions;
+    }
+
+    public void setTourPromotions(Set<TourPromotion> tourPromotions) {
+        this.tourPromotions = tourPromotions;
+    }
 
     // --- Mối quan hệ ---
 
