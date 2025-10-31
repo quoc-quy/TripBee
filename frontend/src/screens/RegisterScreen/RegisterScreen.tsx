@@ -44,7 +44,27 @@ export default function RegisterScreen() {
               />
             </div>
           </div>
-
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-left text-sm font-medium text-gray-700 mb-1"
+            >
+              Nhập tên đăng nhập
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                <FaUser className="text-gray-400 text-sm" />
+              </span>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Nhập họ và tên"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+          </div>
           <div>
             <label
               htmlFor="email"
@@ -104,7 +124,7 @@ export default function RegisterScreen() {
                 type="password"
                 id="password"
                 name="password"
-                placeholder="Nhập mật khẩu (tối thiểu 8 ký tự)"
+                placeholder="Nhập mật khẩu"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
               />
