@@ -6,6 +6,8 @@ import DestinationScreen from "./screens/DestinationScreen";
 import AboutScreen from "./screens/AboutScreen";
 import ContactScreen from "./screens/ContactScreen";
 import AdminScreen from "./screens/AdminScreen";
+import LoginScreen from "./screens/LoginScreen";
+import RegisterScreen from "./screens/RegisterScreen";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -15,6 +17,22 @@ export default function useRouteElements() {
       element: (
         <MainLayout>
           <HomeScreen />
+        </MainLayout>
+      ),
+    },
+    {
+      path: "/login",
+      element: (
+        <MainLayout>
+          <LoginScreen />
+        </MainLayout>
+      ),
+    },
+    {
+      path: "/register",
+      element: (
+        <MainLayout>
+          <RegisterScreen />
         </MainLayout>
       ),
     },
