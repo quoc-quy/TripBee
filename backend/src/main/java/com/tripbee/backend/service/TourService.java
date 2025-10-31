@@ -6,6 +6,10 @@ import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination; // Cần để join
 import com.tripbee.backend.model.TourType; // Cần để join
 import com.tripbee.backend.model.Destination; // Cần để join
+// (Mới) Import thêm các model/enum cần thiết
+import com.tripbee.backend.model.TourPromotion;
+import com.tripbee.backend.model.Promotion;
+import com.tripbee.backend.model.Review;
 import com.tripbee.backend.model.enums.TourStatus;
 import com.tripbee.backend.repository.TourRepository;
 import jakarta.persistence.criteria.Join;
@@ -17,6 +21,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import com.tripbee.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+
+// (Mới) Import Fetch và JoinType
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.JoinType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +54,7 @@ public class TourService {
         Page<Tour> tourPage = tourRepository.findAll(spec, pageable);
 
         // (5) Chuyển đổi Page<Tour> sang Page<TourSummaryResponse>
+        // Constructor của TourSummaryResponse (đã sửa) sẽ lo việc tính toán
         return tourPage.map(TourSummaryResponse::new);
     }
 
@@ -64,6 +73,28 @@ public class TourService {
 
         // Trả về một hàm lambda (Specification)
         return (root, query, criteriaBuilder) -> {
+
+            // (MỚI) FIX N+1 QUERY
+            // Chỉ thực hiện fetch join cho truy vấn chính, không phải cho truy vấn count(*)
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+
+                // Dùng LEFT JOIN FETCH để lấy dữ liệu liên quan
+                root.fetch("tourType", JoinType.LEFT);
+                root.fetch("reviews", JoinType.LEFT);
+
+                // Fetch destinations (quan hệ 2 cấp)
+                Fetch<Tour, TourDestination> tourDestFetch = root.fetch("tourDestinations", JoinType.LEFT);
+                tourDestFetch.fetch("destination", JoinType.LEFT);
+
+                // Fetch promotions (quan hệ 2 cấp)
+                Fetch<Tour, TourPromotion> tourPromoFetch = root.fetch("tourPromotions", JoinType.LEFT);
+                tourPromoFetch.fetch("promotion", JoinType.LEFT);
+
+                // Rất quan trọng: Tránh trùng lặp do join
+                query.distinct(true);
+            }
+            // (KẾT THÚC FIX N+1)
+
 
             // Dùng List để chứa các điều kiện (Predicate)
             List<Predicate> predicates = new ArrayList<>();
@@ -88,15 +119,16 @@ public class TourService {
             }
 
             // (D) Thêm điều kiện LỌC THEO LOẠI TOUR (nếu có)
+            // Phải dùng 'join' chứ không phải 'fetch' cho mệnh đề WHERE
             if (tourTypeId != null) {
-                Join<Tour, TourType> tourTypeJoin = root.join("tourType");
+                Join<Tour, TourType> tourTypeJoin = root.join("tourType", JoinType.LEFT);
                 predicates.add(criteriaBuilder.equal(tourTypeJoin.get("tourTypeID"), tourTypeId));
             }
 
-            // (E) Thêm điều kiện LỌC THEO ĐỊA ĐIỂM (nếu có) - Đây là join phức tạp
+            // (E) Thêm điều kiện LỌC THEO ĐỊA ĐIỂM (nếu có)
             if (destinationId != null) {
-                Join<Tour, TourDestination> tourDestJoin = root.join("tourDestinations");
-                Join<TourDestination, Destination> destJoin = tourDestJoin.join("destination");
+                Join<Tour, TourDestination> tourDestJoin = root.join("tourDestinations", JoinType.LEFT);
+                Join<TourDestination, Destination> destJoin = tourDestJoin.join("destination", JoinType.LEFT);
                 predicates.add(criteriaBuilder.equal(destJoin.get("destinationID"), destinationId));
             }
 
