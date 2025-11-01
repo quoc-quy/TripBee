@@ -8,7 +8,7 @@ public class LoginResponse {
     private String message;
     private String token;
     private String userID;
-    private String username;
+    private String email;
     private String role;
 
     public LoginResponse() {
@@ -19,38 +19,60 @@ public class LoginResponse {
         this.message = message;
     }
 
-    public LoginResponse(boolean success, String message, String token, String userID, String username, String role) {
+    public LoginResponse(boolean success, String message, String token, String userID, String email, String role) {
         this.success = success;
         this.message = message;
         this.token = token;
         this.userID = userID;
-        this.username = username;
+        this.email = email;
         this.role = role;
     }
 
-
     public boolean isSuccess() {
         return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
     }
 
     public String getMessage() {
         return message;
     }
 
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public String getToken() {
         return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getUserID() {
         return userID;
     }
 
-    public String getUsername() {
-        return username;
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getRole() {
         return role;
     }
 
+    public void setRole(String role) {
+        this.role = role;
+    }
 }
