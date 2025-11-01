@@ -67,16 +67,6 @@ export const schema = yup.object({
     .email("Email không đúng định dạng")
     .min(5, "Độ dài từ 5 đến 160 kí tự")
     .max(160, "Độ dài từ 5 đến 160 kí tự"),
-  name: yup
-    .string()
-    .required("tên đăng nhập là bắt buộc")
-    .min(5, "Độ dài từ 5 đến 160 kí tự")
-    .max(160, "Độ dài từ 5 đến 160 kí tự"),
-  username: yup
-    .string()
-    .required("tên đăng nhập là bắt buộc")
-    .min(5, "Độ dài từ 5 đến 160 kí tự")
-    .max(160, "Độ dài từ 5 đến 160 kí tự"),
 
   password: yup
     .string()
@@ -90,8 +80,6 @@ export const schema = yup.object({
     .min(6, "Độ dài từ 6 đến 160 kí tự")
     .max(160, "Độ dài từ 6 đến 160 kí tự")
     .oneOf([yup.ref("password")], "Mật khẩu nhập lại không khớp"),
-
-  phoneNumber: yup.string().required("Số điện thoại là bắt buộc"),
 });
 
 export type Schema = yup.InferType<typeof schema>;
