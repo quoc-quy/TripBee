@@ -8,3 +8,6 @@ export const registerAccount = (body: {
   username: string;
   password: string;
 }) => http.post<AuthResponse>("auth/register", body);
+
+export const loginAccount = (body: { email: string; password: string }) =>
+  http.post("auth/login", body);
