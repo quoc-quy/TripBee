@@ -28,7 +28,6 @@ public class LoginResponse {
         this.role = role;
     }
 
-    // (2) THÊM CÁC GETTERS THỦ CÔNG (ĐẶC BIỆT LÀ isSuccess)
 
     public boolean isSuccess() {
         return success;
@@ -54,5 +53,4 @@ public class LoginResponse {
         return role;
     }
 
-    // Bạn cũng có thể thêm các Setters nếu cần
 }
