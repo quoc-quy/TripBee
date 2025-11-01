@@ -16,7 +16,6 @@ public class RegisterRequest {
     private String username;
     private String password;
 
-    // (3) THÊM CÁC GETTERS THỦ CÔNG
 
     public String getName() {
         return name;

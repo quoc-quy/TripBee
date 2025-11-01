@@ -47,16 +47,13 @@ public class AuthController {
         }
     }
 
-    // (5) THÊM PHƯƠNG THỨC MỚI
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMyProfile(
             @AuthenticationPrincipal Account currentUser
     ) {
-        // @AuthenticationPrincipal sẽ tự động lấy thông tin user đã được xác thực
-        // từ token (thông qua JwtAuthFilter) và tiêm vào biến currentUser.
+
 
         if (currentUser == null) {
-            // Trường hợp này hiếm khi xảy ra vì SecurityConfig sẽ chặn
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
