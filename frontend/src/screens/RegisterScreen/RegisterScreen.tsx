@@ -2,13 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { omit } from "lodash";
-import {
-  FaUser,
-  FaEnvelope,
-  FaLock,
-  FaPhone,
-  FaUserPlus,
-} from "react-icons/fa";
+import { FaEnvelope, FaLock, FaUserPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { schema, type Schema } from "../../utils/rules";
 import Input from "../../components/Input";
@@ -55,48 +49,6 @@ export default function RegisterScreen() {
         <form className="space-y-4" onSubmit={onSubmit} noValidate>
           <div>
             <label
-              htmlFor="name"
-              className="block text-left text-sm font-medium text-gray-700 mb-1"
-            >
-              Họ và tên
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaUser className="text-gray-400 text-sm" />
-              </span>
-              <Input
-                type="text"
-                register={register}
-                name="name"
-                placeholder="Nhập họ và tên"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                errorMessage={errors.name?.message}
-              />
-            </div>
-          </div>
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-left text-sm font-medium text-gray-700 mb-1"
-            >
-              Nhập tên đăng nhập
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaUser className="text-gray-400 text-sm" />
-              </span>
-              <Input
-                type="text"
-                register={register}
-                name="username"
-                placeholder="Nhập tên đăng nhập"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                errorMessage={errors.name?.message}
-              />
-            </div>
-          </div>
-          <div>
-            <label
               htmlFor="email"
               className="block text-left text-sm font-medium text-gray-700 mb-1"
             >
@@ -113,28 +65,6 @@ export default function RegisterScreen() {
                 placeholder="Nhập email"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 errorMessage={errors.email?.message}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-left text-sm font-medium text-gray-700 mb-1"
-            >
-              Số điện thoại
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaPhone className="text-gray-400 text-sm" />
-              </span>
-              <Input
-                type="text"
-                register={register}
-                name="phoneNumber"
-                placeholder="Nhập số điện thoại"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                errorMessage={errors.name?.message}
               />
             </div>
           </div>
