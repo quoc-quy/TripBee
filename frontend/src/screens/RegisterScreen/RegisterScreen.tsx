@@ -1,3 +1,7 @@
+import { useMutation } from "@tanstack/react-query";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import { omit } from "lodash";
 import {
   FaUser,
   FaEnvelope,
@@ -6,8 +10,34 @@ import {
   FaUserPlus,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { schema, type Schema } from "../../utils/rules";
+import Input from "../../components/Input";
+import { registerAccount } from "../../apis/auth.api";
 
+type FormData = Schema;
 export default function RegisterScreen() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: (body: Omit<FormData, "confirm_password">) =>
+      registerAccount(body),
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    const body = omit(data, ["confirm_password"]);
+    registerMutation.mutate(body, {
+      onSuccess: (data) => {
+        console.log(data);
+      },
+    });
+  });
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
@@ -22,7 +52,7 @@ export default function RegisterScreen() {
           Tạo tài khoản để trải nghiệm du lịch tuyệt vời với
         </p>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={onSubmit} noValidate>
           <div>
             <label
               htmlFor="name"
@@ -34,13 +64,13 @@ export default function RegisterScreen() {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaUser className="text-gray-400 text-sm" />
               </span>
-              <input
+              <Input
                 type="text"
-                id="name"
+                register={register}
                 name="name"
                 placeholder="Nhập họ và tên"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                errorMessage={errors.name?.message}
               />
             </div>
           </div>
@@ -55,13 +85,13 @@ export default function RegisterScreen() {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaUser className="text-gray-400 text-sm" />
               </span>
-              <input
+              <Input
                 type="text"
-                id="name"
-                name="name"
-                placeholder="Nhập họ và tên"
+                register={register}
+                name="username"
+                placeholder="Nhập tên đăng nhập"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                errorMessage={errors.name?.message}
               />
             </div>
           </div>
@@ -76,13 +106,13 @@ export default function RegisterScreen() {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaEnvelope className="text-gray-400 text-sm" />
               </span>
-              <input
+              <Input
                 type="email"
-                id="email"
+                register={register}
                 name="email"
-                placeholder="Nhập email của bạn"
+                placeholder="Nhập email"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                errorMessage={errors.email?.message}
               />
             </div>
           </div>
@@ -98,13 +128,13 @@ export default function RegisterScreen() {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaPhone className="text-gray-400 text-sm" />
               </span>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
+              <Input
+                type="text"
+                register={register}
+                name="phoneNumber"
                 placeholder="Nhập số điện thoại"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                errorMessage={errors.name?.message}
               />
             </div>
           </div>
@@ -120,13 +150,13 @@ export default function RegisterScreen() {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaLock className="text-gray-400 text-sm" />
               </span>
-              <input
-                type="password"
-                id="password"
+              <Input
+                type="text"
+                register={register}
                 name="password"
                 placeholder="Nhập mật khẩu"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                errorMessage={errors.password?.message}
               />
             </div>
           </div>
@@ -142,13 +172,13 @@ export default function RegisterScreen() {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FaLock className="text-gray-400 text-sm" />
               </span>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Nhập lại mật khẩu"
+              <Input
+                type="text"
+                register={register}
+                name="confirm_password"
+                placeholder="Nhập mật khẩu"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                errorMessage={errors.confirm_password?.message}
               />
             </div>
           </div>
