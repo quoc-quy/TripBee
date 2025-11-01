@@ -2,11 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { omit } from "lodash";
-import { FaEnvelope, FaLock, FaUserPlus } from "react-icons/fa";
+import { FaUserPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { schema, type Schema } from "../../utils/rules";
 import Input from "../../components/Input";
 import { registerAccount } from "../../apis/auth.api";
+import { toast } from "react-toastify";
 
 type FormData = Schema;
 export default function RegisterScreen() {
@@ -27,7 +28,7 @@ export default function RegisterScreen() {
     const body = omit(data, ["confirm_password"]);
     registerMutation.mutate(body, {
       onSuccess: (data) => {
-        console.log(data);
+        toast.success("Đăng ký tài khoản thành công!", { autoClose: 2000 });
       },
     });
   });
@@ -55,15 +56,12 @@ export default function RegisterScreen() {
               Email
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaEnvelope className="text-gray-400 text-sm" />
-              </span>
               <Input
                 type="email"
                 register={register}
                 name="email"
                 placeholder="Nhập email"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 errorMessage={errors.email?.message}
               />
             </div>
@@ -77,15 +75,12 @@ export default function RegisterScreen() {
               Mật khẩu
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaLock className="text-gray-400 text-sm" />
-              </span>
               <Input
-                type="text"
+                type="password"
                 register={register}
                 name="password"
                 placeholder="Nhập mật khẩu"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 errorMessage={errors.password?.message}
               />
             </div>
@@ -99,15 +94,12 @@ export default function RegisterScreen() {
               Xác nhận mật khẩu
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaLock className="text-gray-400 text-sm" />
-              </span>
               <Input
-                type="text"
+                type="password"
                 register={register}
                 name="confirm_password"
                 placeholder="Nhập mật khẩu"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 errorMessage={errors.confirm_password?.message}
               />
             </div>
