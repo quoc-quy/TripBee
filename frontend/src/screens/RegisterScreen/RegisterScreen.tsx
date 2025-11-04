@@ -13,7 +13,7 @@ import { AppContext } from "../../contexts/app.context";
 
 type FormData = Schema;
 export default function RegisterScreen() {
-  const { setIsAuthenticated } = useContext(AppContext);
+  const { setIsAuthenticated, setProfile } = useContext(AppContext);
   const navigate = useNavigate();
   const {
     register,
@@ -31,9 +31,10 @@ export default function RegisterScreen() {
   const onSubmit = handleSubmit((data) => {
     const body = omit(data, ["confirm_password"]);
     registerMutation.mutate(body, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success("Đăng ký tài khoản thành công!", { autoClose: 2000 });
         setIsAuthenticated(true);
+        setProfile(data.data.user);
         navigate("/");
       },
     });

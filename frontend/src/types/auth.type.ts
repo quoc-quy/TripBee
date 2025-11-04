@@ -1,11 +1,12 @@
-import type { User } from "./user.type";
-
 type Role = "CUSTOMER" | "ADMIN";
 export type AuthResponse = {
   success: boolean;
   message: string;
   token: string;
-  userId: User;
+  userId: string;
   username: string;
   role: Role;
+};
+export type LoginSuccessResponse = {
+  data: AuthResponse;
 };

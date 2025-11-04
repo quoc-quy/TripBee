@@ -6,3 +6,9 @@ export interface User {
   avatarURL: string;
   address: string;
 }
+
+export interface SimpleProfile {
+  userID: string;
+  email: string;
+  role: "CUSTOMER" | "ADMIN";
+}
