@@ -61,4 +61,12 @@ public class AuthController {
         UserProfileResponse response = new UserProfileResponse(currentUser);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<LoginResponse> logout() {
+        // Trong kiến trúc JWT không trạng thái, việc logout thực tế xảy ra ở client
+        // khi nó xóa token. Backend chỉ cần trả về thành công.
+        // Token sẽ hết hạn theo thời gian (EXPIRATION_MS).
+        return ResponseEntity.ok(new LoginResponse(true, "Logout successful"));
+    }
 }
