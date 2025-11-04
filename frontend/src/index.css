@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@layer components {
+    .min-h-screen-nav {
+        /* 100vh - (Header: h-12 (48px) + py-4 (32px) = 80px) */
+        min-height: calc(100vh - 80px);
+    }
+}

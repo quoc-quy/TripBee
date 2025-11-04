@@ -1,134 +1,118 @@
-import React from "react";
+import { useState } from "react"; // (Mới) Thêm useState
 import { Link, NavLink } from "react-router-dom";
-import Popover from "../Popover";
+import { FaBars, FaTimes } from "react-icons/fa"; // (Mới) Thêm icons
+
+const navLinks = [
+    { to: "/", label: "Trang chủ" },
+    { to: "/tours", label: "Tours" },
+    { to: "/destinations", label: "Điểm đến" },
+    { to: "/about", label: "Về chúng tôi" },
+    { to: "/contact", label: "Liên hệ" },
+];
 
 export default function Header() {
+    // (Mới) State để quản lý menu mobile
+    const [isOpen, setIsOpen] = useState(false);
+
+    const activeClass = "text-primary font-semibold";
+    const inactiveClass = "text-gray-700 hover:text-primary transition-colors";
+
     return (
-        <div className="flex justify-around items-center w-full bg-white text-black px-3 py-3 border">
-            <Link to="/" className="hover:text-[#2663ec]">
-                <img src="Logo-TripBee.png" alt="" className="w-16" />
-            </Link>
-            <div className="flex gap-10 font-semibold">
-                <NavLink
-                    to="/"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Trang chủ
-                </NavLink>
-                <NavLink
-                    to="/tours"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Tours
-                </NavLink>
-                <NavLink
-                    to="/destinations"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Điểm đến
-                </NavLink>
-                <NavLink
-                    to="/about"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Về chúng tôi
-                </NavLink>
-                <NavLink
-                    to="/contact"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Liên hệ
-                </NavLink>
-                <NavLink
-                    to="/admin"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Admin
-                </NavLink>
-            </div>
-            <div>
-                <div className="flex gap-10">
-                    <div className="col-span-1 justify-self-start">
-                        <Popover
-                            renderPopover={
-                                <div className="bg-white relative shadow-md rounded-sm border border-gray-200 w-48 text-md">
-                                    <div className="flex flex-col gap-2 text-left mt-2 mb-2">
-                                        <Link
-                                            to="/login"
-                                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                        >
-                                            Đăng nhập
-                                        </Link>
-                                        <Link
-                                            to="/register"
-                                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                        >
-                                            Đăng ký
-                                        </Link>
-                                        <div className="border-t border-gray-200 my-2"></div>
-                                        <Link
-                                            to="/account"
-                                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                        >
-                                            Hồ sơ
-                                        </Link>
-                                        <Link
-                                            to="/tours"
-                                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                        >
-                                            Đặc tour
-                                        </Link>
-                                    </div>
-                                </div>
-                            }
+        // (Tối ưu) Thêm 'sticky top-0 z-50' để fix lỗi bị đè
+        <header className="bg-white py-4 shadow-sm sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center">
+                    {/* Logo */}
+                    <Link to="/" onClick={() => setIsOpen(false)}>
+                        <img src="/Logo-TripBee.png" alt="TripBee Logo" className="h-12" />
+                    </Link>
+
+                    {/* Nav Links (Desktop) */}
+                    <nav className="hidden md:flex space-x-6">
+                        {navLinks.map((link) => (
+                            <NavLink
+                                key={link.to}
+                                to={link.to}
+                                className={({ isActive }) =>
+                                    isActive ? activeClass : inactiveClass
+                                }
+                            >
+                                {link.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+
+                    {/* Auth Buttons (Desktop) */}
+                    <div className="hidden md:flex items-center space-x-4">
+                        <Link
+                            to="/login"
+                            className="text-gray-700 hover:text-primary font-medium transition-colors"
                         >
-                            <div className="flex hover:text-[#2663ec] font-semibold gap-2 cursor-pointer items-center">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="size-5"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                                    />
-                                </svg>
-                                Tài khoản
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="size-5"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                                    />
-                                </svg>
-                            </div>
-                        </Popover>
+                            Đăng nhập
+                        </Link>
+                        <Link
+                            to="/register"
+                            className="bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                        >
+                            Đăng ký
+                        </Link>
+                    </div>
+
+                    {/* (Mới) Nút Hamburger (Mobile) */}
+                    <div className="md:hidden">
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="text-gray-800 focus:outline-none"
+                            aria-label="Mở menu"
+                        >
+                            {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* (Mới) Mobile Menu */}
+            <div
+                className={`md:hidden absolute top-full left-0 w-full bg-white shadow-xl transition-all duration-300 ease-in-out transform ${
+                    isOpen
+                        ? "translate-y-0 opacity-100 visible"
+                        : "-translate-y-4 opacity-0 invisible"
+                } z-40`} // z-40 để nằm dưới header (z-50) nhưng trên mọi thứ khác
+            >
+                <nav className="flex flex-col p-4">
+                    {navLinks.map((link) => (
+                        <NavLink
+                            key={link.to}
+                            to={link.to}
+                            className={({ isActive }) =>
+                                `py-3 px-3 rounded-md text-lg ${
+                                    isActive ? activeClass : inactiveClass
+                                }`
+                            }
+                            onClick={() => setIsOpen(false)} // Tự động đóng khi click
+                        >
+                            {link.label}
+                        </NavLink>
+                    ))}
+                </nav>
+                {/* Auth Buttons (Mobile) */}
+                <div className="flex flex-col gap-3 p-4 border-t border-gray-100">
+                    <Link
+                        to="/login"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-center bg-gray-100 text-gray-800 px-5 py-3 rounded-md font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                        Đăng nhập
+                    </Link>
+                    <Link
+                        to="/register"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full text-center bg-blue-600 text-white px-5 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                        Đăng ký
+                    </Link>
+                </div>
+            </div>
+        </header>
     );
 }
