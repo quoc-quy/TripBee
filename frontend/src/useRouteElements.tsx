@@ -12,7 +12,7 @@ import RegisterScreen from "./screens/RegisterScreen";
 export default function useRouteElements() {
   const rootElements = useRoutes([
     {
-      path: "",
+      path: "/",
       index: true,
       element: (
         <MainLayout>

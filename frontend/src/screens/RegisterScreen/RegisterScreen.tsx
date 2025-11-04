@@ -3,14 +3,18 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { omit } from "lodash";
 import { FaUserPlus } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { schema, type Schema } from "../../utils/rules";
 import Input from "../../components/Input";
 import { registerAccount } from "../../apis/auth.api";
 import { toast } from "react-toastify";
+import { useContext } from "react";
+import { AppContext } from "../../contexts/app.context";
 
 type FormData = Schema;
 export default function RegisterScreen() {
+  const { setIsAuthenticated } = useContext(AppContext);
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -27,8 +31,10 @@ export default function RegisterScreen() {
   const onSubmit = handleSubmit((data) => {
     const body = omit(data, ["confirm_password"]);
     registerMutation.mutate(body, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         toast.success("Đăng ký tài khoản thành công!", { autoClose: 2000 });
+        setIsAuthenticated(true);
+        navigate("/");
       },
     });
   });

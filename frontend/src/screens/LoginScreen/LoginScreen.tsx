@@ -1,19 +1,22 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaUser } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import { schema, type Schema } from "../../utils/rules";
 import { type Omit } from "lodash";
 import { useMutation } from "@tanstack/react-query";
 import { loginAccount } from "../../apis/auth.api";
 import Input from "../../components/Input";
+import { useContext } from "react";
+import { AppContext } from "../../contexts/app.context";
 
 type FormData = Omit<Schema, "confirm_password">;
 const loginSchema = schema.omit(["confirm_password"]);
 export default function LoginScreen() {
+  const { setIsAuthenticated } = useContext(AppContext);
+  const navigate = useNavigate();
   const {
     register,
-    watch,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
@@ -28,6 +31,8 @@ export default function LoginScreen() {
     loginAccountMutation.mutate(data, {
       onSuccess: (data) => {
         console.log(data);
+        setIsAuthenticated(true);
+        navigate("/");
       },
     });
   });
