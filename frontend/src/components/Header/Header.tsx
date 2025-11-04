@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import Popover from "../Popover";
 import { AppContext } from "../../contexts/app.context";
@@ -7,6 +7,9 @@ import { logout } from "../../apis/auth.api";
 
 export default function Header() {
     const { isAuthenticated, setIsAuthenticated, setProfile, profile } = useContext(AppContext);
+    // Thêm state cho mobile menu
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     const logoutMutation = useMutation({
         mutationFn: logout,
         onSuccess: () => {
@@ -19,12 +22,21 @@ export default function Header() {
         logoutMutation.mutate();
     };
 
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
     return (
-        <div className="flex justify-around items-center w-full bg-white text-black px-3 py-3 border">
+        // Thay đổi: Sử dụng `max-w-full` và điều chỉnh padding/gap
+        <div className="flex justify-between items-center w-full bg-white text-black px-4 lg:px-12 py-3 border">
+            {/* --- Logo --- */}
             <Link to="/" className="hover:text-[#2663ec]">
                 <img src="Logo-TripBee.png" alt="" className="w-16" />
             </Link>
-            <div className="flex gap-10 font-semibold">
+
+            {/* --- Menu Điều Hướng (Chỉ hiển thị trên màn hình lớn) --- */}
+            <div className="hidden lg:flex gap-10 font-semibold">
+                {/* NavLinks giữ nguyên */}
                 <NavLink
                     to="/"
                     className={({ isActive }) =>
@@ -74,9 +86,15 @@ export default function Header() {
                     Admin
                 </NavLink>
             </div>
-            <div>
-                <div className="flex gap-10">
+
+            {/* --- Account/Auth & Mobile Menu Toggle --- */}
+            <div className="flex items-center gap-4">
+                {/* Popover cho User/Auth (Luôn hiển thị) */}
+                <div className="hidden lg:block">
+                    {" "}
+                    {/* Ẩn Popover trên mobile, chỉ hiện icon */}
                     <div className="col-span-1 justify-self-start">
+                        {/* ... giữ nguyên logic Popover cho isAuthenticated và !isAuthenticated ... */}
                         {isAuthenticated && (
                             <Popover
                                 renderPopover={
@@ -111,12 +129,12 @@ export default function Header() {
                                                 to="/tours"
                                                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                                             >
-                                                Đặc tour
+                                                Đặt tour
                                             </Link>
                                             <div className="border-t border-gray-200 my-2"></div>
                                             <button
                                                 onClick={handleLogout}
-                                                className="block text-left px-4 py-2 cursor-pointer text-red-500 hover:bg-gray-100 transition-colors duration-200"
+                                                className="block text-left px-4 py-2 cursor-pointer font-semibold text-red-500 hover:bg-gray-100 transition-colors duration-200"
                                             >
                                                 Đăng xuất
                                             </button>
@@ -127,7 +145,7 @@ export default function Header() {
                                 <img
                                     src="src/assets/user.png"
                                     alt=""
-                                    className="w-13 h-13 cursor-pointer object-cover"
+                                    className="w-10 h-10 cursor-pointer object-cover rounded-full" // Thay đổi kích thước và thêm `rounded-full` cho đẹp hơn
                                 />
                             </Popover>
                         )}
@@ -147,19 +165,6 @@ export default function Header() {
                                                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                                             >
                                                 Đăng ký
-                                            </Link>
-                                            <div className="border-t border-gray-200 my-2"></div>
-                                            <Link
-                                                to="/account"
-                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Hồ sơ
-                                            </Link>
-                                            <Link
-                                                to="/tours"
-                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Đặc tour
                                             </Link>
                                         </div>
                                     </div>
@@ -199,6 +204,154 @@ export default function Header() {
                             </Popover>
                         )}
                     </div>
+                </div>
+
+                <button
+                    onClick={toggleMenu}
+                    className="lg:hidden p-2 hover:bg-gray-100 rounded"
+                    aria-expanded={isMenuOpen}
+                    aria-controls="mobile-menu"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="w-6 h-6"
+                    >
+                        {isMenuOpen ? (
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        ) : (
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                            />
+                        )}
+                    </svg>
+                </button>
+            </div>
+            <div
+                id="mobile-menu"
+                className={`absolute top-[68px] left-0 w-full bg-white border-b border-gray-200 shadow-lg lg:hidden z-20 ${
+                    isMenuOpen ? "block" : "hidden"
+                }`}
+            >
+                <div className="flex flex-col p-4 space-y-2 font-semibold">
+                    <NavLink
+                        to="/"
+                        onClick={toggleMenu}
+                        className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md ${
+                                isActive
+                                    ? "bg-[#2663ec] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                            }`
+                        }
+                    >
+                        Trang chủ
+                    </NavLink>
+                    <NavLink
+                        to="/tours"
+                        onClick={toggleMenu}
+                        className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md ${
+                                isActive
+                                    ? "bg-[#2663ec] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                            }`
+                        }
+                    >
+                        Tours
+                    </NavLink>
+                    <NavLink
+                        to="/destinations"
+                        onClick={toggleMenu}
+                        className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md ${
+                                isActive
+                                    ? "bg-[#2663ec] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                            }`
+                        }
+                    >
+                        Điểm đến
+                    </NavLink>
+                    <NavLink
+                        to="/about"
+                        onClick={toggleMenu}
+                        className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md ${
+                                isActive
+                                    ? "bg-[#2663ec] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                            }`
+                        }
+                    >
+                        Về chúng tôi
+                    </NavLink>
+                    <NavLink
+                        to="/contact"
+                        onClick={toggleMenu}
+                        className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md ${
+                                isActive
+                                    ? "bg-[#2663ec] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                            }`
+                        }
+                    >
+                        Liên hệ
+                    </NavLink>
+                    <NavLink
+                        to="/admin"
+                        onClick={toggleMenu}
+                        className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md ${
+                                isActive
+                                    ? "bg-[#2663ec] text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                            }`
+                        }
+                    >
+                        Admin
+                    </NavLink>
+
+                    <div className="border-t border-gray-200 pt-2 mt-2"></div>
+
+                    {isAuthenticated ? (
+                        <button
+                            onClick={() => {
+                                handleLogout();
+                                toggleMenu();
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-md cursor-pointer bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
+                        >
+                            Đăng xuất
+                        </button>
+                    ) : (
+                        <>
+                            <Link
+                                to="/login"
+                                onClick={toggleMenu}
+                                className="block text-center px-3 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                            >
+                                Đăng nhập
+                            </Link>
+                            <Link
+                                to="/register"
+                                onClick={toggleMenu}
+                                className="block text-center px-3 py-2 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-100 transition-colors duration-200"
+                            >
+                                Đăng ký
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

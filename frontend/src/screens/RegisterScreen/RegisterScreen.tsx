@@ -10,6 +10,7 @@ import { registerAccount } from "../../apis/auth.api";
 import { toast } from "react-toastify";
 import { useContext } from "react";
 import { AppContext } from "../../contexts/app.context";
+import type { SimpleProfile } from "../../types/user.type";
 
 type FormData = Schema;
 export default function RegisterScreen() {
@@ -34,7 +35,14 @@ export default function RegisterScreen() {
       onSuccess: (data) => {
         toast.success("Đăng ký tài khoản thành công!", { autoClose: 2000 });
         setIsAuthenticated(true);
-        setProfile(data.data.user);
+        const authData = data.data;
+        const simpleProfile: SimpleProfile = {
+          userID: authData.userID,
+          email: authData.email,
+          role: authData.role,
+        };
+
+        setProfile(simpleProfile);
         navigate("/");
       },
     });
