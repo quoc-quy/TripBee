@@ -6,11 +6,13 @@ import { useMutation } from "@tanstack/react-query";
 import { logout } from "../../apis/auth.api";
 
 export default function Header() {
-  const { isAuthenticated, setIsAuthenticated } = useContext(AppContext);
+  const { isAuthenticated, setIsAuthenticated, setProfile, profile } =
+    useContext(AppContext);
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
       setIsAuthenticated(false);
+      setProfile(null);
     },
   });
 
@@ -91,9 +93,11 @@ export default function Header() {
                           className="w-10 h-10 cursor-pointer object-cover"
                         />
                         <div className="flex flex-col min-w-0 w-40">
-                          <span className="font-bold">Mai Công Thành</span>
+                          <span className="font-bold line-clamp-1">
+                            {profile?.userID}
+                          </span>
                           <span className="line-clamp-1 block max-w-full">
-                            mait58674@gmail.com
+                            {profile?.email}
                           </span>
                         </div>
                       </Link>

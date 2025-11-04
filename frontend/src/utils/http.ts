@@ -1,10 +1,13 @@
 import type { AxiosInstance } from "axios";
 import axios from "axios";
 import {
-  clearAccessTokenFromLS,
+  clearLS,
   getAccessTokenFromLS,
   saveAccessTokenToLS,
+  setProfileToLS,
 } from "./auth";
+import type { AuthResponse } from "../types/auth.type";
+import type { SimpleProfile } from "../types/user.type";
 
 class Http {
   instance: AxiosInstance;
@@ -34,11 +37,18 @@ class Http {
       const { url } = response.config;
 
       if (url == "auth/login" || url == "auth/register") {
-        this.accessToken = response.data.token;
+        const data = response.data as AuthResponse;
+        this.accessToken = data.token;
         saveAccessTokenToLS(this.accessToken);
-      } else if (url == "/logout") {
+        const simpleProfile: SimpleProfile = {
+          userID: data.userID,
+          email: data.email,
+          role: data.role,
+        };
+        setProfileToLS(simpleProfile);
+      } else if (url == "auth/logout") {
         this.accessToken = "";
-        clearAccessTokenFromLS();
+        clearLS();
       }
 
       return response;

@@ -9,11 +9,12 @@ import { loginAccount } from "../../apis/auth.api";
 import Input from "../../components/Input";
 import { useContext } from "react";
 import { AppContext } from "../../contexts/app.context";
+import type { SimpleProfile } from "../../types/user.type";
 
 type FormData = Omit<Schema, "confirm_password">;
 const loginSchema = schema.omit(["confirm_password"]);
 export default function LoginScreen() {
-  const { setIsAuthenticated } = useContext(AppContext);
+  const { setIsAuthenticated, setProfile } = useContext(AppContext);
   const navigate = useNavigate();
   const {
     register,
@@ -32,6 +33,15 @@ export default function LoginScreen() {
       onSuccess: (data) => {
         console.log(data);
         setIsAuthenticated(true);
+        const authData = data.data;
+
+        const simpleProfile: SimpleProfile = {
+          userID: authData.userID,
+          email: authData.email,
+          role: authData.role,
+        };
+
+        setProfile(simpleProfile);
         navigate("/");
       },
     });
