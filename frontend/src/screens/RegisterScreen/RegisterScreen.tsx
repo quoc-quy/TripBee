@@ -1,13 +1,45 @@
-import {
-  FaUser,
-  FaEnvelope,
-  FaLock,
-  FaPhone,
-  FaUserPlus,
-} from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import { omit } from "lodash";
+import { FaUserPlus } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { schema, type Schema } from "../../utils/rules";
+import Input from "../../components/Input";
+import { registerAccount } from "../../apis/auth.api";
+import { toast } from "react-toastify";
+import { useContext } from "react";
+import { AppContext } from "../../contexts/app.context";
 
+type FormData = Schema;
 export default function RegisterScreen() {
+  const { setIsAuthenticated, setProfile } = useContext(AppContext);
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: (body: Omit<FormData, "confirm_password">) =>
+      registerAccount(body),
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    const body = omit(data, ["confirm_password"]);
+    registerMutation.mutate(body, {
+      onSuccess: (data) => {
+        toast.success("Đăng ký tài khoản thành công!", { autoClose: 2000 });
+        setIsAuthenticated(true);
+        setProfile(data.data.user);
+        navigate("/");
+      },
+    });
+  });
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
@@ -22,49 +54,7 @@ export default function RegisterScreen() {
           Tạo tài khoản để trải nghiệm du lịch tuyệt vời với
         </p>
 
-        <form className="space-y-4">
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-left text-sm font-medium text-gray-700 mb-1"
-            >
-              Họ và tên
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaUser className="text-gray-400 text-sm" />
-              </span>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Nhập họ và tên"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-left text-sm font-medium text-gray-700 mb-1"
-            >
-              Nhập tên đăng nhập
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaUser className="text-gray-400 text-sm" />
-              </span>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Nhập họ và tên"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
+        <form className="space-y-4" onSubmit={onSubmit} noValidate>
           <div>
             <label
               htmlFor="email"
@@ -73,38 +63,13 @@ export default function RegisterScreen() {
               Email
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaEnvelope className="text-gray-400 text-sm" />
-              </span>
-              <input
+              <Input
                 type="email"
-                id="email"
+                register={register}
                 name="email"
-                placeholder="Nhập email của bạn"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-left text-sm font-medium text-gray-700 mb-1"
-            >
-              Số điện thoại
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaPhone className="text-gray-400 text-sm" />
-              </span>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                placeholder="Nhập số điện thoại"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                placeholder="Nhập email"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                errorMessage={errors.email?.message}
               />
             </div>
           </div>
@@ -117,16 +82,13 @@ export default function RegisterScreen() {
               Mật khẩu
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaLock className="text-gray-400 text-sm" />
-              </span>
-              <input
+              <Input
                 type="password"
-                id="password"
+                register={register}
                 name="password"
                 placeholder="Nhập mật khẩu"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                errorMessage={errors.password?.message}
               />
             </div>
           </div>
@@ -139,16 +101,13 @@ export default function RegisterScreen() {
               Xác nhận mật khẩu
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaLock className="text-gray-400 text-sm" />
-              </span>
-              <input
+              <Input
                 type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Nhập lại mật khẩu"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                register={register}
+                name="confirm_password"
+                placeholder="Nhập mật khẩu"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                errorMessage={errors.confirm_password?.message}
               />
             </div>
           </div>

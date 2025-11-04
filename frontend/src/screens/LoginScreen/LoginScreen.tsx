@@ -1,7 +1,51 @@
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import { FaUser } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { schema, type Schema } from "../../utils/rules";
+import { type Omit } from "lodash";
+import { useMutation } from "@tanstack/react-query";
+import { loginAccount } from "../../apis/auth.api";
+import Input from "../../components/Input";
+import { useContext } from "react";
+import { AppContext } from "../../contexts/app.context";
+import type { SimpleProfile } from "../../types/user.type";
 
+type FormData = Omit<Schema, "confirm_password">;
+const loginSchema = schema.omit(["confirm_password"]);
 export default function LoginScreen() {
+  const { setIsAuthenticated, setProfile } = useContext(AppContext);
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(loginSchema),
+  });
+
+  const loginAccountMutation = useMutation({
+    mutationFn: (body: Omit<Schema, "confirm_password">) => loginAccount(body),
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    loginAccountMutation.mutate(data, {
+      onSuccess: (data) => {
+        console.log(data);
+        setIsAuthenticated(true);
+        const authData = data.data;
+
+        const simpleProfile: SimpleProfile = {
+          userID: authData.userID,
+          email: authData.email,
+          role: authData.role,
+        };
+
+        setProfile(simpleProfile);
+        navigate("/");
+      },
+    });
+  });
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
@@ -13,7 +57,7 @@ export default function LoginScreen() {
         <h2 className="text-3xl font-bold text-gray-800 mb-2">Đăng nhập</h2>
         <p className="text-gray-500 mb-8">Chào mừng bạn trở lại!</p>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={onSubmit} noValidate>
           <div>
             <label
               htmlFor="email"
@@ -22,16 +66,13 @@ export default function LoginScreen() {
               Email
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaEnvelope className="text-gray-400" />
-              </span>
-              <input
+              <Input
                 type="email"
-                id="email"
+                register={register}
                 name="email"
-                placeholder="Nhập email của bạn"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                placeholder="Nhập email"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                errorMessage={errors.email?.message}
               />
             </div>
           </div>
@@ -44,16 +85,13 @@ export default function LoginScreen() {
               Mật khẩu
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <FaLock className="text-gray-400" />
-              </span>
-              <input
+              <Input
                 type="password"
-                id="password"
+                register={register}
                 name="password"
-                placeholder="Nhập mật khẩu"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
+                placeholder="Nhập password"
+                className="w-full pr-4 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                errorMessage={errors.password?.message}
               />
             </div>
           </div>

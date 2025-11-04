@@ -8,7 +8,6 @@ import com.tripbee.backend.model.User;
 import com.tripbee.backend.model.enums.RoleType;
 import com.tripbee.backend.repository.AccountRepository;
 import com.tripbee.backend.repository.UserRepository;
-// import lombok.RequiredArgsConstructor; // <-- XÓA DÒNG NÀY
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -39,18 +38,19 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest loginRequest) {
         try {
+            // 1. Xác thực bằng Email và Password
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            loginRequest.getEmail(),
                             loginRequest.getPassword()
                     )
             );
         } catch (Exception e) {
-            return new LoginResponse(false, "Invalid username or password");
+            return new LoginResponse(false, "Invalid email or password");
         }
 
-
-        var account = accountRepository.findByUserName(loginRequest.getUsername())
+        // 2. Tìm kiếm Account bằng Email (đã được dùng làm Username)
+        var account = accountRepository.findByUserName(loginRequest.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (account.isLocked()) {
@@ -65,28 +65,31 @@ public class AuthService {
                 "Login successful",
                 bearerJwtToken,
                 account.getUser().getUserID(),
-                account.getUsername(),
+                account.getUser().getEmail(),
                 account.getRole().name()
         );
     }
 
     @Transactional
     public LoginResponse register(RegisterRequest request) {
-        if (accountRepository.findByUserName(request.getUsername()).isPresent()) {
-            return new LoginResponse(false, "Username already exists");
-        }
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return new LoginResponse(false, "Email already exists");
+            return new LoginResponse(false, "Email has already been registered");
         }
 
         User user = new User();
-        user.setName(request.getName());
+//        user.setName(request.getName());
+        String userNameToSet = (request.getName() != null && !request.getName().trim().isEmpty())
+                ? request.getName()
+                : "NewUser";
+        user.setName(userNameToSet);
         user.setEmail(request.getEmail());
-        user.setPhoneNumber(request.getPhoneNumber());
+//        user.setPhoneNumber(request.getPhoneNumber());
         User savedUser = userRepository.save(user);
 
         Account account = new Account();
-        account.setUserName(request.getUsername());
+        // Thiết lập Email làm Tên đăng nhập (Username)
+        account.setUserName(request.getEmail());
         account.setPassword(passwordEncoder.encode(request.getPassword()));
         account.setRole(RoleType.CUSTOMER);
         account.setLocked(false);
@@ -96,13 +99,12 @@ public class AuthService {
         String jwtToken = jwtService.generateToken(account);
         String bearerJwtToken = "Bearer " + jwtToken;
 
-
         return new LoginResponse(
                 true,
                 "Registration successful",
                 bearerJwtToken,
                 savedUser.getUserID(),
-                account.getUsername(),
+                account.getUserName(),
                 account.getRole().name()
         );
     }
