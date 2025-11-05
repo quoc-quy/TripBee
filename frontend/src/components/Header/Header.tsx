@@ -102,7 +102,7 @@ export default function Header() {
                   <div className="bg-white relative shadow-md rounded-sm border border-gray-200 w-60 text-md">
                     <div className="flex flex-col gap-2 text-left mt-2 mb-2">
                       <Link
-                        to="/account"
+                        to="/me"
                         className="flex gap-2 items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                       >
                         <img
@@ -121,7 +121,7 @@ export default function Header() {
                       </Link>
                       <div className="border-t border-gray-200 my-2"></div>
                       <Link
-                        to="/account"
+                        to="/me"
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                       >
                         Hồ sơ
