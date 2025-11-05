@@ -63,8 +63,9 @@ public class TourService {
         Tour tour = tourRepository.findById(tourId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tour not found with id: " + tourId));
 
-        // Chuyển đổi Tour Entity sang DTO chi tiết
-        return new TourDetailsResponse(tour);
+        // --- SỬA LỖI TẠI ĐÂY ---
+        // Thay vì gọi "new", chúng ta gọi phương thức static "build"
+        return TourDetailsResponse.build(tour);
     }
 
     private Specification<Tour> buildSpecification(
@@ -89,6 +90,11 @@ public class TourService {
                 // Fetch promotions (quan hệ 2 cấp)
                 Fetch<Tour, TourPromotion> tourPromoFetch = root.fetch("tourPromotions", JoinType.LEFT);
                 tourPromoFetch.fetch("promotion", JoinType.LEFT);
+
+                // (THÊM MỚI) Fetch các liên kết khác
+                root.fetch("tourImages", JoinType.LEFT);
+                root.fetch("itineraries", JoinType.LEFT);
+
 
                 // Rất quan trọng: Tránh trùng lặp do join
                 query.distinct(true);

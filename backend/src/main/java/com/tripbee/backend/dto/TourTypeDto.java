@@ -6,7 +6,7 @@ public class TourTypeDto {
     private String tourTypeID;
     private String nameType;
 
-    // Constructor
+    // Constructor (File này của bạn đã đúng)
     public TourTypeDto(TourType tourType) {
         this.tourTypeID = tourType.getTourTypeID();
         this.nameType = tourType.getNameType();

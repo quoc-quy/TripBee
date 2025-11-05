@@ -1,9 +1,9 @@
 package com.tripbee.backend.repository;
 
 import com.tripbee.backend.model.Destination;
-import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.EntityGraph; // (1) THÊM IMPORT
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // (1) THÊM IMPORT
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,4 +11,14 @@ import java.util.List;
 @Repository
 public interface DestinationRepository extends JpaRepository<Destination, String>,
         JpaSpecificationExecutor<Destination> {
+
+    // (2) SỬA LỖI: Thêm @EntityGraph để fetch 'images' ngay lập tức
+    // Đây là fix cho lỗi N+1 và LazyInitializationException
+    @Override
+    @EntityGraph(attributePaths = {"images"}) // Tải 'images' cùng lúc
+    List<Destination> findAll();
+
+    // (3) SỬA LỖI: Tương tự, thêm cho phương thức này
+    @EntityGraph(attributePaths = {"images"}) // Tải 'images' cùng lúc
+    List<Destination> findAllByRegion(String region);
 }

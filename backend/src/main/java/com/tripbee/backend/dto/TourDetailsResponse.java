@@ -1,92 +1,127 @@
 package com.tripbee.backend.dto;
 
+import com.tripbee.backend.model.Destination;
 import com.tripbee.backend.model.Tour;
-import com.tripbee.backend.model.enums.TourStatus;
+import com.tripbee.backend.model.TourDestination;
+import com.tripbee.backend.model.TourImage;
+import com.tripbee.backend.model.Itinerary;
+import com.tripbee.backend.model.TourType;
 
+// Sửa import: Dùng LocalDate và Double
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class TourDetailsResponse {
     private String tourID;
     private String title;
     private String description;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDate startDate; // Sửa: Date -> LocalDate
+    private LocalDate endDate; // Sửa: Date -> LocalDate
     private int durationDays;
     private int durationNights;
     private String departurePlace;
-    private Double priceAdult;
-    private Double priceChild;
+    private Double priceAdult; // Sửa: BigDecimal -> Double
+    private Double priceChild; // Sửa: BigDecimal -> Double
     private int maxParticipants;
-    private String imageURL; // Ảnh bìa
-    private TourStatus status;
-
-    // Các thông tin liên kết
+    private String imageURL;
+    private String status;
+    private Integer ranking; // Sửa: int -> Integer (để khớp với Tour.java)
     private TourTypeDto tourType;
-    private Set<DestinationDto> destinations;
-    private Set<ItineraryDto> itineraries;
-    private Set<TourImageDto> tourImages; // Thư viện ảnh
+    private List<DestinationDto> destinations;
+    private List<TourImageDto> tourImages;
+    private List<ItineraryDto> itineraries;
 
-    // Constructor chính để chuyển đổi từ Tour Entity
-    public TourDetailsResponse(Tour tour) {
-        this.tourID = tour.getTourID();
-        this.title = tour.getTitle();
-        this.description = tour.getDescription();
-        this.startDate = tour.getStartDate();
-        this.endDate = tour.getEndDate();
-        this.durationDays = tour.getDurationDays();
-        this.durationNights = tour.getDurationNights();
-        this.departurePlace = tour.getDeparturePlace();
-        this.priceAdult = tour.getPriceAdult();
-        this.priceChild = tour.getPriceChild();
-        this.maxParticipants = tour.getMaxParticipants();
-        this.imageURL = tour.getImageURL();
-        this.status = tour.getStatus();
+    // --- Constructor ---
+    public TourDetailsResponse() {}
 
-        // Chuyển đổi các thông tin liên kết
-        // Lưu ý: Cần đảm bảo các collection này đã được tải (EAGER hoặc JOIN FETCH)
-        // hoặc xử lý LazyInitializationException nếu cần.
+    // --- Phương thức Build (Nơi sửa lỗi) ---
+    // (Đây là phương thức trong ảnh của bạn, đã được sửa)
+    public static TourDetailsResponse build(Tour tour) {
+        TourDetailsResponse response = new TourDetailsResponse();
+        response.setTourID(tour.getTourID());
+        response.setTitle(tour.getTitle());
+        response.setDescription(tour.getDescription());
+        response.setStartDate(tour.getStartDate()); // Đã khớp kiểu LocalDate
+        response.setEndDate(tour.getEndDate()); // Đã khớp kiểu LocalDate
+        response.setDurationDays(tour.getDurationDays());
+        response.setDurationNights(tour.getDurationNights());
+        response.setDeparturePlace(tour.getDeparturePlace());
+        response.setPriceAdult(tour.getPriceAdult()); // Đã khớp kiểu Double
+        response.setPriceChild(tour.getPriceChild()); // Đã khớp kiểu Double
+        response.setMaxParticipants(tour.getMaxParticipants());
+        response.setImageURL(tour.getImageURL());
+        response.setStatus(tour.getStatus().name());
+        response.setRanking(tour.getRanking());
+
         if (tour.getTourType() != null) {
-            this.tourType = new TourTypeDto(tour.getTourType());
+            // SỬA LỖI 1: Gọi constructor đúng
+            response.setTourType(new TourTypeDto(tour.getTourType()));
         }
 
-        if (tour.getItineraries() != null) {
-            this.itineraries = tour.getItineraries().stream()
-                    .map(ItineraryDto::new)
-                    .collect(Collectors.toSet());
-        }
+        // SỬA LỖI 2 & 3:
+        // Sử dụng constructor (Destination) -> new DestinationDto(Destination)
+        List<DestinationDto> destinationDtos = tour.getTourDestinations().stream()
+                .map(TourDestination::getDestination)
+                .map(DestinationDto::new) // <-- Sửa: Gọi hàm khởi tạo DestinationDto(Destination)
+                .collect(Collectors.toList());
+        response.setDestinations(destinationDtos);
 
-        if (tour.getTourImages() != null) {
-            this.tourImages = tour.getTourImages().stream()
-                    .map(TourImageDto::new)
-                    .collect(Collectors.toSet());
-        }
+        // SỬA LỖI (Tương tự):
+        // Sử dụng constructor (TourImage) -> new TourImageDto(TourImage)
+        List<TourImageDto> tourImageDtos = tour.getTourImages().stream()
+                .map(TourImageDto::new) // <-- Sửa: Gọi hàm khởi tạo TourImageDto(TourImage)
+                .collect(Collectors.toList());
+        response.setTourImages(tourImageDtos);
 
-        if (tour.getTourDestinations() != null) {
-            this.destinations = tour.getTourDestinations().stream()
-                    // Chỉ lấy Destination từ TourDestination
-                    .map(td -> new DestinationDto(td.getDestination()))
-                    .collect(Collectors.toSet());
-        }
+        // SỬA LỖI (Tương tự):
+        // Sử dụng constructor (Itinerary) -> new ItineraryDto(Itinerary)
+        List<ItineraryDto> itineraryDtos = tour.getItineraries().stream()
+                .map(ItineraryDto::new) // <-- Sửa: Gọi hàm khởi tạo ItineraryDto(Itinerary)
+                .collect(Collectors.toList());
+        response.setItineraries(itineraryDtos);
+
+        return response;
     }
 
-    // Getters cho tất cả các trường
+    // --- Getters and Setters (Giữ nguyên) ---
+    // (Lưu ý: getter/setter cho startDate, endDate, priceAdult, priceChild
+    // cũng phải được cập nhật để dùng LocalDate và Double)
+
     public String getTourID() { return tourID; }
+    public void setTourID(String tourID) { this.tourID = tourID; }
     public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
-    public LocalDate getStartDate() { return startDate; }
-    public LocalDate getEndDate() { return endDate; }
+    public void setDescription(String description) { this.description = description; }
+    public LocalDate getStartDate() { return startDate; } // Sửa
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; } // Sửa
+    public LocalDate getEndDate() { return endDate; } // Sửa
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; } // Sửa
     public int getDurationDays() { return durationDays; }
+    public void setDurationDays(int durationDays) { this.durationDays = durationDays; }
     public int getDurationNights() { return durationNights; }
+    public void setDurationNights(int durationNights) { this.durationNights = durationNights; }
     public String getDeparturePlace() { return departurePlace; }
-    public Double getPriceAdult() { return priceAdult; }
-    public Double getPriceChild() { return priceChild; }
+    public void setDeparturePlace(String departurePlace) { this.departurePlace = departurePlace; }
+    public Double getPriceAdult() { return priceAdult; } // Sửa
+    public void setPriceAdult(Double priceAdult) { this.priceAdult = priceAdult; } // Sửa
+    public Double getPriceChild() { return priceChild; } // Sửa
+    public void setPriceChild(Double priceChild) { this.priceChild = priceChild; } // Sửa
     public int getMaxParticipants() { return maxParticipants; }
+    public void setMaxParticipants(int maxParticipants) { this.maxParticipants = maxParticipants; }
     public String getImageURL() { return imageURL; }
-    public TourStatus getStatus() { return status; }
+    public void setImageURL(String imageURL) { this.imageURL = imageURL; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public Integer getRanking() { return ranking; } // Sửa
+    public void setRanking(Integer ranking) { this.ranking = ranking; } // Sửa
     public TourTypeDto getTourType() { return tourType; }
-    public Set<DestinationDto> getDestinations() { return destinations; }
-    public Set<ItineraryDto> getItineraries() { return itineraries; }
-    public Set<TourImageDto> getTourImages() { return tourImages; }
+    public void setTourType(TourTypeDto tourType) { this.tourType = tourType; }
+    public List<DestinationDto> getDestinations() { return destinations; }
+    public void setDestinations(List<DestinationDto> destinations) { this.destinations = destinations; }
+    public List<TourImageDto> getTourImages() { return tourImages; }
+    public void setTourImages(List<TourImageDto> tourImages) { this.tourImages = tourImages; }
+    public List<ItineraryDto> getItineraries() { return itineraries; }
+    public void setItineraries(List<ItineraryDto> itineraries) { this.itineraries = itineraries; }
 }

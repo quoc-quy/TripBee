@@ -1,5 +1,6 @@
 package com.tripbee.backend.repository;
 
+import com.tripbee.backend.model.Destination;
 import com.tripbee.backend.model.Tour;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -10,4 +11,5 @@ public interface TourRepository extends JpaRepository<Tour, String>, JpaSpecific
     // JpaSpecificationExecutor sẽ cung cấp các phương thức
     // như findAll(Specification<Tour> spec, Pageable pageable)
     // cho phép chúng ta lọc động
+    long countByTourDestinationsDestination(Destination destination);
 }

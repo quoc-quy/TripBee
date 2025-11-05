@@ -1,47 +1,86 @@
 package com.tripbee.backend.dto;
 
-import com.tripbee.backend.model.Destination;
-import com.tripbee.backend.model.Image;
-
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class DestinationResponse {
-
     private String destinationID;
     private String nameDes;
     private String location;
     private String country;
-    private List<String> imageURLs; // Mảng các URL
-    private int tourCount; // Số lượng tour có sẵn
+    private String region; // Đã thêm
+    private List<String> imageURLs;
+    private long tourCount;
 
-    public DestinationResponse(Destination destination) {
-        this.destinationID = destination.getDestinationID();
-        this.nameDes = destination.getNameDes();
-        this.location = destination.getLocation();
-        this.country = destination.getCountry();
+    // --- Constructors ---
 
-        // (1) Lấy danh sách URL từ Set<Image>
-        if (destination.getImages() != null) {
-            this.imageURLs = destination.getImages().stream()
-                    .map(Image::getUrl)
-                    .collect(Collectors.toList());
-        }
-
-        // (2) Lấy số lượng tour từ Set<TourDestination>
-        if (destination.getTourDestinations() != null) {
-            this.tourCount = destination.getTourDestinations().size();
-        } else {
-            this.tourCount = 0;
-        }
+    public DestinationResponse() {
     }
 
-    // Getters
-    public String getDestinationID() { return destinationID; }
-    public String getNameDes() { return nameDes; }
-    public String getLocation() { return location; }
-    public String getCountry() { return country; }
-    public List<String> getImageURLs() { return imageURLs; }
-    public int getTourCount() { return tourCount; }
+    public DestinationResponse(String destinationID, String nameDes, String location, String country, String region, List<String> imageURLs, long tourCount) {
+        this.destinationID = destinationID;
+        this.nameDes = nameDes;
+        this.location = location;
+        this.country = country;
+        this.region = region;
+        this.imageURLs = imageURLs;
+        this.tourCount = tourCount;
+    }
+
+    // --- Getters and Setters ---
+
+    public String getDestinationID() {
+        return destinationID;
+    }
+
+    public void setDestinationID(String destinationID) {
+        this.destinationID = destinationID;
+    }
+
+    public String getNameDes() {
+        return nameDes;
+    }
+
+    public void setNameDes(String nameDes) {
+        this.nameDes = nameDes;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public List<String> getImageURLs() {
+        return imageURLs;
+    }
+
+    public void setImageURLs(List<String> imageURLs) {
+        this.imageURLs = imageURLs;
+    }
+
+    public long getTourCount() {
+        return tourCount;
+    }
+
+    public void setTourCount(long tourCount) {
+        this.tourCount = tourCount;
+    }
 }

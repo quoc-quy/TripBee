@@ -1,14 +1,14 @@
 package com.tripbee.backend.service;
 
 import com.tripbee.backend.dto.DestinationResponse;
+import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.Destination;
+import com.tripbee.backend.model.Image;
 import com.tripbee.backend.repository.DestinationRepository;
-import jakarta.persistence.criteria.JoinType; // (Mới)
-import jakarta.persistence.criteria.Predicate; // (Mới)
-import org.springframework.data.jpa.domain.Specification; // (Mới)
+import com.tripbee.backend.repository.TourRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList; // (Mới)
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,51 +16,58 @@ import java.util.stream.Collectors;
 public class DestinationService {
 
     private final DestinationRepository destinationRepository;
+    private final TourRepository tourRepository;
 
-    public DestinationService(DestinationRepository destinationRepository) {
+    @Autowired
+    public DestinationService(DestinationRepository destinationRepository, TourRepository tourRepository) {
         this.destinationRepository = destinationRepository;
+        this.tourRepository = tourRepository;
     }
 
-    // (1) Cập nhật phương thức để chấp nhận tham số lọc
-    public List<DestinationResponse> getAllDestinations(String location) {
-
-        // (2) Xây dựng Specification
-        Specification<Destination> spec = (root, query, criteriaBuilder) -> {
-
-            // (3) FIX N+1: Luôn fetch các collection cần thiết
-            // (Chỉ fetch cho truy vấn chính, không phải cho truy vấn count)
-            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
-                root.fetch("images", JoinType.LEFT);
-                root.fetch("tourDestinations", JoinType.LEFT);
-                // Tránh trùng lặp do LEFT JOIN
-                query.distinct(true);
-            }
-
-            // (4) Thêm logic lọc (Predicate)
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (location != null && !location.isEmpty()) {
-                // So sánh chính xác (case-sensitive)
-                predicates.add(criteriaBuilder.equal(root.get("location"), location));
-
-                // (Tùy chọn) Nếu muốn tìm kiếm không phân biệt chữ hoa/thường:
-                // predicates.add(criteriaBuilder.equal(
-                //     criteriaBuilder.lower(root.get("location")),
-                //     location.toLowerCase()
-                // ));
-            }
-
-            // (5) Kết hợp các điều kiện lọc (nếu có)
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-
-
-        // (6) Gọi phương thức findAll(spec) thay vì findAll()
-        List<Destination> destinations = destinationRepository.findAll(spec);
-
-        // (7) Chuyển đổi danh sách Entity sang DTO
-        return destinations.stream()
-                .map(DestinationResponse::new)
+    public List<DestinationResponse> getPopularDestinations() {
+        // Lấy 6 điểm đến, có thể thay đổi logic sau
+        return destinationRepository.findAll().stream()
+                .limit(6)
+                .map(this::convertToDestinationResponse)
                 .collect(Collectors.toList());
+    }
+
+    // (SỬA LỖI 1) Phương thức này cho trường hợp không có region
+    public List<DestinationResponse> getAllDestinations() {
+        return destinationRepository.findAll().stream()
+                .map(this::convertToDestinationResponse)
+                .collect(Collectors.toList());
+    }
+
+    // (SỬA LỖI 1) Thêm phương thức mới này để xử lý khi có region
+    public List<DestinationResponse> getAllDestinations(String region) {
+        // Dùng phương thức mới của repository để lọc
+        return destinationRepository.findAllByRegion(region).stream()
+                .map(this::convertToDestinationResponse)
+                .collect(Collectors.toList());
+    }
+
+    public DestinationResponse getDestinationById(String id) {
+        Destination destination = destinationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Destination not found with id: " + id));
+        return convertToDestinationResponse(destination);
+    }
+
+    private DestinationResponse convertToDestinationResponse(Destination destination) {
+        DestinationResponse response = new DestinationResponse();
+        response.setDestinationID(destination.getDestinationID());
+        response.setNameDes(destination.getNameDes());
+        response.setLocation(destination.getLocation());
+        response.setCountry(destination.getCountry());
+        response.setRegion(destination.getRegion()); // Đã có từ lần sửa trước
+
+        response.setImageURLs(destination.getImages().stream()
+                .map(Image::getUrl)
+                .collect(Collectors.toList()));
+
+        long tourCount = tourRepository.countByTourDestinationsDestination(destination);
+        response.setTourCount(tourCount);
+
+        return response;
     }
 }
