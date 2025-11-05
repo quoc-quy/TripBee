@@ -4,12 +4,13 @@ import { tourApi } from "../../apis/tour";
 import { destinationApi } from "../../apis/destination";
 import type { Tour } from "../../types/tour";
 import type { Destination } from "../../types/destination";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // (MỚI) Import các component đã tách
 import Button from "../../components/Button";
 import TourCard from "../../components/TourCard";
 import DestinationCard from "../../components/DestinationCard";
+import TourFilterSection from "../../components/TourFilterSection";
 
 // Import icons
 import {
@@ -40,6 +41,27 @@ import {
 // === PHẦN 1: HERO SECTION ===
 // (Không thay đổi)
 function HeroSection() {
+    const navigate = useNavigate(); // (MỚI) Hook để điều hướng
+    const [searchTerm, setSearchTerm] = useState(""); // (MỚI) State cho ô tìm kiếm
+
+    // (MỚI) Hàm xử lý khi submit form tìm kiếm
+    const handleSubmitSearch = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault(); // Ngăn form reload lại trang
+
+        const params = new URLSearchParams();
+        if (searchTerm.trim()) {
+            // Chúng ta sẽ dùng 'search' cho tìm kiếm văn bản tự do
+            params.append("search", searchTerm.trim());
+        }
+        // Bạn có thể thêm các trường khác (date, duration...) vào params ở đây
+        // Ví dụ:
+        // const date = (e.target as any).date.value;
+        // if (date) params.append("departureDate", date);
+
+        // Điều hướng đến trang /tours với các tham số
+        navigate(`/tours?${params.toString()}`);
+    };
+
     return (
         <div
             className="relative min-h-screen-nav flex items-center justify-center text-white z-20"
@@ -66,7 +88,11 @@ function HeroSection() {
 
                 {/* Thanh tìm kiếm */}
                 <div className="bg-white text-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-5xl">
-                    <form className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-10 gap-4">
+                    {/* (CẬP NHẬT) Thêm onSubmit */}
+                    <form
+                        className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-10 gap-4"
+                        onSubmit={handleSubmitSearch}
+                    >
                         {/* Điểm đến */}
                         <div className="lg:col-span-3">
                             <label
@@ -82,6 +108,9 @@ function HeroSection() {
                                     id="destination"
                                     placeholder="Bạn muốn đi đâu?"
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                                    // (CẬP NHẬT) Kết nối với state
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -97,7 +126,8 @@ function HeroSection() {
                                 <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="date"
-                                    id="date"
+                                    id="date" // (MỚI) Thêm name="date" nếu bạn muốn lấy giá trị
+                                    name="date"
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
                                 />
                             </div>
@@ -135,10 +165,10 @@ function HeroSection() {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
                             />
                         </div>
-                        {/* Nút tìm kiếm (Giữ nguyên vì là nút custom) */}
+                        {/* Nút tìm kiếm */}
                         <div className="lg:col-span-2 flex items-end">
                             <button
-                                type="submit"
+                                type="submit" // (CẬP NHẬT) Đảm bảo type là "submit"
                                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-md font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2"
                             >
                                 <FaSearch />

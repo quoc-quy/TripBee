@@ -1,5 +1,7 @@
+// frontend-demo/src/apis/tour.ts
 import http from "../utils/http";
-import type { TourApiResponse } from "../types/tour";
+// (CẬP NHẬT) Import thêm TourListParams
+import type { TourApiResponse, TourListParams } from "../types/tour";
 
 export const tourApi = {
     getFeaturedTours: () => {
@@ -9,6 +11,14 @@ export const tourApi = {
                 size: 6,
                 sort: "ranking,asc",
             },
+        });
+    },
+
+    // (MỚI) Hàm lấy tất cả tour với bộ lọc và phân trang
+    getTours: (params: TourListParams) => {
+        // Truyền thẳng các params nhận được vào API
+        return http.get<TourApiResponse>("tours", {
+            params: params,
         });
     },
 };
