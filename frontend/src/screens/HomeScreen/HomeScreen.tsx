@@ -1,15 +1,15 @@
-// (Cập nhật) Thêm useState để dùng cho carousel
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { tourApi } from "../../apis/tour"; // (Sửa đường dẫn nếu cần)
-import { destinationApi } from "../../apis/destination"; // (Sửa đường dẫn nếu cần)
-import { formatCurrency } from "../../utils/utils";
-import type { Tour } from "../../types/tour"; // (Sửa đường dẫn nếu cần)
-// (Sửa đường dẫn nếu cần)
-// (Sửa đường dẫn nếu cần)
-import type { Destination } from "../../types/destination"; // (Sửa đường dẫn nếu cần)
-// (Sửa đường dẫn nếu cần)
+import { tourApi } from "../../apis/tour";
+import { destinationApi } from "../../apis/destination";
+import type { Tour } from "../../types/tour";
+import type { Destination } from "../../types/destination";
 import { Link } from "react-router-dom";
+
+// (MỚI) Import các component đã tách
+import Button from "../../components/Button";
+import TourCard from "../../components/TourCard";
+import DestinationCard from "../../components/DestinationCard";
 
 // Import icons
 import {
@@ -24,18 +24,17 @@ import {
     FaUserGraduate,
     FaQuoteLeft,
     FaChevronRight,
-    // (Mới) Thêm icons cho các section mới
     FaArrowRight,
     FaArrowLeft,
-    FaRegStar, // Icon sao rỗng
+    FaRegStar,
     FaCheckCircle,
     FaThumbsUp,
     FaUserFriends,
-    FaLeaf, // Icon cho Experience
-    FaBookOpen, // Icon cho Blog
-    FaEnvelope, // (Cập nhật) Thay cho PaperPlane
-    FaGift, // (Cập nhật) Icon cho Newsletter
-    FaBell, // (Cập nhật) Icon cho Newsletter
+    FaLeaf,
+    FaBookOpen,
+    FaEnvelope,
+    FaGift,
+    FaBell,
 } from "react-icons/fa";
 
 // === PHẦN 1: HERO SECTION ===
@@ -43,7 +42,6 @@ import {
 function HeroSection() {
     return (
         <div
-            // (Tối ưu) Thêm z-20 để nằm trên Testimonials (z-10)
             className="relative min-h-screen-nav flex items-center justify-center text-white z-20"
             style={{
                 backgroundImage: "url(/hero.jpg)",
@@ -137,7 +135,7 @@ function HeroSection() {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
                             />
                         </div>
-                        {/* Nút tìm kiếm */}
+                        {/* Nút tìm kiếm (Giữ nguyên vì là nút custom) */}
                         <div className="lg:col-span-2 flex items-end">
                             <button
                                 type="submit"
@@ -155,71 +153,6 @@ function HeroSection() {
 }
 
 // === PHẦN 2: TOURS NỔI BẬT ===
-// (Không thay đổi)
-function TourCard({ tour }: { tour: Tour }) {
-    return (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group">
-            <div className="relative">
-                <Link to={`/tours/${tour.tourID}`} className="block h-64">
-                    <img
-                        src={tour.imageURL}
-                        alt={tour.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                </Link>
-                {tour.discountPercentage > 0 && (
-                    <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Giảm {tour.discountPercentage}%
-                    </div>
-                )}
-                <div className="absolute top-4 right-4 bg-primary text-secondary-dark text-xs font-bold px-3 py-1 rounded-full capitalize">
-                    {tour.tourTypeName?.toLowerCase().replace("tour ", "")}
-                </div>
-            </div>
-            <div className="p-5">
-                <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
-                    <div className="flex items-center gap-1">
-                        <FaStar className="text-primary" />
-                        <span className="font-medium">{tour.averageRating}</span>
-                        <span className="text-gray-500">({tour.reviewCount} đánh giá)</span>
-                    </div>
-                    <span>{`${tour.durationDays} ngày ${tour.durationNights} đêm`}</span>
-                </div>
-                <h3 className="text-xl font-bold text-secondary-dark mb-2 h-14 line-clamp-2">
-                    <Link to={`/tours/${tour.tourID}`} className="hover:text-blue-600 transition">
-                        {tour.title}
-                    </Link>
-                </h3>
-                <div className="flex items-center text-sm text-gray-600 mb-4">
-                    <FaMapMarkerAlt className="mr-2 text-gray-400" />
-                    {tour.destinationName}
-                </div>
-                <div className="flex items-baseline justify-end gap-2">
-                    {tour.finalPrice < tour.priceAdult && (
-                        <span className="text-gray-500 line-through text-md">
-                            {formatCurrency(tour.priceAdult)}
-                        </span>
-                    )}
-                    <span className="text-2xl font-bold text-red-600">
-                        {formatCurrency(tour.finalPrice)}
-                    </span>
-                </div>
-                <div className="flex gap-3 mt-5">
-                    <Link
-                        to={`/tours/${tour.tourID}`}
-                        className="flex-1 text-center bg-white border border-blue-600 text-blue-600 px-4 py-2 rounded-md font-semibold hover:bg-blue-50 transition"
-                    >
-                        Xem chi tiết
-                    </Link>
-                    <button className="flex-1 text-center bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition">
-                        Đặt ngay
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-// (Không thay đổi)
 function FeaturedTours() {
     const { data: toursData, isLoading } = useQuery({
         queryKey: ["featuredTours"],
@@ -248,12 +181,10 @@ function FeaturedTours() {
                     </div>
                 )}
                 <div className="text-center mt-12">
-                    <Link
-                        to="/tours"
-                        className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition duration-300"
-                    >
+                    {/* (CẬP NHẬT) Dùng component Button */}
+                    <Button as="link" to="/tours" variant="solid" className="px-8 py-3">
                         Xem tất cả tours
-                    </Link>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -261,33 +192,6 @@ function FeaturedTours() {
 }
 
 // === PHẦN 3: ĐIỂM ĐẾN PHỔ BIẾN ===
-// (Không thay đổi)
-function DestinationCard({ destination }: { destination: Destination }) {
-    return (
-        <Link
-            to={`/tours?destination_id=${destination.destinationID}`}
-            className="relative rounded-lg overflow-hidden h-96 shadow-lg group"
-        >
-            <img
-                src={destination.imageURLs[0]}
-                alt={destination.nameDes}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-            <div className="absolute top-4 right-4 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full">
-                {destination.tourCount} tours
-            </div>
-            <div className="absolute bottom-6 left-6 text-white">
-                <h3 className="text-3xl font-bold mb-1">{destination.nameDes}</h3>
-                <p className="text-lg">{destination.tourCount} tours có sẵn</p>
-            </div>
-            <div className="absolute bottom-6 right-6 bg-white/30 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-1">
-                <FaChevronRight size={20} />
-            </div>
-        </Link>
-    );
-}
-// (Không thay đổi)
 function PopularDestinations() {
     const { data: destinationsData, isLoading } = useQuery({
         queryKey: ["popularDestinations"],
@@ -319,7 +223,7 @@ function PopularDestinations() {
     );
 }
 
-// === PHẦN 4: TẠI SAO CHỌN CHÚNG TÔI (CẬP NHẬT) ===
+// === PHẦN 4: TẠI SAO CHỌN CHÚNG TÔI ===
 // (Không thay đổi)
 const features = [
     {
@@ -366,7 +270,6 @@ const features = [
     },
 ];
 
-// (Không thay đổi)
 const stats = [
     {
         icon: FaRegStar,
@@ -398,7 +301,6 @@ const stats = [
     },
 ];
 
-// (Không thay đổi)
 function WhyChooseUs() {
     return (
         <div className="py-16 bg-gray-50">
@@ -462,7 +364,7 @@ function WhyChooseUs() {
     );
 }
 
-// === PHẦN 5: TRẢI NGHIỆM ĐỘC ĐÁO (MỚI) ===
+// === PHẦN 5: TRẢI NGHIỆM ĐỘC ĐÁO ===
 // (Không thay đổi)
 function UniqueExperience() {
     return (
@@ -481,7 +383,7 @@ function UniqueExperience() {
                         className="relative h-96 rounded-lg overflow-hidden shadow-lg group"
                     >
                         <img
-                            src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop"
+                            src="./dulichmaohiem.avif"
                             alt="Du Lịch Mạo Hiểm"
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
@@ -500,7 +402,7 @@ function UniqueExperience() {
                         className="relative h-96 rounded-lg overflow-hidden shadow-lg group"
                     >
                         <img
-                            src="https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=2070&auto=format&fit=crop"
+                            src="./khamphaamthuc.avif"
                             alt="Khám Phá Ẩm Thực"
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
@@ -519,37 +421,43 @@ function UniqueExperience() {
     );
 }
 
-// === PHẦN 6: BLOG DU LỊCH (MỚI) ===
-// (Không thay đổi)
+// === PHẦN 6: BLOG DU LỊCH ===
+// (GIỮ LẠI THEO YÊU CẦU)
 const blogPosts = [
     {
         id: 1,
-        image: "https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?q=80&w=2070&auto=format&fit=crop",
+        image: "./blog-01.avif",
         date: "25 Tháng 10, 2025",
         title: "10 địa điểm không thể bỏ qua khi đến Hà Giang",
         link: "/blog/1",
     },
     {
         id: 2,
-        image: "https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?q=80&w=2070&auto=format&fit=crop",
+        image: "./blog-02.jpg",
         date: "20 Tháng 10, 2025",
         title: "Kinh nghiệm du lịch Phú Quốc từ A đến Z",
         link: "/blog/2",
     },
     {
         id: 3,
-        image: "https://images.unsplash.com/photo-1528181304800-259b08848526?q=80&w=2070&auto=format&fit=crop",
+        image: "./blog-03.avif",
         date: "15 Tháng 10, 2025",
         title: "Ẩm thực đường phố Sài Gòn: Ăn gì, ở đâu?",
         link: "/blog/3",
     },
 ];
 
-// (Không thay đổi)
+// (GIỮ LẠI THEO YÊU CẦU)
 function BlogCard({
     post,
 }: {
-    post: { id: number; image: string; date: string; title: string; link: string };
+    post: {
+        id: number;
+        image: string;
+        date: string;
+        title: string;
+        link: string;
+    };
 }) {
     return (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden group">
@@ -578,7 +486,6 @@ function BlogCard({
     );
 }
 
-// (Không thay đổi)
 function TravelBlog() {
     return (
         <div className="py-16 bg-gray-50">
@@ -625,7 +532,6 @@ const testimonialData = [
     },
 ];
 
-// (Không thay đổi)
 const testimonialStats = [
     {
         icon: FaRegStar,
@@ -644,7 +550,6 @@ const testimonialStats = [
     },
 ];
 
-// (Không thay đổi)
 function Testimonials() {
     const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -737,7 +642,7 @@ function Testimonials() {
                     </div>
                 </div>
 
-                {/* (Mới) Thống kê Testimonial */}
+                {/* Thống kê Testimonial */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto mt-12 text-center">
                     {testimonialStats.map((stat) => (
                         <div key={stat.label}>
@@ -756,9 +661,8 @@ function Testimonials() {
     );
 }
 
-// === (CẬP NHẬT) PHẦN 8: NHẬN THÔNG TIN ===
-
-// (Mới) Dữ liệu cho 3 lợi ích của Newsletter
+// === PHẦN 8: NHẬN THÔNG TIN ===
+// (Không thay đổi)
 const newsletterBenefits = [
     {
         icon: FaGift,
@@ -777,13 +681,10 @@ const newsletterBenefits = [
     },
 ];
 
-// (Cập nhật) Toàn bộ component Newsletter
 function Newsletter() {
     return (
         <div
             className="py-20 bg-blue-600 text-white relative overflow-hidden"
-            // (Mới) Thêm hình ảnh núi mờ làm nền
-            // Bạn cần thêm ảnh 'mountain-silhouette.png' vào thư mục /public/
             style={{
                 backgroundImage: "url('/hero.jpg')",
                 backgroundPosition: "bottom center",
@@ -791,12 +692,11 @@ function Newsletter() {
                 backgroundSize: "100% auto",
             }}
         >
-            {/* (Mới) Lớp phủ màu xanh để đảm bảo text đọc được và che ảnh nền */}
+            {/* Lớp phủ màu */}
             <div className="absolute inset-0 bg-blue-500/85" />
 
             {/* Container nội dung */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-                {/* (Cập nhật) Icon Envelope trong vòng tròn */}
                 <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
                     <FaEnvelope size={32} />
                 </div>
@@ -807,24 +707,23 @@ function Newsletter() {
                     biệt từ chúng tôi
                 </p>
 
-                {/* (Cập nhật) Form đăng ký */}
+                {/* Form đăng ký */}
                 <form className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
                     <input
                         type="email"
                         placeholder="Nhập email của bạn..."
-                        // (Cập nhật) Nền trắng, bo tròn, chữ đen
                         className="bg-white flex-grow px-5 py-3 rounded-lg text-gray-900 border-0 focus:ring-2 focus:ring-primary-light focus:outline-none min-w-0"
                         required
                     />
-                    <button
+                    {/* (CẬP NHẬT) Dùng component Button */}
+                    <Button
                         type="submit"
-                        className="bg-white text-blue-600 font-bold px-8 py-3 rounded-lg hover:bg-blue-600 hover:text-white transition duration-300 flex-shrink-0"
+                        className="bg-white text-blue-600! font-bold px-8 py-3 hover:bg-blue-600 hover:text-white flex-shrink-0"
                     >
                         Đăng ký
-                    </button>
+                    </Button>
                 </form>
 
-                {/* (Mới) Disclaimer */}
                 <p className="text-xs text-blue-100 mt-4 max-w-xl mx-auto">
                     Bằng cách đăng ký, bạn đồng ý với{" "}
                     <Link to="/privacy" className="font-semibold underline hover:text-white">
@@ -833,7 +732,7 @@ function Newsletter() {
                     của chúng tôi.
                 </p>
 
-                {/* (Mới) 3 Lợi ích */}
+                {/* 3 Lợi ích */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-16">
                     {newsletterBenefits.map((item) => (
                         <div key={item.title} className="flex flex-col items-center p-4">
@@ -850,7 +749,7 @@ function Newsletter() {
     );
 }
 
-// === COMPONENT CHÍNH: HOMESCREEN (CẬP NHẬT THỨ TỰ) ===
+// === COMPONENT CHÍNH: HOMESCREEN ===
 export default function HomeScreen() {
     return (
         <div className="bg-white">
@@ -858,9 +757,7 @@ export default function HomeScreen() {
             <FeaturedTours />
             <PopularDestinations />
             <WhyChooseUs />
-            {/* (Mới) */}
             <UniqueExperience />
-            {/* (Mới) */}
             <TravelBlog />
             <Testimonials />
             <Newsletter />
