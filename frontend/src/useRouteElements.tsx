@@ -8,6 +8,7 @@ import ContactScreen from "./screens/ContactScreen";
 import AdminScreen from "./screens/AdminScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
+import AccountDetail from "./screens/AccountDetail";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -73,6 +74,15 @@ export default function useRouteElements() {
       element: (
         <MainLayout>
           <AdminScreen />
+        </MainLayout>
+      ),
+    },
+    {
+      path: "/me",
+      index: true,
+      element: (
+        <MainLayout>
+          <AccountDetail />
         </MainLayout>
       ),
     },
