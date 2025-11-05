@@ -59,7 +59,7 @@ function HeroSection() {
                 <h2 className="text-5xl md:text-7xl font-bold text-primary-light mb-6 text-[#f7c34a]">
                     Việt Nam Cùng Chúng Tôi
                 </h2>
-                <p className="text-2xl max-w-4xl mb-12 text-shadow-lg">
+                <p className="text-2xl max-w-4xl mb-12 text-shadow-lg hidden md:block">
                     Trải nghiệm những chuyến du lịch độc đáo, khám phá văn hóa đậm đà và cảnh đẹp
                     thiên nhiên tuyệt vời của đất nước hình chữ S
                 </p>
