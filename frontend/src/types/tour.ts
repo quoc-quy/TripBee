@@ -14,7 +14,8 @@ export interface Tour {
     tourTypeName: string;
     destinationName: string;
     originalPrice: number | null;
-    discountPercentage: number | null;
+    // FIX: Loại bỏ | null vì backend đã đảm bảo trả về 0 nếu không có khuyến mãi.
+    discountPercentage: number; 
     averageRating: number;
     reviewCount: number;
 }
@@ -62,4 +63,50 @@ export interface TourListParams {
     // (CẬP NHẬT) Đổi tên trường sang snake_case
     destination_id?: string;
     tour_type_id?: string;
+}
+interface ItineraryDto {
+    dayNumber: number;
+    title: string;
+    description: string;
+}
+
+interface TourImageDto {
+    url: string;
+    caption: string;
+}
+
+interface DestinationDto {
+    destinationID: string;
+    nameDes: string;
+    region: string;
+}
+
+// (MỚI) Dựa trên TourDetailsResponse của backend
+export interface TourDetails {
+    tourID: string;
+    title: string;
+    description: string;
+    startDate: string; // LocalDate
+    endDate: string; // LocalDate
+    durationDays: number;
+    durationNights: number;
+    departurePlace: string;
+    priceAdult: number;
+    priceChild: number;
+    maxParticipants: number;
+    imageURL: string;
+    status: string;
+    ranking: number;
+    finalPrice: number; // Thêm finalPrice và discountPercentage
+    discountPercentage: number; // Thêm finalPrice và discountPercentage
+    tourType: {
+        tourTypeID: string;
+        nameType: string;
+    };
+    destinations: DestinationDto[];
+    tourImages: TourImageDto[];
+    itineraries: ItineraryDto[];
+    // Giả định thêm rating cho hiển thị
+    averageRating: number;
+    reviewCount: number;
 }

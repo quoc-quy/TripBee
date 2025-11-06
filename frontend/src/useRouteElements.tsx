@@ -9,6 +9,7 @@ import AdminScreen from "./screens/AdminScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import AccountDetail from "./screens/AccountDetail";
+import TourDetailScreen from "./screens/TourDetailScreen";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -42,6 +43,22 @@ export default function useRouteElements() {
       element: (
         <MainLayout>
           <TourScreen />
+        </MainLayout>
+      ),
+    },
+    {
+      path: "/tours",
+      element: (
+        <MainLayout>
+          <TourScreen />
+        </MainLayout>
+      ),
+    },
+    {
+      path: "/tours/:id", 
+      element: (
+        <MainLayout>
+          <TourDetailScreen /> 
         </MainLayout>
       ),
     },
