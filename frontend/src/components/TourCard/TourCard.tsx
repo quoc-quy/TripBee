@@ -28,6 +28,7 @@ export default function TourCard({ tour }: { tour: Tour }) {
 
                 {/* (SỬA) Loại tour - nền xanh chữ trắng */}
                 <div className="absolute top-4 left-4 z-10 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full capitalize">
+                    {/* Đảm bảo tên loại tour được hiển thị an toàn */}
                     {tour.tourTypeName?.toLowerCase().replace("tour ", "")}
                 </div>
 
@@ -71,11 +72,14 @@ export default function TourCard({ tour }: { tour: Tour }) {
 
                 {/* Giá tiền */}
                 <div className="flex items-baseline justify-end gap-2">
-                    {tour.finalPrice < tour.priceAdult && (
+                    {/* Hiển thị giá gốc nếu có giảm giá */}
+                    {tour.finalPrice < (tour.priceAdult || 0) && (
                         <span className="text-gray-500 line-through text-md">
+                            {/* Dùng priceAdult làm giá gốc */}
                             {formatCurrency(tour.priceAdult)}
                         </span>
                     )}
+                    {/* Giá cuối cùng (sau khuyến mãi) */}
                     <span className="text-2xl font-bold text-red-600">
                         {formatCurrency(tour.finalPrice)}
                     </span>
@@ -91,7 +95,12 @@ export default function TourCard({ tour }: { tour: Tour }) {
                     >
                         Xem chi tiết
                     </Button>
-                    <Button as="button" variant="solid" className="flex-1">
+                    <Button 
+                        as="link" // Chuyển nút "Đặt ngay" thành link
+                        to={`/tours/${tour.tourID}`} // Trỏ đến trang chi tiết tour
+                        variant="solid" 
+                        className="flex-1"
+                    >
                         Đặt ngay
                     </Button>
                 </div>
