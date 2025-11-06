@@ -28,8 +28,7 @@ export default function Header() {
   };
 
   return (
-    // Thay đổi: Sử dụng `max-w-full` và điều chỉnh padding/gap
-    <div className="flex justify-between items-center w-full bg-white text-black px-4 lg:px-12 py-3 border">
+    <div className="top-0 fixed z-50 flex justify-between items-center w-full bg-white text-black px-4 lg:px-12 py-3 border border-b-gray-300">
       {/* --- Logo --- */}
       <Link to="/" className="hover:text-[#2663ec]">
         <img src="Logo-TripBee.png" alt="" className="w-16" />
