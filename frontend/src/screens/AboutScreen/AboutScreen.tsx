@@ -16,29 +16,29 @@ const milestones = [
     value: "10+",
     label: "Năm kinh nghiệm",
     icon: FaStar,
-    color: "text-white-600",
-    bg: "bg-blue-100",
+    color: "text-white",
+    bg: "bg-white/20",
   },
   {
     value: "50,000+",
     label: "Khách hàng hài lòng",
     icon: FaUsers,
-    color: "text-white-500",
-    bg: "bg-red-100",
+    color: "text-white",
+    bg: "bg-red-700",
   },
   {
     value: "200+",
     label: "Tour du lịch",
     icon: FaTags,
-    color: "text-white-600",
-    bg: "bg-green-100",
+    color: "text-white",
+    bg: "bg-yellow-700",
   },
   {
     value: "4.9/5",
     label: "Đánh giá trung bình",
     icon: FaStar,
-    color: "text-white-500",
-    bg: "bg-amber-100",
+    color: "text-white",
+    bg: "bg-green-700",
   },
 ];
 
@@ -77,25 +77,25 @@ const leaders = [
     name: "Nguyễn Văn An",
     title: "Thành viên sáng lập & CEO",
     desc: "Chuyên gia Du lịch Top 10",
-    image: "https://i.pravatar.cc/150?img=68",
+    image: "/uifaces-human-avatar.jpg",
   },
   {
     name: "Trần Thị Bình",
     title: "Trưởng phòng Marketing",
     desc: "Chiến lược Digital Marketing",
-    image: "https://i.pravatar.cc/150?img=39",
+    image: "/uifaces-human-avatar (3).jpg",
   },
   {
     name: "Lê Minh Cường",
     title: "Trưởng phòng Tour",
     desc: "Chuyên gia thiết kế Tour",
-    image: "https://i.pravatar.cc/150?img=66",
+    image: "/uifaces-human-avatar (2).jpg",
   },
   {
     name: "Phạm Thị Dung",
     title: "Trưởng phòng Chăm sóc Khách hàng",
     desc: "Tận tâm, chu đáo với khách hàng",
-    image: "https://i.pravatar.cc/150?img=43",
+    image: "/uifaces-human-avatar (1).jpg",
   },
 ];
 
@@ -131,7 +131,7 @@ const MilestoneCard: React.FC<{ data: (typeof milestones)[number] }> = ({
       <data.icon className={`${data.color} text-4xl`} />
     </div>
     <p className={`text-4xl font-bold ${data.color} mb-1`}>{data.value}</p>
-    <p className="text-gray-700 font-semibold">{data.label}</p>
+    <p className="text-white-700 font-semibold">{data.label}</p>
   </div>
 );
 
