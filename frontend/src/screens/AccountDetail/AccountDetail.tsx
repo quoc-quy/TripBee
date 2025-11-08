@@ -81,7 +81,7 @@ export default function AccountDetail() {
                 </label>
                 <input
                   type="date"
-                  defaultValue="1990-01-01"
+                  defaultValue="yyyy-MM-dd"
                   className="w-full border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:ring-blue-500 outline-none"
                 />
               </div>
@@ -90,6 +90,7 @@ export default function AccountDetail() {
                   Giới tính
                 </label>
                 <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:ring-blue-500 outline-none">
+                  <option disabled>Giới tính</option>
                   <option>Nam</option>
                   <option>Nữ</option>
                   <option>Khác</option>
