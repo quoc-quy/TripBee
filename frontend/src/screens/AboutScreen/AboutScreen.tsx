@@ -9,6 +9,7 @@ import {
   FaUsers,
   FaHeart,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 // Data Cứng cho các phần tử
 const milestones = [
@@ -253,12 +254,12 @@ export default function AboutScreen() {
                 TripBee luôn làm việc tận tâm để mỗi chuyến đi của khách hàng
                 đều là những trải nghiệm tuyệt vời và khó quên.
               </p>
-              <a
-                href="/contact" // Dùng Link hoặc Button nếu cần
+              <Link
+                to="/contact" // Dùng Link hoặc Button nếu cần
                 className="inline-block bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300"
               >
                 Liên hệ với chúng tôi
-              </a>
+              </Link>
             </div>
             <div className="h-96 rounded-xl overflow-hidden shadow-2xl">
               <img
@@ -354,18 +355,18 @@ export default function AboutScreen() {
             mà thế giới mang lại.
           </p>
           <div className="flex justify-center space-x-4">
-            <a
-              href="/tours"
+            <Link
+              to="/tours"
               className="bg-white text-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300"
             >
               Khám Phá Tour
-            </a>
-            <a
-              href="/contact"
+            </Link>
+            <Link
+              to="/contact"
               className="border border-white text-white font-bold py-3 px-8 rounded-lg hover:bg-white hover:text-blue-600 transition duration-300"
             >
               Liên Hệ Ngay
-            </a>
+            </Link>
           </div>
         </div>
       </div>
