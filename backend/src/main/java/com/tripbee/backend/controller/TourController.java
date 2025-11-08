@@ -28,12 +28,13 @@ public class TourController {
             @RequestParam(name = "destination_id", required = false) String destinationId,
             @RequestParam(name = "tour_type_id", required = false) String tourTypeId,
             @RequestParam(name = "price_min", required = false) Double priceMin,
-            @RequestParam(name = "price_max", required = false) Double priceMax
+            @RequestParam(name = "price_max", required = false) Double priceMax,
+            @RequestParam(name = "region", required = false) String region // <-- (MỚI) Thêm tham số region
     ) {
 
-        // (3) Gọi service
+        // (3) Gọi service (CẬP NHẬT: truyền thêm region)
         Page<TourSummaryResponse> tourPage = tourService.getAllActiveTours(
-                page, size, sort, search, destinationId, tourTypeId, priceMin, priceMax
+                page, size, sort, search, destinationId, tourTypeId, priceMin, priceMax, region
         );
 
         // (4) Trả về Page (đã bao gồm thông tin phân trang)

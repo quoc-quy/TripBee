@@ -15,7 +15,7 @@ export interface Tour {
     destinationName: string;
     originalPrice: number | null;
     // FIX: Loại bỏ | null vì backend đã đảm bảo trả về 0 nếu không có khuyến mãi.
-    discountPercentage: number; 
+    discountPercentage: number;
     averageRating: number;
     reviewCount: number;
 }
@@ -63,6 +63,7 @@ export interface TourListParams {
     // (CẬP NHẬT) Đổi tên trường sang snake_case
     destination_id?: string;
     tour_type_id?: string;
+    region?: string;
 }
 interface ItineraryDto {
     dayNumber: number;
