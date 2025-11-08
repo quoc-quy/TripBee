@@ -1,5 +1,32 @@
-import React from "react";
+
+
+import React, { useEffect, useState } from "react";
+import Sidebar from "../../admin/components/SiideBar";
+import { Outlet, useNavigate } from "react-router-dom";
 
 export default function AdminScreen() {
-  return <div>AdminScreen</div>;
+  const [activeMenu, setActiveMenu] = useState("dashboard");
+  const navigate = useNavigate();
+
+  // Khi click vào menu trong sidebar, điều hướng sang route con
+  const handleMenuChange = (menu: string) => {
+    setActiveMenu(menu);
+    if (menu === "dashboard") navigate("/admin/dashboard");
+    else if (menu === "tour") navigate("/admin/manage-tour");
+  };
+
+  useEffect(() => {
+    if (location.pathname === "/admin") {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  return (
+    <div className="flex">
+      <Sidebar activeMenu={activeMenu} setActiveMenu={handleMenuChange} />
+      <div className="flex-1 ml-64 bg-gray-50 min-h-screen">
+        <Outlet />
+      </div>
+    </div>
+  );
 }

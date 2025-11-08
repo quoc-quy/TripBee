@@ -238,19 +238,17 @@ export default function Header() {
       </div>
       <div
         id="mobile-menu"
-        className={`absolute top-[68px] left-0 w-full bg-white border-b border-gray-200 mt-5 shadow-lg lg:hidden z-50 ${
-          isMenuOpen ? "block" : "hidden"
-        }`}
+        className={`absolute top-[68px] left-0 w-full bg-white border-b border-gray-200 mt-5 shadow-lg lg:hidden z-50 ${isMenuOpen ? "block" : "hidden"
+          }`}
       >
         <div className="flex flex-col p-4 space-y-2 font-semibold">
           <NavLink
             to="/"
             onClick={toggleMenu}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md ${
-                isActive
-                  ? "bg-[#2663ec] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+              `block px-3 py-2 rounded-md ${isActive
+                ? "bg-[#2663ec] text-white"
+                : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -260,10 +258,9 @@ export default function Header() {
             to="/tours"
             onClick={toggleMenu}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md ${
-                isActive
-                  ? "bg-[#2663ec] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+              `block px-3 py-2 rounded-md ${isActive
+                ? "bg-[#2663ec] text-white"
+                : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -273,10 +270,9 @@ export default function Header() {
             to="/destinations"
             onClick={toggleMenu}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md ${
-                isActive
-                  ? "bg-[#2663ec] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+              `block px-3 py-2 rounded-md ${isActive
+                ? "bg-[#2663ec] text-white"
+                : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -286,10 +282,9 @@ export default function Header() {
             to="/about"
             onClick={toggleMenu}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md ${
-                isActive
-                  ? "bg-[#2663ec] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+              `block px-3 py-2 rounded-md ${isActive
+                ? "bg-[#2663ec] text-white"
+                : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -299,10 +294,9 @@ export default function Header() {
             to="/contact"
             onClick={toggleMenu}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md ${
-                isActive
-                  ? "bg-[#2663ec] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+              `block px-3 py-2 rounded-md ${isActive
+                ? "bg-[#2663ec] text-white"
+                : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -312,10 +306,9 @@ export default function Header() {
             to="/admin"
             onClick={toggleMenu}
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-md ${
-                isActive
-                  ? "bg-[#2663ec] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+              `block px-3 py-2 rounded-md ${isActive
+                ? "bg-[#2663ec] text-white"
+                : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
