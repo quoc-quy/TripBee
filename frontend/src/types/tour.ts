@@ -91,7 +91,7 @@ interface DestinationDto {
     region: string;
 }
 
-// (MỚI) Dựa trên TourDetailsResponse của backend
+// (CẬP NHẬT) Dựa trên TourDetailsResponse của backend
 export interface TourDetails {
     tourID: string;
     title: string;
@@ -103,12 +103,14 @@ export interface TourDetails {
     departurePlace: string;
     priceAdult: number;
     priceChild: number;
+    finalPriceAdult: number; // <-- (MỚI) Thêm giá cuối cùng
+    finalPriceChild: number; // <-- (MỚI) Thêm giá cuối cùng
     maxParticipants: number;
     imageURL: string;
     status: string;
     ranking: number;
-    finalPrice: number; // Thêm finalPrice và discountPercentage
-    discountPercentage: number; // Thêm finalPrice và discountPercentage
+    // finalPrice: number; // Trường này không còn trong DTO chi tiết
+    // discountPercentage: number; // Trường này không còn trong DTO chi tiết
     tourType: {
         tourTypeID: string;
         nameType: string;
