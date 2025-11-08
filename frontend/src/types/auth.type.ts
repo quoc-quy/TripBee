@@ -4,7 +4,7 @@ export type AuthResponse = {
     success: boolean;
     message: string;
     token: string;
-    userId: string;
+    userID: string;
     username: string;
     role: Role;
 };
