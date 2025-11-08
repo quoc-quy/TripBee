@@ -9,5 +9,5 @@ export type AuthResponse = {
     role: Role;
 };
 export type LoginSuccessResponse = {
-    data: AuthResponse;
+  data: AuthResponse;
 };

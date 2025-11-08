@@ -31,20 +31,20 @@ class Http {
         this.instance.interceptors.response.use((response) => {
             const { url } = response.config;
 
-            if (url == "auth/login" || url == "auth/register") {
-                const data = response.data as AuthResponse;
-                this.accessToken = data.token;
-                saveAccessTokenToLS(this.accessToken);
-                const simpleProfile: SimpleProfile = {
-                    userID: data.userID,
-                    email: data.email,
-                    role: data.role,
-                };
-                setProfileToLS(simpleProfile);
-            } else if (url == "auth/logout") {
-                this.accessToken = "";
-                clearLS();
-            }
+      if (url == "auth/login" || url == "auth/register") {
+        const data = response.data as AuthResponse;
+        this.accessToken = data.token;
+        saveAccessTokenToLS(this.accessToken);
+        const simpleProfile: SimpleProfile = {
+          userID: data.userID,
+          email: data.email,
+          role: data.role,
+        };
+        setProfileToLS(simpleProfile);
+      } else if (url == "auth/logout") {
+        this.accessToken = "";
+        clearLS();
+      }
 
             return response;
         });
