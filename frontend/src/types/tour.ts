@@ -65,6 +65,15 @@ export interface TourListParams {
     tour_type_id?: string;
     region?: string;
 }
+
+export interface TourListAdminParams {
+    page?: number | string;
+    size?: number | string;
+    search?: string;
+    status?: string;
+    tour_type_id?: string;
+}
+
 interface ItineraryDto {
     dayNumber: number;
     title: string;
