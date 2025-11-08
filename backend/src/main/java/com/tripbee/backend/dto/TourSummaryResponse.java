@@ -6,6 +6,7 @@ import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination;
 import com.tripbee.backend.model.TourPromotion;
 import com.tripbee.backend.model.enums.PromotionStatus;
+import com.tripbee.backend.model.enums.TourStatus;
 
 import java.util.Optional;
 import java.util.Set;
@@ -26,6 +27,7 @@ public class TourSummaryResponse {
     private double averageRating; // (Mới - thay cho ranking)
     private int reviewCount; // (Mới)
     private String tourTypeName; // (Mới)
+    private TourStatus status;
 
 
     // Constructor để chuyển đổi từ Tour Entity sang DTO
