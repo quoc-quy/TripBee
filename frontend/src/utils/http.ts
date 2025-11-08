@@ -41,7 +41,7 @@ class Http {
         this.accessToken = data.token;
         saveAccessTokenToLS(this.accessToken);
         const simpleProfile: SimpleProfile = {
-          userID: data.userId,
+          userID: data.userID,
           email: data.email,
           role: data.role,
         };
