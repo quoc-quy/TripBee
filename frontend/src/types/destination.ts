@@ -1,5 +1,6 @@
 // Dựa trên DestinationResponse từ backend
 export interface Destination {
+    region: any;
     destinationID: string;
     nameDes: string;
     location: string;
