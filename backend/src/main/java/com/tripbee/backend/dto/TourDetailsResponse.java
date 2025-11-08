@@ -6,11 +6,18 @@ import com.tripbee.backend.model.TourDestination;
 import com.tripbee.backend.model.TourImage;
 import com.tripbee.backend.model.Itinerary;
 import com.tripbee.backend.model.TourType;
+// (MỚI) Import thêm các model/util cần thiết
+import com.tripbee.backend.model.Promotion;
+import com.tripbee.backend.model.TourPromotion;
+import com.tripbee.backend.model.enums.PromotionStatus; // Import enum PromotionStatus
+import java.util.Comparator;
+import java.util.Optional;
 
 // Sửa import: Dùng LocalDate và Double
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.lang.Math; // <-- (MỚI) Thêm import cho Math.ceil
 
 public class TourDetailsResponse {
     private String tourID;
@@ -23,6 +30,8 @@ public class TourDetailsResponse {
     private String departurePlace;
     private Double priceAdult; // Sửa: BigDecimal -> Double
     private Double priceChild; // Sửa: BigDecimal -> Double
+    private Double finalPriceAdult; // <-- (MỚI)
+    private Double finalPriceChild; // <-- (MỚI)
     private int maxParticipants;
     private String imageURL;
     private String status;
@@ -53,6 +62,42 @@ public class TourDetailsResponse {
         response.setImageURL(tour.getImageURL());
         response.setStatus(tour.getStatus().name());
         response.setRanking(tour.getRanking());
+
+        // --- (CẬP NHẬT) Logic tính giá khuyến mãi và làm tròn ---
+        double discountPercentage = 0;
+        LocalDate today = LocalDate.now();
+
+        // Tìm khuyến mãi tốt nhất đang hoạt động
+        Optional<Promotion> bestPromotion = tour.getTourPromotions().stream()
+                .map(TourPromotion::getPromotion)
+                // (CẬP NHẬT) Sửa lỗi: Gọi thẳng PromotionStatus.ACTIVE
+                .filter(p -> p.getStatus() == PromotionStatus.ACTIVE &&
+                        !today.isBefore(p.getStartDate()) &&
+                        !today.isAfter(p.getEndDate()))
+                .max(Comparator.comparingDouble(Promotion::getDiscountPercentage));
+
+        if (bestPromotion.isPresent()) {
+            discountPercentage = bestPromotion.get().getDiscountPercentage();
+        }
+
+        // Tính toán giá cuối cùng (kiểm tra null để tránh lỗi)
+        double adultPrice = tour.getPriceAdult() != null ? tour.getPriceAdult() : 0.0;
+        double childPrice = tour.getPriceChild() != null ? tour.getPriceChild() : 0.0;
+
+        // Tính giá thô sau khi giảm giá
+        double rawFinalAdult = adultPrice * (1 - (discountPercentage / 100.0));
+        double rawFinalChild = childPrice * (1 - (discountPercentage / 100.0));
+
+        // (CẬP NHẬT) Làm tròn LÊN đến hàng chục nghìn
+        // Ví dụ: 2,135,000 -> 2,140,000
+        // Ví dụ: 2,130,000 -> 2,130,000
+        double finalAdult = Math.ceil(rawFinalAdult / 10000.0) * 10000.0;
+        double finalChild = Math.ceil(rawFinalChild / 10000.0) * 10000.0;
+
+        response.setFinalPriceAdult(finalAdult);
+        response.setFinalPriceChild(finalChild);
+        // --- (Kết thúc logic cập nhật) ---
+
 
         if (tour.getTourType() != null) {
             // SỬA LỖI 1: Gọi constructor đúng
@@ -108,6 +153,13 @@ public class TourDetailsResponse {
     public void setPriceAdult(Double priceAdult) { this.priceAdult = priceAdult; } // Sửa
     public Double getPriceChild() { return priceChild; } // Sửa
     public void setPriceChild(Double priceChild) { this.priceChild = priceChild; } // Sửa
+
+    // (MỚI) Getters/Setters cho giá cuối cùng
+    public Double getFinalPriceAdult() { return finalPriceAdult; }
+    public void setFinalPriceAdult(Double finalPriceAdult) { this.finalPriceAdult = finalPriceAdult; }
+    public Double getFinalPriceChild() { return finalPriceChild; }
+    public void setFinalPriceChild(Double finalPriceChild) { this.finalPriceChild = finalPriceChild; }
+
     public int getMaxParticipants() { return maxParticipants; }
     public void setMaxParticipants(int maxParticipants) { this.maxParticipants = maxParticipants; }
     public String getImageURL() { return imageURL; }
