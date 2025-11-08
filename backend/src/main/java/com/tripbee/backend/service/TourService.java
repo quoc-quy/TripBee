@@ -39,16 +39,17 @@ public class TourService {
         this.tourRepository = tourRepository;
     }
 
+    // (CẬP NHẬT) Thêm tham số 'region'
     public Page<TourSummaryResponse> getAllActiveTours(
             int page, int size, String sort,
             String search, String destinationId, String tourTypeId,
-            Double priceMin, Double priceMax) {
+            Double priceMin, Double priceMax, String region) { // <-- (MỚI)
 
         // (2) Xây dựng đối tượng Pageable (phân trang và sắp xếp)
         Pageable pageable = PageRequest.of(page, size, parseSort(sort));
 
-        // (3) Xây dựng Specification (lọc động)
-        Specification<Tour> spec = buildSpecification(search, destinationId, tourTypeId, priceMin, priceMax);
+        // (3) Xây dựng Specification (lọc động) (CẬP NHẬT: truyền thêm region)
+        Specification<Tour> spec = buildSpecification(search, destinationId, tourTypeId, priceMin, priceMax, region);
 
         // (4) Gọi Repository
         Page<Tour> tourPage = tourRepository.findAll(spec, pageable);
@@ -68,9 +69,10 @@ public class TourService {
         return TourDetailsResponse.build(tour);
     }
 
+    // (CẬP NHẬT) Thêm tham số 'region'
     private Specification<Tour> buildSpecification(
             String search, String destinationId, String tourTypeId,
-            Double priceMin, Double priceMax) {
+            Double priceMin, Double priceMax, String region) { // <-- (MỚI)
 
         // Trả về một hàm lambda (Specification)
         return (root, query, criteriaBuilder) -> {
@@ -131,11 +133,21 @@ public class TourService {
                 predicates.add(criteriaBuilder.equal(tourTypeJoin.get("tourTypeID"), tourTypeId));
             }
 
-            // (E) Thêm điều kiện LỌC THEO ĐỊA ĐIỂM (nếu có)
-            if (destinationId != null) {
+            // (CẬP NHẬT) (E) & (G): Lọc theo ĐỊA ĐIỂM và VÙNG MIỀN
+            // Chúng ta chỉ join 1 lần nếu có destinationId HOẶC region
+            if (destinationId != null || (region != null && !region.isEmpty())) {
                 Join<Tour, TourDestination> tourDestJoin = root.join("tourDestinations", JoinType.LEFT);
                 Join<TourDestination, Destination> destJoin = tourDestJoin.join("destination", JoinType.LEFT);
-                predicates.add(criteriaBuilder.equal(destJoin.get("destinationID"), destinationId));
+
+                // (E) Thêm điều kiện LỌC THEO ĐỊA ĐIỂM (nếu có)
+                if (destinationId != null) {
+                    predicates.add(criteriaBuilder.equal(destJoin.get("destinationID"), destinationId));
+                }
+
+                // (G) Thêm điều kiện LỌC THEO VÙNG MIỀN (nếu có)
+                if (region != null && !region.isEmpty()) {
+                    predicates.add(criteriaBuilder.equal(destJoin.get("region"), region));
+                }
             }
 
             // (F) Kết hợp tất cả điều kiện bằng AND

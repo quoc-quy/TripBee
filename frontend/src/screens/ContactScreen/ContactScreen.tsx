@@ -13,28 +13,28 @@ const officeLocations = [
     city: "Văn phòng Chính - TP.HCM",
     address: "123 Đường Lê Lợi, Phường Bến Thành, Quận 1, TP.HCM",
     phone: "+84 28 1234 5678",
-    email: "info@travelviet.com",
+    email: "info@tripbee.com",
     isMain: true,
   },
   {
     city: "Hà Nội",
     address: "Tầng 3, Tòa nhà ABC, Hoàn Kiếm, Hà Nội",
     phone: "+84 24 9876 5432",
-    email: "hanoi@travelviet.com",
+    email: "hanoi@tripbee.com",
     isMain: false,
   },
   {
     city: "Đà Nẵng",
     address: "Đường Võ Nguyên Giáp, Quận Sơn Trà, Đà Nẵng",
     phone: "+84 236 4567 8901",
-    email: "danang@travelviet.com",
+    email: "danang@tripbee.com",
     isMain: false,
   },
   {
     city: "Cần Thơ",
     address: "159 Trần Văn Khéo, Quận Ninh Kiều, Cần Thơ",
     phone: "+84 292 234 5678",
-    email: "cantho@travelviet.com",
+    email: "cantho@tripbee.com",
     isMain: false,
   },
 ];
@@ -80,7 +80,7 @@ function GeneralContactInfo() {
       <ContactInfoCard
         icon={FaEnvelope}
         title="Email"
-        detail="info@travelviet.com"
+        detail="info@tripbee.com"
       />
       <ContactInfoCard
         icon={FaClock}

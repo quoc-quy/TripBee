@@ -4,10 +4,10 @@ export type AuthResponse = {
     success: boolean;
     message: string;
     token: string;
-    userId: string;
+    userID: string;
     username: string;
     role: Role;
 };
 export type LoginSuccessResponse = {
-    data: AuthResponse;
+  data: AuthResponse;
 };
