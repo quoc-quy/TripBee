@@ -8,10 +8,14 @@ import ContactScreen from "./screens/ContactScreen";
 import AdminScreen from "./screens/AdminScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
-import AccountDetail from "./screens/AccountDetail";
 import TourDetailScreen from "./screens/TourDetailScreen";
 import DashboardScreen from "./admin/screens/DashboardScreen";
-import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen"; 
+import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen";
+import AccountLayout from "./screens/Account/layouts/AccountLayout";
+import Profile from "./screens/Account/pages/Profile";
+import ChangePassword from "./screens/Account/pages/ChangePassword";
+import HistoryTour from "./screens/Account/pages/HistoryTour";
+import FavouriteTour from "./screens/Account/pages/FavouriteTour";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -57,10 +61,10 @@ export default function useRouteElements() {
       ),
     },
     {
-      path: "/tours/:id", 
+      path: "/tours/:id",
       element: (
         <MainLayout>
-          <TourDetailScreen /> 
+          <TourDetailScreen />
         </MainLayout>
       ),
     },
@@ -94,7 +98,7 @@ export default function useRouteElements() {
       //   <MainLayout>
       //     <AdminScreen />
       //   </MainLayout>
-        
+
       // ),
       element: <AdminScreen />,
       children: [
@@ -102,14 +106,39 @@ export default function useRouteElements() {
         { path: "manage-tour", element: <ManageTourScreen /> },
       ],
     },
+    // {
+    //   path: "/account",
+    //   element: (
+    //     <MainLayout>
+    //       <AccountDetail />
+    //     </MainLayout>
+    //   ),
+    // },
     {
-      path: "/me",
-      index: true,
+      path: "/account",
       element: (
         <MainLayout>
-          <AccountDetail />
+          <AccountLayout />
         </MainLayout>
       ),
+      children: [
+        {
+          path: "/account/profile",
+          element: <Profile />,
+        },
+        {
+          path: "/account/password",
+          element: <ChangePassword />,
+        },
+        {
+          path: "/account/historyTour",
+          element: <HistoryTour />,
+        },
+        {
+          path: "/account/favouriteTour",
+          element: <FavouriteTour />,
+        },
+      ],
     },
   ]);
 
