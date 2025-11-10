@@ -9,9 +9,12 @@ import AdminScreen from "./screens/AdminScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import AccountDetail from "./screens/AccountDetail";
-import TourDetailScreen from "./screens/TourDetailScreen";
 import DashboardScreen from "./admin/screens/DashboardScreen";
 import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen"; 
+import FormTourScreen from "./admin/screens/ManageTour/FormTourScreen";
+import TourDetailScreen from "./screens/TourDetailScreen";
+import TourDetailAdminScreen from "./admin/screens/ManageTour/TourDetailAdminScreen"
+
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -90,16 +93,14 @@ export default function useRouteElements() {
     },
     {
       path: "/admin",
-      // element: (
-      //   <MainLayout>
-      //     <AdminScreen />
-      //   </MainLayout>
-        
-      // ),
       element: <AdminScreen />,
       children: [
         { path: "dashboard", element: <DashboardScreen /> },
         { path: "manage-tour", element: <ManageTourScreen /> },
+        { path: "tours/new", element: <FormTourScreen /> },
+        { path: "tours/:id/edit", element: <FormTourScreen /> },
+        { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
+        // { path:"manage-destination", element: <ManageDestinationScreen />} 
       ],
     },
     {
