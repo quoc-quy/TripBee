@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Map, Users, Calendar, Settings } from 'lucide-react';
+import { LayoutDashboard, Map, Users, Calendar, Settings, Tag } from 'lucide-react';
 
 interface SidebarProps {
   activeMenu: string;
@@ -10,6 +10,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tour', label: 'Quản lý Tour', icon: Map },
+    { id: 'promotion', label: 'Quản lý Khuyến mãi', icon: Tag },
     { id: 'user', label: 'Quản lý Người dùng', icon: Users },
     { id: 'destination', label: 'Quản lý Điểm đến', icon: Map },
     { id: 'booking', label: 'Quản lý Booking', icon: Calendar },

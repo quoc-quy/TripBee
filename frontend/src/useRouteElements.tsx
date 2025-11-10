@@ -8,15 +8,20 @@ import ContactScreen from "./screens/ContactScreen";
 import AdminScreen from "./screens/AdminScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
-import AccountDetail from "./screens/AccountDetail";
-import DashboardScreen from "./admin/screens/DashboardScreen";
-import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen"; 
 import FormTourScreen from "./admin/screens/ManageTour/FormTourScreen";
-import TourDetailScreen from "./screens/TourDetailScreen";
 import TourDetailAdminScreen from "./admin/screens/ManageTour/TourDetailAdminScreen"
 import ManageDestinationScreen from "./admin/screens/ManageDestination/ManageDestinationScreen";
 import FormDestinationScreen from "./admin/screens/ManageDestination/FormDestinationScreen";
 import DestinationDeatilScreen from "./admin/screens/ManageDestination/DestinationDetailAdminScreen";
+import TourDetailScreen from "./screens/TourDetailScreen";
+import DashboardScreen from "./admin/screens/DashboardScreen";
+import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen";
+import AccountLayout from "./screens/Account/layouts/AccountLayout";
+import Profile from "./screens/Account/pages/Profile";
+import ChangePassword from "./screens/Account/pages/ChangePassword";
+import HistoryTour from "./screens/Account/pages/HistoryTour";
+import FavouriteTour from "./screens/Account/pages/FavouriteTour";
+import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
 
 
 export default function useRouteElements() {
@@ -63,10 +68,10 @@ export default function useRouteElements() {
       ),
     },
     {
-      path: "/tours/:id", 
+      path: "/tours/:id",
       element: (
         <MainLayout>
-          <TourDetailScreen /> 
+          <TourDetailScreen />
         </MainLayout>
       ),
     },
@@ -107,17 +112,43 @@ export default function useRouteElements() {
         { path: "destinations/:id/edit", element: <FormDestinationScreen />},
         { path: "destinations/new", element: <FormDestinationScreen />},
         { path: "destinations/detail/:id", element: <DestinationDeatilScreen />},
+        { path: "promotions", element: <ManagePromotionScreen /> },
 
       ],
     },
+    // {
+    //   path: "/account",
+    //   element: (
+    //     <MainLayout>
+    //       <AccountDetail />
+    //     </MainLayout>
+    //   ),
+    // },
     {
-      path: "/me",
-      index: true,
+      path: "/account",
       element: (
         <MainLayout>
-          <AccountDetail />
+          <AccountLayout />
         </MainLayout>
       ),
+      children: [
+        {
+          path: "/account/profile",
+          element: <Profile />,
+        },
+        {
+          path: "/account/password",
+          element: <ChangePassword />,
+        },
+        {
+          path: "/account/historyTour",
+          element: <HistoryTour />,
+        },
+        {
+          path: "/account/favouriteTour",
+          element: <FavouriteTour />,
+        },
+      ],
     },
   ]);
 

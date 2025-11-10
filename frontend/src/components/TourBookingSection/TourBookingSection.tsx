@@ -1,11 +1,14 @@
 // frontend-demo/src/components/TourBookingSection/TourBookingSection.tsx
 
-import { useEffect } from "react";
+// (1. THÊM) Import useState
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { Calendar, Users, DollarSign, CheckCircle } from "lucide-react";
+import { Calendar, Users, DollarSign, Heart } from "lucide-react";
 import type { TourDetails } from "../..//types/tour";
 import { formatCurrency } from "../..//utils/utils";
 import Button from "../..//components/Button";
+// (2. THÊM) Import Modal
+import BookingModal from "../BookingModal";
 
 interface Props {
     tour: TourDetails;
@@ -18,24 +21,30 @@ interface BookingFormData {
 }
 
 export default function TourBookingSection({ tour }: Props) {
+    // (3. THÊM) State để quản lý modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // (Giữ nguyên) react-hook-form
     const {
         control,
         watch,
         setValue,
-        handleSubmit,
+        // (4. SỬA) không cần handleSubmit ở đây nữa
+        // handleSubmit,
+        getValues, // Dùng getValues để lấy dữ liệu cho modal
         formState: { errors },
     } = useForm<BookingFormData>({
         defaultValues: {
             adults: 1,
             children: 0,
-            totalPrice: tour.finalPriceAdult, // <-- (CẬP NHẬT) Đặt giá trị mặc định là giá cuối cùng
+            totalPrice: tour.finalPriceAdult,
         },
     });
 
     const adults = watch("adults");
     const children = watch("children");
+    const totalPrice = watch("totalPrice"); // (5. THÊM) Theo dõi totalPrice
 
-    // (CẬP NHẬT) Sử dụng finalPriceAdult và finalPriceChild để tính toán
     useEffect(() => {
         const adultPrice = tour.finalPriceAdult || 0;
         const childPrice = tour.finalPriceChild || 0;
@@ -43,28 +52,36 @@ export default function TourBookingSection({ tour }: Props) {
         setValue("totalPrice", total);
     }, [adults, children, tour.finalPriceAdult, tour.finalPriceChild, setValue]);
 
-    const onSubmit = (data: BookingFormData) => {
-        console.log("Booking data:", data);
-        // TODO: Xử lý logic đặt tour, ví dụ: gọi API, chuyển trang
+    // (6. SỬA) Xóa hàm onSubmit cũ
+
+    // (7. THÊM) Hàm mở modal
+    const handleOpenBookingModal = () => {
+        // Kiểm tra lỗi trước khi mở
+        // (Đây là một cách đơn giản, bạn có thể triggerValidate nếu muốn)
+        if (errors.adults || errors.children) {
+            return;
+        }
+        setIsModalOpen(true);
     };
 
-    const maxParticipants = tour.maxParticipants || 20; // Giả sử mặc định 20 nếu API không trả về
+    const handleFavorite = () => {
+        console.log("Tour added to favorites:", tour.tourID);
+    };
+
+    const maxParticipants = tour.maxParticipants || 20;
 
     return (
-        <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="bg-white p-6 rounded-lg shadow-xl sticky top-24"
-        >
+        // (8. SỬA) Bỏ thẻ <form> và onSubmit
+        <div className="bg-white p-6 rounded-lg shadow-xl sticky top-24">
             <h2 className="text-2xl font-semibold mb-5 text-gray-800">Đặt tour ngay</h2>
 
-            {/* Hiển thị giá */}
+            {/* ... (Tất cả các phần input, giá tiền, tổng cộng... giữ nguyên) ... */}
             <div className="mb-4 space-y-2">
                 <div className="flex justify-between items-center">
                     <span className="text-gray-600 flex items-center">
                         <Users size={18} className="mr-2 text-blue-500" />
                         Giá người lớn:
                     </span>
-                    {/* (CẬP NHẬT) Hiển thị finalPriceAdult */}
                     <span className="font-semibold text-lg text-gray-900">
                         {formatCurrency(tour.finalPriceAdult)}
                     </span>
@@ -74,12 +91,10 @@ export default function TourBookingSection({ tour }: Props) {
                         <Users size={16} className="mr-2 text-blue-500" />
                         Giá trẻ em:
                     </span>
-                    {/* (CẬP NHẬT) Hiển thị finalPriceChild */}
                     <span className="font-semibold text-lg text-gray-900">
                         {formatCurrency(tour.finalPriceChild)}
                     </span>
                 </div>
-                {/* Hiển thị giá gốc nếu có khuyến mãi */}
                 {tour.priceAdult > tour.finalPriceAdult && (
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-500">Giá gốc (người lớn):</span>
@@ -92,7 +107,7 @@ export default function TourBookingSection({ tour }: Props) {
 
             <hr className="my-4" />
 
-            {/* Chọn số lượng khách */}
+            {/* Chọn số lượng khách (Giữ nguyên) */}
             <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label
@@ -154,14 +169,12 @@ export default function TourBookingSection({ tour }: Props) {
                 </div>
             </div>
 
-            {/* Hiển thị lỗi */}
             {(errors.adults || errors.children) && (
                 <div className="mb-4 text-sm text-red-600">
                     {errors.adults?.message || errors.children?.message}
                 </div>
             )}
 
-            {/* Hiển thị ngày (chỉ hiển thị, không cho chọn) */}
             <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                     Ngày khởi hành
@@ -172,25 +185,50 @@ export default function TourBookingSection({ tour }: Props) {
                 </div>
             </div>
 
-            {/* Tổng cộng */}
             <div className="flex justify-between items-center mb-5 p-4 bg-blue-50 rounded-lg">
                 <span className="text-lg font-semibold text-gray-700 flex items-center">
                     <DollarSign size={20} className="mr-2" />
                     Tổng cộng:
                 </span>
                 <span className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(watch("totalPrice"))}
+                    {formatCurrency(totalPrice)}
                 </span>
             </div>
 
-            {/* Nút đặt tour */}
-            <Button
-                type="submit"
-                className="w-full text-lg font-semibold py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition duration-300 ease-in-out flex items-center justify-center"
-                disabled={!!errors.adults || !!errors.children}
-            >
-                Đặt Tour
-            </Button>
-        </form>
+            <div className="space-y-3">
+                {/* (9. SỬA) Nút Đặt Tour giờ sẽ mở Modal */}
+                <Button
+                    type="button" // Sửa thành type="button"
+                    className="w-full text-lg font-semibold py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition duration-300 ease-in-out"
+                    disabled={!!errors.adults || !!errors.children}
+                    onClick={handleOpenBookingModal} // Thêm onClick
+                >
+                    Đặt Tour
+                </Button>
+
+                {/* Nút Yêu thích (Giữ nguyên) */}
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full text-lg py-3"
+                    onClick={handleFavorite}
+                >
+                    <Heart size={20} className="mr-2" />
+                    Yêu Thích
+                </Button>
+            </div>
+
+            {/* (10. THÊM) Render Modal (nó sẽ ở trạng thái ẩn cho đến khi isOpen={true}) */}
+            <BookingModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                tour={tour}
+                bookingDetails={{
+                    adults: adults,
+                    children: children,
+                    totalPrice: totalPrice,
+                }}
+            />
+        </div>
     );
 }
