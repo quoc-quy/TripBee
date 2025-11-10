@@ -32,7 +32,7 @@ export default function Header() {
     <div className="top-0 sticky z-50 flex justify-between items-center w-full bg-white text-black px-4 lg:px-12 py-3 border border-b-gray-300">
       {/* --- Logo --- */}
       <Link to="/" className="hover:text-[#2663ec]">
-        <img src="Logo-TripBee.png" alt="" className="w-16" />
+        <img src="/Logo-TripBee.png" alt="" className="w-16" />
       </Link>
 
       {/* --- Menu Điều Hướng (Chỉ hiển thị trên màn hình lớn) --- */}
@@ -79,7 +79,7 @@ export default function Header() {
           Liên hệ
         </NavLink>
         <NavLink
-          to="/admin"
+          to="/admin/dashboard"
           className={({ isActive }) =>
             isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
           }
@@ -92,10 +92,7 @@ export default function Header() {
       <div className="flex items-center gap-4">
         {/* Popover cho User/Auth (Luôn hiển thị) */}
         <div className="hidden lg:block">
-          {" "}
-          {/* Ẩn Popover trên mobile, chỉ hiện icon */}
           <div className="col-span-1 justify-self-start">
-            {/* ... giữ nguyên logic Popover cho isAuthenticated và !isAuthenticated ... */}
             {isAuthenticated && (
               <Popover
                 renderPopover={
@@ -106,9 +103,9 @@ export default function Header() {
                         className="flex gap-2 items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                       >
                         <img
-                          src={userImage}
-                          alt=""
-                          className="w-10 h-10 cursor-pointer object-cover"
+                          src={userImage} // Dùng biến import userImage
+                          alt="User avatar"
+                          className="w-10 h-10 cursor-pointer object-cover rounded-full"
                         />
                         <div className="flex flex-col min-w-0 w-40">
                           <span className="font-bold line-clamp-1">
@@ -144,9 +141,9 @@ export default function Header() {
                 }
               >
                 <img
-                  src="src/assets/user.png"
-                  alt=""
-                  className="w-10 h-10 cursor-pointer object-cover rounded-full" // Thay đổi kích thước và thêm `rounded-full` cho đẹp hơn
+                  src={userImage} // Dùng biến import userImage
+                  alt="User avatar"
+                  className="w-10 h-10 cursor-pointer object-cover rounded-full"
                 />
               </Popover>
             )}
@@ -310,7 +307,7 @@ export default function Header() {
             Liên hệ
           </NavLink>
           <NavLink
-            to="/admin"
+            to="/admin/dashboard"
             onClick={toggleMenu}
             className={({ isActive }) =>
               `block px-3 py-2 rounded-md ${
@@ -324,6 +321,16 @@ export default function Header() {
           </NavLink>
 
           <div className="border-t border-gray-200 pt-2 mt-2"></div>
+
+          {isAuthenticated && (
+            <Link
+              to="/account/profile"
+              onClick={toggleMenu}
+              className="block text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+            >
+              Hồ sơ
+            </Link>
+          )}
 
           {isAuthenticated ? (
             <button
