@@ -4,6 +4,7 @@ import Popover from "../Popover";
 import { AppContext } from "../../contexts/app.context";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "../../apis/auth.api";
+import userImage from "../../assets/user.png";
 
 export default function Header() {
   const { isAuthenticated, setIsAuthenticated, setProfile, profile } =
@@ -105,7 +106,7 @@ export default function Header() {
                         className="flex gap-2 items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                       >
                         <img
-                          src="src/assets/user.png"
+                          src={userImage}
                           alt=""
                           className="w-10 h-10 cursor-pointer object-cover"
                         />
