@@ -34,17 +34,17 @@ export default function Button(props: Props) {
     // 1. Destructure props chung (dùng cho style)
     const { variant = "solid", className = "", children } = props;
 
-    // 2. Tạo style
+    // 2. (SỬA LỖI)
+    // Xóa 'text-center inline-block'
+    // Thêm 'flex items-center justify-center' làm mặc định
     const baseStyle =
-        "font-semibold py-2 px-5 rounded-md transition duration-300 text-center inline-block";
+        "font-semibold py-2 px-5 rounded-md transition duration-300 flex items-center justify-center cursor-pointer";
+
     const variantStyle = variants[variant];
     const combinedClassName = `${baseStyle} ${variantStyle} ${className}`;
 
     // 3. Xử lý trường hợp là <Link>
     if (props.as === "link") {
-        // SỬA LỖI:
-        // Đổi tên các biến trùng lặp (vd: 'as' thành '_as')
-        // để loại bỏ chúng khỏi ...restLinkProps
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const {
             as: _as,
@@ -62,7 +62,6 @@ export default function Button(props: Props) {
     }
 
     // 4. Mặc định là <button>
-    // SỬA LỖI TƯƠNG TỰ:
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {
         as: _as,
