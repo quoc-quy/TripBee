@@ -34,12 +34,14 @@ export default function AccountDetail() {
             Thông tin cá nhân
           </button>
           <button className="py-3 px-4 hover:text-blue-600">
+            Đổi mật khẩu
+          </button>
+          <button className="py-3 px-4 hover:text-blue-600">
             Lịch sử đặt tour
           </button>
           <button className="py-3 px-4 hover:text-blue-600">
             Tour yêu thích
           </button>
-          <button className="py-3 px-4 hover:text-blue-600">Cài đặt</button>
         </div>
 
         <div className="p-8">
@@ -77,16 +79,6 @@ export default function AccountDetail() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Ngày sinh
-                </label>
-                <input
-                  type="date"
-                  defaultValue="yyyy-MM-dd"
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
                   Giới tính
                 </label>
                 <select className="w-full border border-gray-300 rounded-lg p-2.5 focus:border-blue-500 focus:ring-blue-500 outline-none">
@@ -114,12 +106,6 @@ export default function AccountDetail() {
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg"
               >
                 Cập nhật thông tin
-              </button>
-              <button
-                type="button"
-                className="bg-gray-100 hover:bg-gray-200 text-blue-600 font-medium px-5 py-2.5 rounded-lg border border-blue-600"
-              >
-                Đổi mật khẩu
               </button>
             </div>
           </form>
