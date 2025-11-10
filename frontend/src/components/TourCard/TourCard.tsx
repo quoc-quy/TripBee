@@ -95,10 +95,10 @@ export default function TourCard({ tour }: { tour: Tour }) {
                     >
                         Xem chi tiết
                     </Button>
-                    <Button 
+                    <Button
                         as="link" // Chuyển nút "Đặt ngay" thành link
                         to={`/tours/${tour.tourID}`} // Trỏ đến trang chi tiết tour
-                        variant="solid" 
+                        variant="solid"
                         className="flex-1"
                     >
                         Đặt ngay
