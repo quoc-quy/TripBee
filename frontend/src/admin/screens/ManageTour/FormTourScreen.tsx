@@ -123,10 +123,41 @@ export default function FormTourScreen() {
     queryKey: ["admin-destinations", form.region],
     queryFn: () =>
       destinationAdminApi
-        .getDestinations(form.region || undefined)
+        .getDestinationsForTour(form.region || undefined)
         .then((res: any) => res.data),
     enabled: !!form.region,
   });
+
+  // hình ảnh
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      setErrors((prev) => ({ ...prev, imageURL: undefined, form: undefined }));
+
+      const res = await tourAdminApi.uploadTourImage(file);
+      const url = res.data.url;
+
+      setForm((prev) => ({
+        ...prev,
+        imageURL: url,
+      }));
+    } catch (error: any) {
+      console.log(error?.response || error);
+      setErrors((prev) => ({
+        ...prev,
+        imageURL: "Upload ảnh thất bại. Vui lòng thử lại.",
+      }));
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     if (!tourDetail) return;
@@ -673,10 +704,10 @@ export default function FormTourScreen() {
                   {!form.region
                     ? "Chọn miền trước"
                     : loadingDestinations
-                    ? "Đang tải điểm đến"
-                    : destinations.length === 0
-                    ? "Không có điểm đến phù hợp"
-                    : "Chọn điểm đến để thêm"}
+                      ? "Đang tải điểm đến"
+                      : destinations.length === 0
+                        ? "Không có điểm đến phù hợp"
+                        : "Chọn điểm đến để thêm"}
                 </option>
                 {destinations.map((d) => (
                   <option key={d.destinationID} value={d.destinationID}>
@@ -733,47 +764,71 @@ export default function FormTourScreen() {
 
         {/* Hình ảnh & trạng thái */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Hình ảnh & trạng thái
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Hình ảnh & trạng thái
+            </h2>
+            {form.imageURL && !uploadingImage && (
+              <span className="text-[10px] px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">
+                Đã chọn ảnh bìa
+              </span>
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Hình ảnh (URL)
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Cột trái: upload + preview */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-600">
+                Ảnh bìa tour
               </label>
+
               {errors.imageURL && (
-                <p className="text-xs text-red-500 mb-1">
+                <p className="text-xs text-red-500">
                   {errors.imageURL}
                 </p>
               )}
+
               <input
-                name="imageURL"
-                value={form.imageURL}
-                onChange={handleChange}
-                placeholder="Dán link ảnh bìa tour"
-                className={inputBase}
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileChange}
+                className="block w-full text-sm text-gray-700
+                   file:mr-3 file:py-2 file:px-4
+                   file:rounded-xl file:border-0
+                   file:text-sm file:font-semibold
+                   file:bg-blue-50 file:text-blue-600
+                   hover:file:bg-blue-100"
               />
-              {form.imageURL && !errors.imageURL && (
-                <div className="mt-3">
+
+              {uploadingImage && (
+                <p className="text-xs text-gray-500">
+                  Đang tải ảnh lên...
+                </p>
+              )}
+
+              {form.imageURL && !uploadingImage && !errors.imageURL && (
+                <div className="mt-1">
                   <p className="text-xs text-gray-500 mb-1">
-                    Xem trước
+                    Xem trước ảnh bìa
                   </p>
-                  <img
-                    src={form.imageURL}
-                    alt="Preview"
-                    className="w-full h-48 object-cover rounded-xl border border-gray-200"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
+                  <div className="w-full h-44 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                    <img
+                      src={form.imageURL}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Trạng thái
+            {/* Cột phải: trạng thái */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-600">
+                Trạng thái tour
               </label>
               <select
                 name="status"

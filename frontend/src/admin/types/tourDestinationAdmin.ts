@@ -1,7 +1,7 @@
-import type { DestinationAdminParams } from "./destinationAdmin";
+import type { DestinationAdmin } from "./destinationAdmin";
 
 
 export interface tourDestinationAdmin {
   tourDestinationID: string;
-  destination: DestinationAdminParams;
+  destination: DestinationAdmin;
 }

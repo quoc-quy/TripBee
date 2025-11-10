@@ -13,4 +13,15 @@ export const tourAdminApi = {
   createTour: (data: any) => http.post("/admin/tours", data),
 
   updateTour: (id: string, data: any) => http.put(`/admin/tours/${id}`, data),
+
+  uploadTourImage(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return http.post<{ url: string }>("/admin/uploads/tour-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };

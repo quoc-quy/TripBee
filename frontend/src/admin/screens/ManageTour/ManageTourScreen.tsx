@@ -93,8 +93,8 @@ export default function ManageTourScreen() {
   };
 
   const handleDetail = (tourId: string) => {
-  navigate(`/admin/tours/details/${tourId}`); // hoặc route detail mà bạn đang dùng
-};
+    navigate(`/admin/tours/details/${tourId}`); // hoặc route detail mà bạn đang dùng
+  };
 
 
   return (
@@ -273,24 +273,36 @@ export default function ManageTourScreen() {
                         {label}
                       </span>
                     </td>
+
+                    {/* Xem chi tiết */}
                     <td className="px-5 py-4 text-center text-sm">
                       <div className="inline-flex gap-2">
+                        
                         <button
-  onClick={() => handleDetail(tour.tourID)}
-  className="border border-gray-400 text-gray-600 rounded-lg p-2 hover:bg-gray-50"
-  title="Xem chi tiết"
->
-  <Eye size={16} />
-</button>
+                          onClick={() => handleDetail(tour.tourID)}
+                          className="border border-gray-400 text-gray-600 rounded-lg p-2 hover:bg-gray-50"
+                          title="Xem chi tiết"
+                        >
+                          <Eye size={16} />
+                        </button>
 
-                        <button onClick={() => handleEdit(tour.tourID)} className="border border-blue-500 text-blue-500 rounded-lg p-2 hover:bg-blue-50">
-                          <Edit2 size={16} />
-                        </button>
-                        <button className="border border-red-500 text-red-500 rounded-lg p-2 hover:bg-red-50">
+                        {/* Chỉ hiện nút sửa nếu chưa COMPLETED */}
+                        {tour.status !== "COMPLETED" && (
+                          <button
+                            onClick={() => handleEdit(tour.tourID)}
+                            className="border border-blue-500 text-blue-500 rounded-lg p-2 hover:bg-blue-50"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
+
+                        {/* Xóa (tùy rule, nếu cũng muốn khóa khi COMPLETED thì thêm điều kiện tương tự) */}
+                        {/* <button className="border border-red-500 text-red-500 rounded-lg p-2 hover:bg-red-50">
                           <Trash2 size={16} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
+
                   </tr>
                 );
               })

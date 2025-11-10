@@ -14,6 +14,9 @@ import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen";
 import FormTourScreen from "./admin/screens/ManageTour/FormTourScreen";
 import TourDetailScreen from "./screens/TourDetailScreen";
 import TourDetailAdminScreen from "./admin/screens/ManageTour/TourDetailAdminScreen"
+import ManageDestinationScreen from "./admin/screens/ManageDestination/ManageDestinationScreen";
+import FormDestinationScreen from "./admin/screens/ManageDestination/FormDestinationScreen";
+import DestinationDeatilScreen from "./admin/screens/ManageDestination/DestinationDetailAdminScreen";
 
 
 export default function useRouteElements() {
@@ -100,7 +103,11 @@ export default function useRouteElements() {
         { path: "tours/new", element: <FormTourScreen /> },
         { path: "tours/:id/edit", element: <FormTourScreen /> },
         { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
-        // { path:"manage-destination", element: <ManageDestinationScreen />} 
+        { path: "manage-destination", element: <ManageDestinationScreen />},
+        { path: "destinations/:id/edit", element: <FormDestinationScreen />},
+        { path: "destinations/new", element: <FormDestinationScreen />},
+        { path: "destinations/detail/:id", element: <DestinationDeatilScreen />},
+
       ],
     },
     {
