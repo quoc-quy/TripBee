@@ -17,9 +17,12 @@ import type { Tour, TourDetails } from "../../types/tour";
 import TourCard from "../../components/TourCard";
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+// (1. THÊM) Import component Review
+import TourReviewSection from "../../components/TourReviewSection";
 
 // (Giữ nguyên) Component con RelatedToursSection
 function RelatedToursSection({
+    // ... (code component này giữ nguyên) ...
     tourTypeId,
     currentTourId,
 }: {
@@ -64,7 +67,7 @@ function RelatedToursSection({
 
 // === Component chính ===
 export default function TourDetailScreen() {
-    // --- (FIX) BƯỚC 1: GỌI TẤT CẢ HOOKS LÊN ĐẦU ---
+    // --- (Giữ nguyên) Tất cả Hooks (useParams, useQuery, useState, useRef, useEffect...) ---
     const { id } = useParams<{ id: string }>();
 
     const { data: tourDetailsData, isLoading } = useQuery({
@@ -77,13 +80,10 @@ export default function TourDetailScreen() {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
     const AUTO_SLIDE_DELAY = 5000;
-    // (Sửa lỗi) Dùng 'number' cho trình duyệt
     const intervalRef = useRef<number | null>(null);
 
-    // --- (FIX) BƯỚC 2: TÍNH TOÁN BIẾN VÀ HÀM (VỚI KIỂM TRA AN TOÀN) ---
     const tour: TourDetails | undefined = tourDetailsData?.data;
 
-    // Tính toán an toàn, nếu tour chưa có thì là mảng rỗng
     const allImages = tour ? [{ url: tour.imageURL, caption: tour.title }, ...tour.tourImages] : [];
 
     const stopAutoSlide = () => {
@@ -96,23 +96,19 @@ export default function TourDetailScreen() {
     const startAutoSlide = () => {
         stopAutoSlide();
         if (allImages.length > 0) {
-            // Chỉ chạy nếu có ảnh
             intervalRef.current = window.setInterval(() => {
                 setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
             }, AUTO_SLIDE_DELAY);
         }
     };
 
-    // (FIX) BƯỚC 3: GỌI useEffect (VẪN Ở TRÊN CÙNG, TRƯỚC RETURN)
     useEffect(() => {
-        // Điều kiện logic được chuyển vào BÊN TRONG effect
         if (allImages.length > 0 && lightboxIndex === null) {
             startAutoSlide();
         }
         return () => stopAutoSlide();
-    }, [allImages.length, lightboxIndex]); // dependencies vẫn giữ nguyên
+    }, [allImages.length, lightboxIndex]);
 
-    // (FIX) BƯỚC 4: ĐỊNH NGHĨA CÁC HÀM XỬ LÝ CÒN LẠI
     const nextImage = () => {
         if (allImages.length === 0) return;
         setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
@@ -149,11 +145,8 @@ export default function TourDetailScreen() {
         );
     };
 
-    // Tính toán an toàn, nếu tour chưa có thì là chuỗi rỗng
     const destinationNames = tour ? tour.destinations.map((dest) => dest.nameDes).join(", ") : "";
 
-    // --- (FIX) BƯỚC 5: KIỂM TRA RETURN SỚM (ĐẶT Ở CUỐI CÙNG) ---
-    // Bây giờ tất cả Hooks đã được gọi, chúng ta có thể return sớm
     if (isLoading) {
         return <div className="text-center py-20">Đang tải chi tiết tour...</div>;
     }
@@ -162,12 +155,9 @@ export default function TourDetailScreen() {
         return <div className="text-center py-20">Không tìm thấy tour.</div>;
     }
 
-    // Nếu code chạy đến đây, `tour` chắc chắn đã tồn tại
-    // và `allImages` đã có dữ liệu.
-
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Phần Header Tour (Giữ nguyên) */}
+            {/* ... (Phần Header Tour giữ nguyên) ... */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6 mb-8">
                 <div className="flex items-center text-sm text-gray-500 mb-2">
                     <span className="bg-blue-100 text-blue-600 text-xs font-semibold px-2.5 py-0.5 rounded mr-3">
@@ -191,7 +181,7 @@ export default function TourDetailScreen() {
                 </div>
             </div>
 
-            {/* Slider (Giữ nguyên) */}
+            {/* ... (Phần Slider giữ nguyên) ... */}
             <div
                 className="h-96 md:h-[500px] bg-gray-200 relative mb-8 rounded-2xl shadow-lg overflow-hidden group"
                 onMouseEnter={stopAutoSlide}
@@ -238,10 +228,10 @@ export default function TourDetailScreen() {
                 </div>
             </div>
 
-            {/* Phần còn lại của JSX (Giữ nguyên) */}
+            {/* ... (Phần Grid nội dung chính) ... */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                    {/* Thông tin nhanh */}
+                    {/* ... (Thông tin nhanh giữ nguyên) ... */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-8">
                         <div className="bg-blue-50 p-4 rounded-lg">
                             <Calendar className="mx-auto mb-2 text-blue-600" />
@@ -266,8 +256,7 @@ export default function TourDetailScreen() {
                             <p className="text-sm text-gray-700">{tour.departurePlace}</p>
                         </div>
                     </div>
-
-                    {/* Mô tả chi tiết */}
+                    {/* ... (Mô tả chi tiết giữ nguyên) ... */}
                     <div className="bg-white p-8 rounded-lg mb-8 shadow-xl">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Mô tả Tour</h2>
                         <div
@@ -275,8 +264,7 @@ export default function TourDetailScreen() {
                             dangerouslySetInnerHTML={{ __html: tour.description }}
                         />
                     </div>
-
-                    {/* Lịch trình */}
+                    {/* ... (Lịch trình giữ nguyên) ... */}
                     <div className="bg-white p-8 rounded-lg mb-8 shadow-xl">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                             Hành trình chi tiết
@@ -296,19 +284,22 @@ export default function TourDetailScreen() {
                         </div>
                     </div>
                 </div>
-                {/* Cột bên phải: Đặt Tour */}
+                {/* ... (Cột Đặt Tour giữ nguyên) ... */}
                 <div className="lg:col-span-1">
                     <TourBookingSection tour={tour} />
                 </div>
             </div>
 
-            {/* Tours Liên Quan */}
+            {/* (2. THÊM MỚI) Thêm phần Đánh giá vào đây */}
+            <TourReviewSection tourId={tour.tourID} />
+
+            {/* ... (Phần Tours Liên Quan giữ nguyên) ... */}
             <RelatedToursSection
                 tourTypeId={tour.tourType.tourTypeID}
                 currentTourId={tour.tourID}
             />
 
-            {/* Lightbox (Giữ nguyên) */}
+            {/* ... (Phần Lightbox giữ nguyên) ... */}
             <AnimatePresence>
                 {lightboxIndex !== null && (
                     <motion.div

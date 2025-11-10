@@ -212,7 +212,12 @@ function FeaturedTours() {
                 )}
                 <div className="text-center mt-12">
                     {/* (CẬP NHẬT) Dùng component Button */}
-                    <Button as="link" to="/tours" variant="solid" className="px-8 py-3">
+                    <Button
+                        as="link"
+                        to="/tours"
+                        variant="solid"
+                        className="px-8 py-3 text-center inline-block"
+                    >
                         Xem tất cả tours
                     </Button>
                 </div>
