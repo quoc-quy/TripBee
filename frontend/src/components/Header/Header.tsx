@@ -321,37 +321,153 @@ export default function Header() {
           >
             Admin
           </NavLink>
-
-          <div className="border-t border-gray-200 pt-2 mt-2"></div>
-
-          {isAuthenticated ? (
-            <button
-              onClick={() => {
-                handleLogout();
-                toggleMenu();
-              }}
-              className="w-full text-left px-3 py-2 rounded-md cursor-pointer bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
+          <button
+            onClick={toggleMenu}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="w-6 h-6"
             >
-              Đăng xuất
-            </button>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                onClick={toggleMenu}
-                className="block text-center px-3 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+              {isMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
+        <div
+          id="mobile-menu"
+          className={`absolute top-[68px] left-0 w-full bg-white border-b border-gray-200 mt-5 shadow-lg lg:hidden z-50 ${
+            isMenuOpen ? "block" : "hidden"
+          }`}
+        >
+          <div className="flex flex-col p-4 space-y-2 font-semibold">
+            <NavLink
+              to="/"
+              onClick={toggleMenu}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md ${
+                  isActive
+                    ? "bg-[#2663ec] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              Trang chủ
+            </NavLink>
+            <NavLink
+              to="/tours"
+              onClick={toggleMenu}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md ${
+                  isActive
+                    ? "bg-[#2663ec] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              Tours
+            </NavLink>
+            <NavLink
+              to="/destinations"
+              onClick={toggleMenu}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md ${
+                  isActive
+                    ? "bg-[#2663ec] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              Điểm đến
+            </NavLink>
+            <NavLink
+              to="/about"
+              onClick={toggleMenu}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md ${
+                  isActive
+                    ? "bg-[#2663ec] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              Về chúng tôi
+            </NavLink>
+            <NavLink
+              to="/contact"
+              onClick={toggleMenu}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md ${
+                  isActive
+                    ? "bg-[#2663ec] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              Liên hệ
+            </NavLink>
+            <NavLink
+              to="/admin"
+              onClick={toggleMenu}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-md ${
+                  isActive
+                    ? "bg-[#2663ec] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              Admin
+            </NavLink>
+
+            <div className="border-t border-gray-200 pt-2 mt-2"></div>
+
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  toggleMenu();
+                }}
+                className="w-full text-left px-3 py-2 rounded-md cursor-pointer bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
               >
-                Đăng nhập
-              </Link>
-              <Link
-                to="/register"
-                onClick={toggleMenu}
-                className="block text-center px-3 py-2 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-100 transition-colors duration-200"
-              >
-                Đăng ký
-              </Link>
-            </>
-          )}
+                Đăng xuất
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={toggleMenu}
+                  className="block text-center px-3 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={toggleMenu}
+                  className="block text-center px-3 py-2 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-100 transition-colors duration-200"
+                >
+                  Đăng ký
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
