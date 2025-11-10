@@ -16,6 +16,7 @@ import Profile from "./screens/Account/pages/Profile";
 import ChangePassword from "./screens/Account/pages/ChangePassword";
 import HistoryTour from "./screens/Account/pages/HistoryTour";
 import FavouriteTour from "./screens/Account/pages/FavouriteTour";
+import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -104,6 +105,7 @@ export default function useRouteElements() {
       children: [
         { path: "dashboard", element: <DashboardScreen /> },
         { path: "manage-tour", element: <ManageTourScreen /> },
+        { path: "promotions", element: <ManagePromotionScreen /> },
       ],
     },
     // {
