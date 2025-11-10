@@ -1,4 +1,4 @@
-package com.tripbee.backend.admin.dto.response;
+package com.tripbee.backend.admin.dto.response.tour;
 
 import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination;

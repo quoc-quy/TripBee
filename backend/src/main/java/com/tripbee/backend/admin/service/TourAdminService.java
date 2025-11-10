@@ -1,8 +1,8 @@
 package com.tripbee.backend.admin.service;
 
 import com.tripbee.backend.admin.dto.request.TourRequest;
-import com.tripbee.backend.admin.dto.response.TourAdminResponse;
-import com.tripbee.backend.admin.dto.response.TourDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
 import com.tripbee.backend.model.Destination;
 import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination;
@@ -21,7 +21,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 @Service

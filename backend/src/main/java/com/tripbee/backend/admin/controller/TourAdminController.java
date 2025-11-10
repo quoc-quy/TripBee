@@ -1,8 +1,8 @@
 package com.tripbee.backend.admin.controller;
 
 import com.tripbee.backend.admin.dto.request.TourRequest;
-import com.tripbee.backend.admin.dto.response.TourAdminResponse;
-import com.tripbee.backend.admin.dto.response.TourDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
 import com.tripbee.backend.admin.service.TourAdminService;
 import com.tripbee.backend.model.Tour;
 import org.springframework.data.domain.Page;
