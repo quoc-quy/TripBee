@@ -93,6 +93,7 @@ interface DestinationDto {
 
 // (CẬP NHẬT) Dựa trên TourDetailsResponse của backend
 export interface TourDetails {
+    imagePath: any;
     tourID: string;
     title: string;
     description: string;

@@ -3,14 +3,64 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { tourApi } from "../../apis/tour";
-import { MapPin, Calendar, Clock, Users, Sun, Moon } from "lucide-react";
+import { MapPin, Calendar, Clock, Users } from "lucide-react"; // Bỏ Sun, Moon vì không dùng
 import TourBookingSection from "../../components/TourBookingSection";
 import { FaClock, FaMapMarkerAlt, FaStar } from "react-icons/fa";
-import type { TourDetails } from "../../types/tour";
+// (1. THÊM) Import thêm 'Tour' (cho danh sách liên quan) và 'TourCard'
+import type { Tour, TourDetails } from "../../types/tour";
+import TourCard from "../../components/TourCard";
 
 // (MỚI) Định nghĩa base URL của backend
 const BACKEND_URL = "http://localhost:8080";
 
+// (2. THÊM MỚI) Component con để fetch và hiển thị tour liên quan
+function RelatedToursSection({
+    tourTypeId,
+    currentTourId,
+}: {
+    tourTypeId: string;
+    currentTourId: string;
+}) {
+    // Gọi API để lấy tour, lọc theo tour_type_id
+    const { data: relatedToursData, isLoading: isLoadingRelated } = useQuery({
+        queryKey: ["relatedTours", tourTypeId],
+        queryFn: () =>
+            tourApi.getTours({
+                tour_type_id: tourTypeId,
+                size: 4, // Lấy 4 tour (để trừ tour hiện tại)
+                page: 0,
+            }),
+        enabled: !!tourTypeId, // Chỉ chạy khi có tourTypeId
+    });
+
+    // Lọc tour hiện tại ra khỏi danh sách liên quan và chỉ lấy 3 tour
+    const relatedTours =
+        relatedToursData?.data.content
+            .filter((tour: Tour) => tour.tourID !== currentTourId)
+            .slice(0, 3) || []; // Chỉ lấy tối đa 3 tour
+
+    if (isLoadingRelated) {
+        return <div className="text-center py-10">Đang tải các tour liên quan...</div>;
+    }
+
+    // Nếu không có tour nào (sau khi đã lọc) thì không hiển thị gì
+    if (relatedTours.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="bg-white p-8 rounded-lg shadow-xl mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Tours Liên Quan</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedTours.map((tour: Tour) => (
+                    <TourCard key={tour.tourID} tour={tour} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// === Component chính ===
 export default function TourDetailScreen() {
     const { id } = useParams<{ id: string }>();
 
@@ -30,12 +80,14 @@ export default function TourDetailScreen() {
         return <div className="text-center py-20">Không tìm thấy tour.</div>;
     }
 
-    // Lấy tên các điểm đến
+    // (Giữ nguyên)
     const destinationNames = tour.destinations.map((dest) => dest.nameDes).join(", ");
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Phần Header Tour */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {" "}
+            {/* Thêm py-8 */}
+            {/* Phần Header Tour (Giữ nguyên) */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6 mb-8">
                 <div className="flex items-center text-sm text-gray-500 mb-2">
                     <span className="bg-blue-100 text-blue-600 text-xs font-semibold px-2.5 py-0.5 rounded mr-3">
@@ -60,18 +112,23 @@ export default function TourDetailScreen() {
                     <span>{`${tour.durationDays} ngày ${tour.durationNights} đêm`}</span>
                 </div>
             </div>
-            {/* Phần Hero Image */}
-            <div className="h-96 bg-cover bg-center relative">
+            {/* Phần Hero Image (Giữ nguyên) */}
+            <div className="h-96 bg-cover bg-center relative mb-8">
+                {" "}
+                {/* Thêm mb-8 */}
                 <img
                     src={tour.imageURL}
                     alt=""
-                    className="h-full w-full object-cover rounded-2xl"
+                    className="h-full w-full object-cover rounded-2xl shadow-lg" // Thêm shadow
                 />
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {" "}
                 <div className="lg:col-span-2">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-6">
+                    {/* Thông tin nhanh (Giữ nguyên) */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-8">
+                        {" "}
+                        {/* Thêm mb-8 */}
                         <div className="bg-blue-50 p-4 rounded-lg">
                             <Calendar className="mx-auto mb-2 text-blue-600" />
                             <span className="font-semibold">Khởi hành</span>
@@ -96,8 +153,10 @@ export default function TourDetailScreen() {
                         </div>
                     </div>
 
-                    {/* Mô tả chi tiết */}
-                    <div className="bg-white p-8 rounded-lg mb-3">
+                    {/* Mô tả chi tiết (Giữ nguyên) */}
+                    <div className="bg-white p-8 rounded-lg mb-8 shadow-xl">
+                        {" "}
+                        {/* Thêm shadow-xl */}
                         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Mô tả Tour</h2>
                         <div
                             className="prose max-w-none text-gray-700"
@@ -105,8 +164,10 @@ export default function TourDetailScreen() {
                         />
                     </div>
 
-                    {/* Lịch trình */}
-                    <div className="bg-white p-8 rounded-lg mb-8 shadow-2xl">
+                    {/* Lịch trình (Giữ nguyên) */}
+                    <div className="bg-white p-8 rounded-lg mb-8 shadow-xl">
+                        {" "}
+                        {/* Thêm shadow-xl */}
                         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                             Hành trình chi tiết
                         </h2>
@@ -125,14 +186,13 @@ export default function TourDetailScreen() {
                         </div>
                     </div>
 
-                    {/* Thư viện ảnh */}
+                    {/* Thư viện ảnh (Giữ nguyên) */}
                     <div className="bg-white p-8 rounded-lg shadow-xl mb-8">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Thư viện ảnh</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {tour.tourImages.map((image, index) => (
                                 <img
                                     key={index}
-                                    // (CẬP NHẬT) Thêm BACKEND_URL
                                     src={`${BACKEND_URL}${image.url}`}
                                     alt={image.caption}
                                     className="w-full h-40 object-cover rounded-lg"
@@ -141,11 +201,16 @@ export default function TourDetailScreen() {
                         </div>
                     </div>
                 </div>
-                {/* Cột bên phải: Đặt Tour */}
+                {/* Cột bên phải: Đặt Tour (Giữ nguyên) */}
                 <div className="lg:col-span-1">
                     <TourBookingSection tour={tour} />
                 </div>
             </div>
+            {/* (3. THÊM MỚI) Phần Tour Liên Quan */}
+            <RelatedToursSection
+                tourTypeId={tour.tourType.tourTypeID}
+                currentTourId={tour.tourID}
+            />
         </div>
     );
 }
