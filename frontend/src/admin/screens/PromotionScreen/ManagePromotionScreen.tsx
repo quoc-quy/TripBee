@@ -62,7 +62,7 @@ const formatDate = (dateString: string) => {
   }
 };
 
-// (MỚI) Component Modal Wrapper đơn giản
+// (ĐÃ SỬA) Component Modal Wrapper đơn giản
 const SimpleModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -84,7 +84,8 @@ const SimpleModal: React.FC<{
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+        // THAY ĐỔI: Thêm flex flex-col và h-full. h-full đảm bảo nó kéo dài hết chiều cao của max-h-[90vh]
+        className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col h-full"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

@@ -1,3 +1,5 @@
+// src/admin/screens/PromotionScreen/FormPromotionScreen.tsx
+
 import React, { useState, useEffect } from "react";
 // Bỏ useParams, useNavigate
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -47,6 +49,17 @@ const formatVND = (value: number | null): string => {
   return formatCurrency(Number(value));
 };
 
+// (MỚI) Helper để format date ISO string thành YYYY-MM-DD cho input type="date"
+const formatDateToInput = (isoString: string | null | undefined): string => {
+  if (!isoString) return "";
+  try {
+    // Lấy phần YYYY-MM-DD từ chuỗi ISO 8601
+    return isoString.split("T")[0];
+  } catch {
+    return "";
+  }
+};
+
 // ==== Component Chính ====
 // (SỬA): Nhận props thay vì dùng useParams và useNavigate
 export default function FormPromotionScreen({
@@ -70,15 +83,18 @@ export default function FormPromotionScreen({
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Query để lấy dữ liệu chỉnh sửa
-  const { data: promotionDetail, isLoading: loadingPromotion } =
-    useQuery<PromotionDetailAdmin>({
-      queryKey: ["promotion-detail", promotionId],
-      queryFn: () =>
-        promotionAdminApi
-          .getPromotionById(promotionId as string)
-          .then((res) => res.data),
-      enabled: isEdit && !!promotionId,
-    });
+  const {
+    data: promotionDetail,
+    isLoading: loadingPromotion,
+    isError, // THÊM isError để kiểm tra lỗi tải dữ liệu
+  } = useQuery<PromotionDetailAdmin>({
+    queryKey: ["promotion-detail", promotionId],
+    queryFn: () =>
+      promotionAdminApi
+        .getPromotionById(promotionId as string)
+        .then((res) => res.data),
+    enabled: isEdit && !!promotionId,
+  });
 
   // Mutate để tạo/cập nhật
   const createMutation = useMutation({
@@ -109,8 +125,9 @@ export default function FormPromotionScreen({
       discountPercentage: detail.discountPercentage ?? 0,
       discountAmount: detail.discountAmount ?? null,
       limitUsage: detail.limitUsage ?? 0,
-      startDate: detail.startDate ?? "",
-      endDate: detail.endDate ?? "",
+      // (FIX) Format ngày tháng sang YYYY-MM-DD cho input type="date"
+      startDate: formatDateToInput(detail.startDate),
+      endDate: formatDateToInput(detail.endDate),
       status: detail.status ?? "ACTIVE",
       discountType: type,
     });
@@ -244,20 +261,11 @@ export default function FormPromotionScreen({
     }
   };
 
-  if (isEdit && loadingPromotion) {
-    // (SỬA) Thay đổi container loading để phù hợp với modal
-    return (
-      <div className="flex items-center justify-center p-12 text-base h-full min-h-[300px]">
-        Đang tải dữ liệu khuyến mãi...
-      </div>
-    );
-  }
-
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  // (SỬA LAYOUT ĐỂ TRÔNG NHƯ MODAL)
+  // (SỬA LAYOUT CHÍNH): THÊM h-full và flex flex-col ở đây
   return (
-    <div className="bg-white text-base w-full">
+    <div className="bg-white text-base w-full h-full flex flex-col">
       {/* Header Modal */}
       <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
         <div>
@@ -291,270 +299,298 @@ export default function FormPromotionScreen({
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col h-full">
-        {/* Nội dung form có thể cuộn */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {errors.form && (
-            <div className="mb-4 text-sm text-red-500">{errors.form}</div>
-          )}
+      {isEdit && loadingPromotion ? (
+        // HIỂN THỊ LOADING: SỬ DỤNG flex-1 để div loading chiếm hết chiều cao còn lại
+        <div className="flex-1 flex items-center justify-center p-12 text-base">
+          Đang tải dữ liệu khuyến mãi...
+        </div>
+      ) : isEdit && (isError || !promotionDetail) ? (
+        // HIỂN THỊ LỖI KHI LOAD XONG NHƯNG THẤT BẠI
+        <div className="flex-1 flex flex-col items-center justify-center p-12 text-base">
+          <div className="text-red-500 font-semibold mb-4 text-center">
+            {isError
+              ? "Lỗi kết nối hoặc tải dữ liệu thất bại. Vui lòng thử lại."
+              : "Không tìm thấy khuyến mãi này."}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 rounded-xl border border-gray-300 text-base text-gray-700 hover:bg-gray-100"
+          >
+            Đóng
+          </button>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col h-full flex-1 overflow-hidden"
+        >
+          {/* Nội dung form có thể cuộn */}
+          <div className="p-6 space-y-6 overflow-y-auto flex-1">
+            {errors.form && (
+              <div className="mb-4 text-sm text-red-500">{errors.form}</div>
+            )}
 
-          {/* Thông tin cơ bản */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Thông tin mã ưu đãi
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Mã khuyến mãi (Code)
-                </label>
-                {errors.title && (
-                  <p className="text-xs text-red-500 mb-1">{errors.title}</p>
-                )}
-                <input
-                  name="title"
-                  value={form.title}
-                  onChange={handleChange}
-                  placeholder="Ví dụ: SUMMER10, GIAM200K"
-                  className={inputBase}
-                  disabled={isSaving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Số lần sử dụng tối đa
-                </label>
-                {errors.limitUsage && (
-                  <p className="text-xs text-red-500 mb-1">
-                    {errors.limitUsage}
-                  </p>
-                )}
-                <input
-                  type="number"
-                  min={0}
-                  name="limitUsage"
-                  value={form.limitUsage === 0 ? "" : form.limitUsage}
-                  onChange={handleChange}
-                  placeholder="0 (Không giới hạn)"
-                  className={inputBase}
-                  disabled={isSaving}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Mô tả
-              </label>
-              {errors.description && (
-                <p className="text-xs text-red-500 mb-1">
-                  {errors.description}
-                </p>
-              )}
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Mô tả ngắn gọn về ưu đãi"
-                className={inputBase + " min-h-[100px] resize-y"}
-                disabled={isSaving}
-              />
-            </div>
-          </section>
-
-          {/* Giá trị và loại khuyến mãi */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Giá trị ưu đãi
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Loại giảm giá
-                </label>
-                {errors.discountType && (
-                  <p className="text-xs text-red-500 mb-1">
-                    {errors.discountType}
-                  </p>
-                )}
-                <select
-                  name="discountType"
-                  value={form.discountType}
-                  onChange={handleDiscountTypeChange}
-                  className={inputBase}
-                  disabled={isSaving}
-                >
-                  <option value="NONE">Chọn loại</option>
-                  <option value="PERCENTAGE">Giảm theo Phần trăm (%)</option>
-                  <option value="FIXED_AMOUNT">
-                    Giảm theo Số tiền cố định
-                  </option>
-                </select>
-              </div>
-
-              {form.discountType === "PERCENTAGE" && (
-                <div className="md:col-span-2">
+            {/* Thông tin cơ bản */}
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Thông tin mã ưu đãi
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Phần trăm giảm (%)
+                    Mã khuyến mãi (Code)
                   </label>
-                  {errors.discountPercentage && (
+                  {errors.title && (
+                    <p className="text-xs text-red-500 mb-1">{errors.title}</p>
+                  )}
+                  <input
+                    name="title"
+                    value={form.title}
+                    onChange={handleChange}
+                    placeholder="Ví dụ: SUMMER10, GIAM200K"
+                    className={inputBase}
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Số lần sử dụng tối đa
+                  </label>
+                  {errors.limitUsage && (
                     <p className="text-xs text-red-500 mb-1">
-                      {errors.discountPercentage}
+                      {errors.limitUsage}
                     </p>
                   )}
                   <input
                     type="number"
-                    min={1}
-                    max={100}
-                    name="discountPercentage"
-                    value={form.discountPercentage || ""}
+                    min={0}
+                    name="limitUsage"
+                    value={form.limitUsage === 0 ? "" : form.limitUsage}
                     onChange={handleChange}
-                    placeholder="1 - 100"
+                    placeholder="0 (Không giới hạn)"
                     className={inputBase}
                     disabled={isSaving}
                   />
                 </div>
-              )}
+              </div>
 
-              {form.discountType === "FIXED_AMOUNT" && (
-                <div className="md:col-span-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Mô tả
+                </label>
+                {errors.description && (
+                  <p className="text-xs text-red-500 mb-1">
+                    {errors.description}
+                  </p>
+                )}
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Mô tả ngắn gọn về ưu đãi"
+                  className={inputBase + " min-h-[100px] resize-y"}
+                  disabled={isSaving}
+                />
+              </div>
+            </section>
+
+            {/* Giá trị và loại khuyến mãi */}
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Giá trị ưu đãi
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Số tiền giảm cố định (VNĐ)
+                    Loại giảm giá
                   </label>
-                  {errors.discountAmount && (
+                  {errors.discountType && (
                     <p className="text-xs text-red-500 mb-1">
-                      {errors.discountAmount}
+                      {errors.discountType}
+                    </p>
+                  )}
+                  <select
+                    name="discountType"
+                    value={form.discountType}
+                    onChange={handleDiscountTypeChange}
+                    className={inputBase}
+                    disabled={isSaving}
+                  >
+                    <option value="NONE">Chọn loại</option>
+                    <option value="PERCENTAGE">Giảm theo Phần trăm (%)</option>
+                    <option value="FIXED_AMOUNT">
+                      Giảm theo Số tiền cố định
+                    </option>
+                  </select>
+                </div>
+
+                {form.discountType === "PERCENTAGE" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Phần trăm giảm (%)
+                    </label>
+                    {errors.discountPercentage && (
+                      <p className="text-xs text-red-500 mb-1">
+                        {errors.discountPercentage}
+                      </p>
+                    )}
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      name="discountPercentage"
+                      value={form.discountPercentage || ""}
+                      onChange={handleChange}
+                      placeholder="1 - 100"
+                      className={inputBase}
+                      disabled={isSaving}
+                    />
+                  </div>
+                )}
+
+                {form.discountType === "FIXED_AMOUNT" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Số tiền giảm cố định (VNĐ)
+                    </label>
+                    {errors.discountAmount && (
+                      <p className="text-xs text-red-500 mb-1">
+                        {errors.discountAmount}
+                      </p>
+                    )}
+                    <input
+                      type="text"
+                      name="discountAmount"
+                      value={formatVND(form.discountAmount)}
+                      onChange={handleChange}
+                      placeholder="Ví dụ: 200,000"
+                      className={inputBase}
+                      inputMode="numeric"
+                      disabled={isSaving}
+                    />
+                  </div>
+                )}
+
+                {form.discountType === "NONE" && (
+                  <div className="md:col-span-2 text-gray-500 flex items-center pt-2">
+                    Vui lòng chọn loại giảm giá.
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Thời gian & Trạng thái */}
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Thời gian và Trạng thái
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Ngày bắt đầu
+                  </label>
+                  {errors.startDate && (
+                    <p className="text-xs text-red-500 mb-1">
+                      {errors.startDate}
                     </p>
                   )}
                   <input
-                    type="text"
-                    name="discountAmount"
-                    value={formatVND(form.discountAmount)}
+                    type="date"
+                    name="startDate"
+                    value={form.startDate}
                     onChange={handleChange}
-                    placeholder="Ví dụ: 200,000"
                     className={inputBase}
-                    inputMode="numeric"
                     disabled={isSaving}
                   />
                 </div>
-              )}
 
-              {form.discountType === "NONE" && (
-                <div className="md:col-span-2 text-gray-500 flex items-center pt-2">
-                  Vui lòng chọn loại giảm giá.
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Ngày kết thúc
+                  </label>
+                  {errors.endDate && (
+                    <p className="text-xs text-red-500 mb-1">
+                      {errors.endDate}
+                    </p>
+                  )}
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={form.endDate}
+                    onChange={handleChange}
+                    className={inputBase}
+                    disabled={isSaving}
+                  />
                 </div>
-              )}
-            </div>
-          </section>
 
-          {/* Thời gian & Trạng thái */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Thời gian và Trạng thái
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Ngày bắt đầu
-                </label>
-                {errors.startDate && (
-                  <p className="text-xs text-red-500 mb-1">
-                    {errors.startDate}
-                  </p>
-                )}
-                <input
-                  type="date"
-                  name="startDate"
-                  value={form.startDate}
-                  onChange={handleChange}
-                  className={inputBase}
-                  disabled={isSaving}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Trạng thái
+                  </label>
+                  <select
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    className={inputBase}
+                    disabled={isSaving}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+            </section>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Ngày kết thúc
-                </label>
-                {errors.endDate && (
-                  <p className="text-xs text-red-500 mb-1">{errors.endDate}</p>
-                )}
-                <input
-                  type="date"
-                  name="endDate"
-                  value={form.endDate}
-                  onChange={handleChange}
-                  className={inputBase}
-                  disabled={isSaving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Trạng thái
-                </label>
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className={inputBase}
-                  disabled={isSaving}
+          {/* Actions (Footer Modal) */}
+          <div className="flex justify-end gap-3 p-6 border-t bg-gray-50 flex-shrink-0">
+            <button
+              type="button"
+              onClick={onClose} // Gọi onClose khi hủy
+              className="px-6 py-3 rounded-xl border border-gray-300 text-base text-gray-700"
+              disabled={isSaving}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className={`px-7 py-3 rounded-xl bg-blue-600 text-base text-white font-semibold flex items-center gap-2 ${
+                isSaving ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+              }`}
+              disabled={isSaving}
+            >
+              {isSaving && (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
                 >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Actions (Footer Modal) */}
-        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50 flex-shrink-0">
-          <button
-            type="button"
-            onClick={onClose} // Gọi onClose khi hủy
-            className="px-6 py-3 rounded-xl border border-gray-300 text-base text-gray-700"
-            disabled={isSaving}
-          >
-            Hủy
-          </button>
-          <button
-            type="submit"
-            className={`px-7 py-3 rounded-xl bg-blue-600 text-base text-white font-semibold flex items-center gap-2 ${
-              isSaving ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
-            }`}
-            disabled={isSaving}
-          >
-            {isSaving && (
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-            )}
-            {isEdit ? "Lưu thay đổi" : "Tạo khuyến mãi"}
-          </button>
-        </div>
-      </form>
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              )}
+              {isEdit ? "Lưu thay đổi" : "Tạo khuyến mãi"}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
