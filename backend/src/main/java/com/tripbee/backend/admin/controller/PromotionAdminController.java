@@ -1,9 +1,11 @@
-// src/main/java/com/tripbee/backend/admin/controller/PromotionAdminController.java
 package com.tripbee.backend.admin.controller;
 
 import com.tripbee.backend.admin.dto.PromotionAdminResponse;
+import com.tripbee.backend.admin.dto.request.PromotionRequest;
 import com.tripbee.backend.admin.service.PromotionAdminService;
+import com.tripbee.backend.model.Promotion;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +25,50 @@ public class PromotionAdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String sort // Thêm tham số sort
+            @RequestParam(name = "discountType", required = false) String discountType, // <--- ĐÃ THÊM
+            @RequestParam(required = false) String sort
     ) {
-        // Gọi service để lấy danh sách khuyến mãi đã được lọc/phân trang
+        // Gọi service (cần cập nhật service trước)
         Page<PromotionAdminResponse> promotionPage = promotionAdminService.getAllPromotions(
-                page, size, search, status, sort
+                page, size, search, status, discountType, sort // <--- ĐÃ CẬP NHẬT
         );
+
         return ResponseEntity.ok(promotionPage);
     }
 
-    // [TODO] Bạn có thể thêm các API POST, PUT, DELETE cho Promotion tại đây.
+    // (MỚI) API TẠO KHUYẾN MÃI (POST)
+    @PostMapping
+    public ResponseEntity<PromotionAdminResponse> createPromotion(@RequestBody PromotionRequest request) {
+        try {
+            Promotion created = promotionAdminService.createPromotion(request);
+            // Trả về 201 Created
+            return ResponseEntity.status(HttpStatus.CREATED).body(new PromotionAdminResponse(created));
+        } catch (IllegalArgumentException e) {
+            // Trả về 400 Bad Request nếu logic nghiệp vụ bị vi phạm (ví dụ: mã trùng)
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // (MỚI) API CẬP NHẬT KHUYẾN MÃI (PUT)
+    @PutMapping("/{id}")
+    public ResponseEntity<PromotionAdminResponse> updatePromotion(
+            @PathVariable String id,
+            @RequestBody PromotionRequest request) {
+        try {
+            Promotion updated = promotionAdminService.updatePromotion(id, request);
+            return ResponseEntity.ok(new PromotionAdminResponse(updated));
+        } catch (IllegalArgumentException e) {
+            // Trả về 400 Bad Request nếu logic nghiệp vụ bị vi phạm
+            return ResponseEntity.badRequest().build();
+        }
+        // ResourceNotFoundException sẽ tự động trả về 404 Not Found
+    }
+    @GetMapping("/{id}") // <--- ĐỊNH NGHĨA GET VỚI PARAM ID
+    public ResponseEntity<PromotionAdminResponse> getPromotionDetail(@PathVariable String id) {
+        // Gọi service để lấy chi tiết
+        PromotionAdminResponse detail = promotionAdminService.getPromotionDetailById(id);
+
+        // ResourceNotFoundException sẽ tự động trả về 404
+        return ResponseEntity.ok(detail);
+    }
 }
