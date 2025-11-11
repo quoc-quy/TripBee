@@ -23,17 +23,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     public AuthService(AccountRepository accountRepository,
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       AuthenticationManager authenticationManager) {
+                       AuthenticationManager authenticationManager, EmailService emailService) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.emailService = emailService;
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
@@ -78,7 +80,6 @@ public class AuthService {
         }
 
         User user = new User();
-//        user.setName(request.getName());
         String userNameToSet = (request.getName() != null && !request.getName().trim().isEmpty())
                 ? request.getName()
                 : "NewUser";
@@ -88,13 +89,14 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         Account account = new Account();
-        // Thiết lập Email làm Tên đăng nhập (Username)
         account.setUserName(request.getEmail());
         account.setPassword(passwordEncoder.encode(request.getPassword()));
         account.setRole(RoleType.CUSTOMER);
         account.setLocked(false);
         account.setUser(savedUser);
         accountRepository.save(account);
+
+        emailService.sendRegistrationSuccessEmail(savedUser.getEmail(), savedUser.getName());
 
         String jwtToken = jwtService.generateToken(account);
         String bearerJwtToken = "Bearer " + jwtToken;
