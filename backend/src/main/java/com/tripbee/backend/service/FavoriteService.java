@@ -11,6 +11,8 @@ import com.tripbee.backend.repository.TourRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List; // (1) THÊM IMPORT
+
 @Service
 public class FavoriteService {
 
@@ -22,28 +24,41 @@ public class FavoriteService {
         this.tourRepository = tourRepository;
     }
 
+    // (Code cũ của addFavorite giữ nguyên)
     @Transactional
     public void addFavorite(String tourId, Account currentUser) {
-        // 1. Lấy User từ Account đã xác thực
-        // (Chúng ta biết 'user' đã được tải EAGER trong Account)
+        // ... code cũ
         User user = currentUser.getUser();
-
-        // 2. Tìm Tour từ tourId
         Tour tour = tourRepository.findById(tourId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tour not found with id: " + tourId));
-
-        // 3. Kiểm tra xem user này đã favorite tour này chưa
         if (favoriteRepository.existsByUserAndTour(user, tour)) {
-            // Nếu đã tồn tại, ném lỗi 409 Conflict
             throw new ConflictException("You have already favorited this tour.");
         }
-
-        // 4. Tạo và lưu đối tượng Favorite mới
         Favorite favorite = new Favorite();
         favorite.setUser(user);
         favorite.setTour(tour);
-        // trường 'addedAt' sẽ tự động được gán bởi @CreationTimestamp
-
         favoriteRepository.save(favorite);
+    }
+
+    // (Code cũ của removeFavorite giữ nguyên)
+    @Transactional
+    public void removeFavorite(String tourId, Account currentUser) {
+        // ... code cũ
+        User user = currentUser.getUser();
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tour not found with id: " + tourId));
+        Favorite favorite = favoriteRepository.findByUserAndTour(user, tour)
+                .orElseThrow(() -> new ResourceNotFoundException("Favorite not found to delete."));
+        favoriteRepository.delete(favorite);
+    }
+
+    // (2) THÊM PHƯƠNG THỨC MỚI
+    /**
+     * Lấy danh sách ID của các tour đã yêu thích
+     */
+    @Transactional(readOnly = true)
+    public List<String> getFavoriteTourIds(Account currentUser) {
+        User user = currentUser.getUser();
+        return favoriteRepository.findTourIdsByUserId(user.getUserID());
     }
 }

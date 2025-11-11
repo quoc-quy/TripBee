@@ -6,13 +6,18 @@ import com.tripbee.backend.service.FavoriteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping; // (1) THÊM IMPORT
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List; // (2) THÊM IMPORT
+
 @RestController
-@RequestMapping("/api/favorites") // Endpoint này tự động được bảo vệ
+@RequestMapping("/api/favorites")
 public class FavoriteController {
 
     private final FavoriteService favoriteService;
@@ -21,30 +26,35 @@ public class FavoriteController {
         this.favoriteService = favoriteService;
     }
 
-    /**
-     * API để thêm một tour vào danh sách yêu thích.
-     * Cần phải đăng nhập (gửi Bearer Token).
-     */
+    // (Code cũ của addFavorite giữ nguyên)
     @PostMapping
     public ResponseEntity<?> addFavorite(
             @AuthenticationPrincipal Account currentUser,
             @RequestBody FavoriteRequest request
     ) {
-        // 1. Lấy tourId từ request body
-        String tourId = request.getTourId();
-
-        // 2. Gọi service
-        // Service sẽ tự động ném lỗi (401, 404, 409) nếu có vấn đề
-        favoriteService.addFavorite(tourId, currentUser);
-
-        // 3. Nếu thành công, trả về 201 Created (không cần nội dung)
+        favoriteService.addFavorite(request.getTourId(), currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    // [TODO] Bạn có thể thêm API GET và DELETE tại đây sau
-    // @GetMapping
-    // public ResponseEntity<?> getMyFavorites(...) {}
+    // (Code cũ của removeFavorite giữ nguyên)
+    @DeleteMapping("/tour/{tourId}")
+    public ResponseEntity<?> removeFavorite(
+            @AuthenticationPrincipal Account currentUser,
+            @PathVariable String tourId
+    ) {
+        favoriteService.removeFavorite(tourId, currentUser);
+        return ResponseEntity.ok().build();
+    }
 
-    // @DeleteMapping("/{favoriteId}")
-    // public ResponseEntity<?> removeFavorite(...) {}
+    // (3) THÊM ENDPOINT MỚI
+    /**
+     * API để lấy danh sách (chỉ ID) các tour đã yêu thích của user.
+     */
+    @GetMapping("/my-ids")
+    public ResponseEntity<List<String>> getMyFavoriteIds(
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        List<String> ids = favoriteService.getFavoriteTourIds(currentUser);
+        return ResponseEntity.ok(ids);
+    }
 }
