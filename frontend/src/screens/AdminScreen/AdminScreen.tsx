@@ -5,9 +5,9 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 const getMenuFromPath = (path: string): string => {
   if (path.startsWith("/admin/manage-tour") || path.startsWith("/admin/tours"))
     return "tour";
-  if (path.startsWith("/admin/manage-destination"))
-    return "destination";
-  
+  if (path.startsWith("/admin/promotions")) return "promotion";
+  if (path.startsWith("/admin/manage-destination")) return "destination";
+
   return "dashboard";
 };
 
