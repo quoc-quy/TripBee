@@ -1,3 +1,6 @@
+import type { tourDestinationAdmin } from "./tourDestinationAdmin";
+import type { TourTypeAdminParams } from "./tourTypeAdmin";
+
 export interface TourAdmin {
   tourID: string;
   title: string;
@@ -37,4 +40,33 @@ export interface TourListAdminParams {
   search?: string;
   status?: string;
   tour_type_id?: string;
+}
+
+export interface TourDetailAdmin {
+  tourID: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  durationDays: number;
+  durationNights: number;
+  priceAdult: number;
+  priceChild: number;
+  maxParticipants: number;
+  minParticipants: number;
+  imageURL: string;
+  status: string;
+  ranking?: number | null;
+  tourType?: {
+    id: string;
+    name: string;
+  } | null;
+  tourDestinations?: {
+    tourDestinationID: string;
+    destination: {
+      id: string;
+      nameDes: string;
+      region: string;
+    } | null;
+  }[];
 }

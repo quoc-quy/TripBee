@@ -8,6 +8,11 @@ import ContactScreen from "./screens/ContactScreen";
 import AdminScreen from "./screens/AdminScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
+import FormTourScreen from "./admin/screens/ManageTour/FormTourScreen";
+import TourDetailAdminScreen from "./admin/screens/ManageTour/TourDetailAdminScreen"
+import ManageDestinationScreen from "./admin/screens/ManageDestination/ManageDestinationScreen";
+import FormDestinationScreen from "./admin/screens/ManageDestination/FormDestinationScreen";
+import DestinationDeatilScreen from "./admin/screens/ManageDestination/DestinationDetailAdminScreen";
 import TourDetailScreen from "./screens/TourDetailScreen";
 import DashboardScreen from "./admin/screens/DashboardScreen";
 import ManageTourScreen from "./admin/screens/ManageTour/ManageTourScreen";
@@ -17,6 +22,7 @@ import ChangePassword from "./screens/Account/pages/ChangePassword";
 import HistoryTour from "./screens/Account/pages/HistoryTour";
 import FavouriteTour from "./screens/Account/pages/FavouriteTour";
 import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
+
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -95,17 +101,19 @@ export default function useRouteElements() {
     },
     {
       path: "/admin",
-      // element: (
-      //   <MainLayout>
-      //     <AdminScreen />
-      //   </MainLayout>
-
-      // ),
       element: <AdminScreen />,
       children: [
         { path: "dashboard", element: <DashboardScreen /> },
         { path: "manage-tour", element: <ManageTourScreen /> },
+        { path: "tours/new", element: <FormTourScreen /> },
+        { path: "tours/:id/edit", element: <FormTourScreen /> },
+        { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
+        { path: "manage-destination", element: <ManageDestinationScreen />},
+        { path: "destinations/:id/edit", element: <FormDestinationScreen />},
+        { path: "destinations/new", element: <FormDestinationScreen />},
+        { path: "destinations/detail/:id", element: <DestinationDeatilScreen />},
         { path: "promotions", element: <ManagePromotionScreen /> },
+
       ],
     },
     // {

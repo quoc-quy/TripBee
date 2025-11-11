@@ -1,7 +1,10 @@
 package com.tripbee.backend.admin.controller;
 
-import com.tripbee.backend.admin.dto.TourAdminResponse;
+import com.tripbee.backend.admin.dto.request.TourRequest;
+import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
 import com.tripbee.backend.admin.service.TourAdminService;
+import com.tripbee.backend.model.Tour;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,5 +29,24 @@ public class TourAdminController {
     ) {
         Page<TourAdminResponse> tourPage = tourAdminService.getAllTours(page, size, search, tourTypeId, status);
         return ResponseEntity.ok(tourPage);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TourDetailAdminResponse> getById(@PathVariable String id) {
+        TourDetailAdminResponse dto = tourAdminService.getTourDetail(id);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping
+    public ResponseEntity<Tour> create(@RequestBody TourRequest request) {
+        Tour created = tourAdminService.createTour(request);
+        return ResponseEntity.ok(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Tour> update(@PathVariable String id,
+                                       @RequestBody TourRequest request) {
+        Tour updated = tourAdminService.updateTour(id, request);
+        return ResponseEntity.ok(updated);
     }
 }

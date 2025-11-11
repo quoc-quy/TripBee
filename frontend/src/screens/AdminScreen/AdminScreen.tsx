@@ -1,26 +1,44 @@
-
-
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../admin/components/SiideBar";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+
+const getMenuFromPath = (path: string): string => {
+  if (path.startsWith("/admin/manage-tour") || path.startsWith("/admin/tours"))
+    return "tour";
+  if (path.startsWith("/admin/manage-destination"))
+    return "destination";
+  
+  return "dashboard";
+};
 
 export default function AdminScreen() {
-  const [activeMenu, setActiveMenu] = useState("dashboard");
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Khi click vào menu trong sidebar, điều hướng sang route con
+  const [activeMenu, setActiveMenu] = useState(
+    getMenuFromPath(location.pathname)
+  );
+
   const handleMenuChange = (menu: string) => {
     setActiveMenu(menu);
+
     if (menu === "dashboard") navigate("/admin/dashboard");
     else if (menu === "tour") navigate("/admin/manage-tour");
+    else if (menu === "destination") navigate("/admin/manage-destination");
     else if (menu === "promotion") navigate("/admin/promotions");
   };
 
   useEffect(() => {
     if (location.pathname === "/admin") {
       navigate("/admin/dashboard", { replace: true });
+      return;
     }
-  }, [location.pathname, navigate]);
+
+    const currentMenu = getMenuFromPath(location.pathname);
+    if (currentMenu !== activeMenu) {
+      setActiveMenu(currentMenu);
+    }
+  }, [location.pathname, navigate, activeMenu]);
 
   return (
     <div className="flex">

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DestinationRepository extends JpaRepository<Destination, String>,
@@ -21,4 +22,12 @@ public interface DestinationRepository extends JpaRepository<Destination, String
     // (3) SỬA LỖI: Tương tự, thêm cho phương thức này
     @EntityGraph(attributePaths = {"images"}) // Tải 'images' cùng lúc
     List<Destination> findAllByRegion(String region);
+
+    @Override
+    @EntityGraph(attributePaths = {
+            "images",
+            "tourDestinations",
+            "tourDestinations.tour"
+    })
+    Optional<Destination> findById(String id);
 }
