@@ -1,0 +1,22 @@
+import type { User } from "../types/user.type";
+import http from "../utils/http";
+
+interface SuccessResponse<T> {
+  data: T;
+  message: string;
+}
+
+export type UpdateProfileBody = {
+  name?: string;
+  phoneNumber?: string;
+  address?: string;
+  avatarUrl?: string;
+};
+
+const userApi = {
+  updateProfile(body: UpdateProfileBody) {
+    return http.put<SuccessResponse<User>>("auth/me", body);
+  },
+};
+
+export default userApi;
