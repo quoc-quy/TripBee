@@ -1,15 +1,75 @@
+// frontend-demo/src/components/TourCard/TourCard.tsx
+
 import { Link } from "react-router-dom";
 import type { Tour } from "../../types/tour";
 import { formatCurrency } from "../../utils/utils";
-// (MỚI) Thêm FaClock và FaHeart
 import { FaMapMarkerAlt, FaStar, FaClock, FaHeart } from "react-icons/fa";
 import Button from "../Button";
 
+// (THÊM) Import các hooks và dependencies cần thiết
+import React, { useContext, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { AppContext } from "../../contexts/app.context";
+import { favoriteApi } from "../../apis/favorite.api";
+import type { AxiosError } from "axios";
+
 export default function TourCard({ tour }: { tour: Tour }) {
+    // (THÊM) Lấy trạng thái đăng nhập
+    const { isAuthenticated } = useContext(AppContext);
+
+    // (THÊM) State để quản lý trạng thái "đã thích" của card này
+    // Giả định ban đầu là chưa thích.
+    // Lưu ý: State này chỉ tồn tại trong phiên render,
+    // nó sẽ reset nếu tải lại trang.
+    const [isLiked, setIsLiked] = useState(false);
+
+    // (THÊM) Khởi tạo mutation để gọi API
+    const addFavoriteMutation = useMutation({
+        mutationFn: favoriteApi.addFavorite,
+    });
+
+    // (THÊM) Hàm xử lý khi nhấn nút trái tim
+    const handleFavoriteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        // Ngăn thẻ <Link> của card bị kích hoạt
+        e.preventDefault();
+        e.stopPropagation();
+
+        // 1. Nếu chưa đăng nhập, không làm gì cả
+        if (!isAuthenticated) {
+            // (Bạn có thể thêm toast thông báo "Vui lòng đăng nhập" ở đây nếu muốn)
+            // toast.info("Bạn cần đăng nhập để thực hiện chức năng này");
+            return;
+        }
+
+        // 2. Nếu đã đăng nhập, gọi API
+        addFavoriteMutation.mutate(
+            { tourId: tour.tourID },
+            {
+                onSuccess: () => {
+                    // 3. Nếu thành công, đổi màu trái tim và thông báo
+                    setIsLiked(true);
+                    toast.success("Đã thêm tour vào danh sách yêu thích!");
+                },
+                onError: (error: AxiosError | Error) => {
+                    // 4. Nếu lỗi
+                    const axiosError = error as AxiosError<{ message: string }>;
+                    if (axiosError.response?.status === 409) {
+                        // Lỗi 409 (Conflict) nghĩa là đã thích tour này rồi
+                        setIsLiked(true); // Cập nhật lại state cho đúng
+                        toast.info("Bạn đã yêu thích tour này rồi.");
+                    } else {
+                        // Lỗi chung
+                        toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
+                    }
+                },
+            }
+        );
+    };
+
     return (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group">
             <div className="relative">
-                {/* Ảnh chính */}
                 <Link to={`/tours/${tour.tourID}`} className="block h-64">
                     <img
                         src={tour.imageURL}
@@ -18,21 +78,27 @@ export default function TourCard({ tour }: { tour: Tour }) {
                     />
                 </Link>
 
-                {/* (MỚI) Nút Yêu thích (Trái tim) */}
+                {/* (CẬP NHẬT) Nút Yêu thích (Trái tim) */}
                 <button
-                    className="absolute top-4 right-4 z-10 p-2.5 bg-white/90 rounded-full text-gray-400 hover:text-red-500 transition duration-300"
+                    onClick={handleFavoriteClick}
+                    disabled={addFavoriteMutation.isPending} // Vô hiệu hóa khi đang gọi API
+                    className={`absolute top-4 right-4 z-10 p-2.5 bg-white/90 rounded-full transition duration-300
+                        ${
+                            isLiked
+                                ? "text-red-500" // Trái tim màu đỏ nếu đã thích
+                                : "text-gray-400 hover:text-red-500" // Mặc định
+                        }
+                        ${addFavoriteMutation.isPending ? "cursor-not-allowed" : ""}
+                    `}
                     aria-label="Yêu thích"
                 >
                     <FaHeart size={18} />
                 </button>
 
-                {/* (SỬA) Loại tour - nền xanh chữ trắng */}
                 <div className="absolute top-4 left-4 z-10 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full capitalize">
-                    {/* Đảm bảo tên loại tour được hiển thị an toàn */}
                     {tour.tourTypeName?.toLowerCase().replace("tour ", "")}
                 </div>
 
-                {/* (SỬA) Cập nhật vị trí Giảm giá (dưới Loại tour) */}
                 {tour.discountPercentage > 0 && (
                     <div className="absolute bottom-5 left-4 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                         Giảm {tour.discountPercentage}%
@@ -40,52 +106,42 @@ export default function TourCard({ tour }: { tour: Tour }) {
                 )}
             </div>
 
-            {/* --- Nội dung Card --- */}
             <div className="p-5">
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
-                    {/* (SỬA) Sao màu vàng */}
                     <div className="flex items-center gap-1">
                         <FaStar className="text-yellow-500" />
                         <span className="font-medium">{tour.averageRating}</span>
                         <span className="text-gray-500">({tour.reviewCount} đánh giá)</span>
                     </div>
 
-                    {/* (SỬA) Thêm icon đồng hồ */}
                     <div className="flex items-center gap-1.5">
                         <FaClock className="text-gray-400" />
                         <span>{`${tour.durationDays} ngày ${tour.durationNights} đêm`}</span>
                     </div>
                 </div>
 
-                {/* Tiêu đề */}
                 <h3 className="text-xl font-bold text-secondary-dark mb-2 h-14 line-clamp-2">
                     <Link to={`/tours/${tour.tourID}`} className="hover:text-blue-600 transition">
                         {tour.title}
                     </Link>
                 </h3>
 
-                {/* Địa điểm */}
                 <div className="flex items-center text-sm text-gray-600 mb-4">
                     <FaMapMarkerAlt className="mr-2 text-gray-400" />
                     {tour.destinationName}
                 </div>
 
-                {/* Giá tiền */}
                 <div className="flex items-baseline justify-end gap-2">
-                    {/* Hiển thị giá gốc nếu có giảm giá */}
                     {tour.finalPrice < (tour.priceAdult || 0) && (
                         <span className="text-gray-500 line-through text-md">
-                            {/* Dùng priceAdult làm giá gốc */}
                             {formatCurrency(tour.priceAdult)}
                         </span>
                     )}
-                    {/* Giá cuối cùng (sau khuyến mãi) */}
                     <span className="text-2xl font-bold text-red-600">
                         {formatCurrency(tour.finalPrice)}
                     </span>
                 </div>
 
-                {/* Nút bấm */}
                 <div className="flex gap-3 mt-5">
                     <Button
                         as="link"
@@ -96,8 +152,8 @@ export default function TourCard({ tour }: { tour: Tour }) {
                         Xem chi tiết
                     </Button>
                     <Button
-                        as="link" // Chuyển nút "Đặt ngay" thành link
-                        to={`/tours/${tour.tourID}`} // Trỏ đến trang chi tiết tour
+                        as="link"
+                        to={`/tours/${tour.tourID}`}
                         variant="solid"
                         className="flex-1"
                     >
