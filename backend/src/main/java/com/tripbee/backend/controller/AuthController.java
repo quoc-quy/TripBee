@@ -1,28 +1,24 @@
 package com.tripbee.backend.controller;
 
-import com.tripbee.backend.dto.LoginRequest;
-import com.tripbee.backend.dto.LoginResponse;
-import com.tripbee.backend.dto.RegisterRequest;
-import com.tripbee.backend.dto.UserProfileResponse; // (1) THÊM IMPORT
+import com.tripbee.backend.dto.*;
 import com.tripbee.backend.model.Account; // (2) THÊM IMPORT
 import com.tripbee.backend.service.AuthService;
+import com.tripbee.backend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // (3) THÊM IMPORT
-import org.springframework.web.bind.annotation.GetMapping; // (4) THÊM IMPORT
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     @PostMapping("/login")
@@ -60,6 +56,19 @@ public class AuthController {
         // Dùng DTO mới của chúng ta để tạo response
         UserProfileResponse response = new UserProfileResponse(currentUser);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserProfileResponse> updateMyProfile(
+            @RequestBody UserUpdateRequest request,
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserProfileResponse updatedProfile = userService.updateUserProfile(request, currentUser);
+        return ResponseEntity.ok(updatedProfile);
     }
 
     @PostMapping("/logout")
