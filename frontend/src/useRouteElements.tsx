@@ -22,7 +22,6 @@ import ChangePassword from "./screens/Account/pages/ChangePassword";
 import HistoryTour from "./screens/Account/pages/HistoryTour";
 import FavouriteTour from "./screens/Account/pages/FavouriteTour";
 import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
-import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionScreen";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
