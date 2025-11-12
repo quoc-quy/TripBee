@@ -32,7 +32,7 @@ public class PromotionAdminService {
 
     public Page<PromotionAdminResponse> getAllPromotions(int page, int size, String search, String status, String discountType, String sortBy) {
         // Mặc định sắp xếp theo ngày tạo mới nhất nếu không có sortBy
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Sort sort = Sort.by(Sort.Direction.ASC, "promotionID");
         if (sortBy != null && !sortBy.isEmpty()) {
             try {
                 String[] parts = sortBy.split(",");
