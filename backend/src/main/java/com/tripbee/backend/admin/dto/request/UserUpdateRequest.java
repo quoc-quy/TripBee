@@ -1,2 +1,14 @@
-package com.tripbee.backend.admin.dto.request;public class UserUpdateRequest {
+package com.tripbee.backend.admin.dto.request;
+
+import lombok.*;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class UserUpdateRequest {
+    private String name;
+    private String phoneNumber;
+    private boolean locked;
 }
