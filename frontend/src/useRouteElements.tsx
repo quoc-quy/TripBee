@@ -23,6 +23,10 @@ import HistoryTour from "./screens/Account/pages/HistoryTour";
 import FavouriteTour from "./screens/Account/pages/FavouriteTour";
 import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
 import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionScreen";
+import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
+import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
+import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
+
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -116,6 +120,9 @@ export default function useRouteElements() {
           element: <DestinationDeatilScreen />,
         },
         { path: "promotions", element: <ManagePromotionScreen /> },
+        { path: "users", element: <UserAdminScreen /> },
+        { path: "users/:id", element: <UserDetailScreen /> },
+        { path: "users/:id/edit", element: <UserEditScreen /> },
       ],
     },
     // {
