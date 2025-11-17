@@ -82,4 +82,25 @@ export const schema = yup.object({
     .oneOf([yup.ref("password")], "Mật khẩu nhập lại không khớp"),
 });
 
+export const schemaProfile = yup.object({
+  name: yup
+    .string()
+    .trim()
+    .required("Tên là bắt buộc")
+    .max(100, "Tên không được vượt quá 100 ký tự")
+    .nullable(),
+  phoneNumber: yup
+    .string()
+    .notRequired()
+    .matches(/^[0-9]{10}$/, "Số điện thoại phải có 10 chữ số")
+    .nullable(),
+  address: yup
+    .string()
+    .notRequired()
+    .max(255, "Địa chỉ không được vượt quá 255 ký tự")
+    .nullable(),
+  avatarUrl: yup.string().notRequired().nullable(),
+});
+
 export type Schema = yup.InferType<typeof schema>;
+export type SchemaProfile = yup.InferType<typeof schemaProfile>;

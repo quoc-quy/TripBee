@@ -1,5 +1,6 @@
 package com.tripbee.backend.config;
 
+import com.tripbee.backend.model.enums.RoleType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -32,7 +33,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // Cho phép các nguồn gốc của Front-end
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
@@ -58,6 +59,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
                         .requestMatchers("/api/admin/**", "/api/admin/tours/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
+//                        .requestMatchers("/api/admin/**").hasAuthority(RoleType.ADMIN.name())
+//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 );
