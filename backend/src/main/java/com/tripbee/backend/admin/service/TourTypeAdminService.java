@@ -15,7 +15,7 @@ public class TourTypeAdminService {
         this.tourTypeRepository = tourTypeRepository;
     }
 
-    public List<TourTypeResponse> getAll() {
+    public List<TourTypeResponse> getAllForTour() {
         return tourTypeRepository.findAll().stream()
                 .map(TourTypeResponse::new)
                 .toList();

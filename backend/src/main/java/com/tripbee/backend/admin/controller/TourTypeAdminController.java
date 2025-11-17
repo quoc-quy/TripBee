@@ -20,7 +20,7 @@ public class TourTypeAdminController {
 
 
     @GetMapping
-    public List<TourTypeResponse> getAllTourTypes() {
-        return tourTypeAdminService.getAll();
+    public List<TourTypeResponse> getAllTourTypesForTour() {
+        return tourTypeAdminService.getAllForTour();
     }
 }
