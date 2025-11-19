@@ -1,20 +1,21 @@
-// frontend-demo/src/components/BookingModal/BookingModal.tsx
-
 import { createPortal } from "react-dom";
 import { useContext, useEffect } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, User, Users, Baby, CreditCard } from "lucide-react";
+// [MỚI] Import các hook và API cần thiết
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { bookingApi } from "../../apis/booking.api";
+import { getProfile } from "../../apis/auth.api";
 
 import type { TourDetails } from "../../types/tour";
-import type { BookingFormData, Participant } from "../../types/booking.type";
+import type { BookingFormData } from "../../types/booking.type";
 import { formatCurrency } from "../../utils/utils";
 import Button from "../Button";
 import { AppContext } from "../../contexts/app.context";
-import { useQuery } from "@tanstack/react-query";
-import { getProfile } from "../../apis/auth.api";
 
 // --- Validation Schemas (Giữ nguyên) ---
 const phoneRegex = /^[0-9]{10}$/;
@@ -55,7 +56,7 @@ const bookingFormSchema = yup.object({
     children: yup.array().of(childParticipantSchema),
 });
 
-// --- Props cho Modal (Giữ nguyên) ---
+// --- Props cho Modal ---
 interface BookingModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -67,7 +68,7 @@ interface BookingModalProps {
     };
 }
 
-// --- Component Input Tùy Chỉnh (Giữ nguyên) ---
+// --- Component Input Tùy Chỉnh ---
 type FormInputProps = {
     label: string;
     id: string;
@@ -132,19 +133,38 @@ const FormSelect = ({ label, id, register, error, required = false }: FormSelect
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
 );
-// --- Kết thúc Component Input Tùy Chỉnh ---
 
 // --- Component Modal Chính ---
 export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: BookingModalProps) {
-    // ... (Toàn bộ logic hooks: useQuery, useForm, useFieldArray... giữ nguyên) ...
     const { isAuthenticated } = useContext(AppContext);
+    const navigate = useNavigate(); // Hook điều hướng
 
+    // Lấy thông tin user để điền sẵn vào form
     const { data: profileData } = useQuery({
         queryKey: ["userProfile"],
         queryFn: getProfile,
         enabled: isAuthenticated,
     });
     const user = profileData?.data;
+
+    // [MỚI] Hook mutation để gọi API tạo booking
+    const createBookingMutation = useMutation({
+        mutationFn: (body: any) => bookingApi.createBooking(body),
+        onSuccess: (response) => {
+            // API trả về object có chứa bookingID
+            const bookingID = response.data.bookingID;
+
+            // 1. Đóng modal
+            onClose();
+
+            // 2. Chuyển hướng sang trang thanh toán với ID vừa tạo
+            navigate(`/payment/${bookingID}`);
+        },
+        onError: (error) => {
+            console.error("Lỗi đặt tour:", error);
+            alert("Đặt tour thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau!");
+        },
+    });
 
     const {
         register,
@@ -181,6 +201,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         name: "children",
     });
 
+    // Điền thông tin user vào form nếu đã đăng nhập
     useEffect(() => {
         if (user) {
             setValue("bookerName", user.name || "");
@@ -189,8 +210,10 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         }
     }, [user, setValue]);
 
+    // Logic cập nhật số lượng form người tham gia dựa trên props bookingDetails
     useEffect(() => {
         if (isOpen) {
+            // Xử lý người lớn đi cùng (trừ người đặt)
             const requiredOtherAdults = Math.max(0, bookingDetails.adults - 1);
             const currentOtherAdults = adultFields.length;
             if (requiredOtherAdults > currentOtherAdults) {
@@ -206,6 +229,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                 );
             }
 
+            // Xử lý trẻ em
             const requiredChildren = bookingDetails.children;
             const currentChildren = childrenFields.length;
             if (requiredChildren > currentChildren) {
@@ -232,7 +256,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         adultFields.length,
     ]);
 
-    // (Giữ nguyên) Logic khóa cuộn (scroll lock)
+    // Khóa cuộn trang khi mở modal
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden";
@@ -244,7 +268,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         };
     }, [isOpen]);
 
-    // (Giữ nguyên) Logic chặn phím ESC
+    // Đóng modal khi nhấn ESC
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
@@ -260,11 +284,20 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
     }, [isOpen]);
 
     const onSubmit = (data: BookingFormData) => {
-        console.log("Dữ liệu form hợp lệ:", data);
-        // TODO: GỌI API THANH TOÁN / TẠO BOOKING
+        // Chuẩn bị dữ liệu payload
+        const payload = {
+            tourID: tour.tourID,
+            numAdults: bookingDetails.adults,
+            numChildren: bookingDetails.children,
+            totalPrice: bookingDetails.totalPrice,
+            // Spread toàn bộ dữ liệu từ form (bookerName, otherAdults, children...)
+            ...data,
+        };
+
+        // Gọi API
+        createBookingMutation.mutate(payload);
     };
 
-    // (SỬA) Bọc JSX trong createPortal
     return createPortal(
         <AnimatePresence>
             {isOpen && (
@@ -272,18 +305,16 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    // (SỬA) Tăng z-index và xóa onClick
                     className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4"
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        // (SỬA) Thêm class flex, flex-col và max-h
                         className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[95vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* (SỬA) Thêm flex-shrink-0 cho Header */}
+                        {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b flex-shrink-0">
                             <h2 className="text-2xl font-semibold text-gray-800">
                                 Thông tin đặt tour
@@ -293,17 +324,13 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                             </button>
                         </div>
 
-                        {/* (SỬA) Thêm class cho Form để nó quản lý layout */}
+                        {/* Form Body */}
                         <form
                             onSubmit={handleSubmit(onSubmit)}
-                            // class="flex-1" -> chiếm không gian còn lại
-                            // class="overflow-hidden" -> để nó chứa div con có overflow-y-auto
-                            // class="flex flex-col" -> để xếp content và footer theo chiều dọc
                             className="flex-1 overflow-hidden flex flex-col"
                         >
-                            {/* (SỬA) Thêm flex-1 và overflow-y-auto cho Vùng cuộn */}
                             <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                                {/* 1. Thông tin người đặt (Giữ nguyên) */}
+                                {/* 1. Thông tin người đặt */}
                                 <div className="border border-gray-200 rounded-lg p-4">
                                     <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                                         <User size={20} className="mr-2 text-blue-600" />
@@ -340,7 +367,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     </div>
                                 </div>
 
-                                {/* 2. Người lớn đi cùng (Giữ nguyên) */}
+                                {/* 2. Người lớn đi cùng */}
                                 {adultFields.length > 0 && (
                                     <div className="border border-gray-200 rounded-lg p-4">
                                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -406,7 +433,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     </div>
                                 )}
 
-                                {/* 3. Trẻ em đi cùng (Giữ nguyên) */}
+                                {/* 3. Trẻ em đi cùng */}
                                 {childrenFields.length > 0 && (
                                     <div className="border border-gray-200 rounded-lg p-4">
                                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -470,7 +497,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     </div>
                                 )}
 
-                                {/* Ghi chú (Giữ nguyên) */}
+                                {/* Ghi chú */}
                                 <div>
                                     <label
                                         htmlFor="note"
@@ -488,9 +515,8 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                 </div>
                             </div>
 
-                            {/* (SỬA) Thêm flex-shrink-0 cho Footer */}
+                            {/* Footer: Tổng tiền & Nút submit */}
                             <div className="p-6 bg-gray-50 border-t flex-shrink-0">
-                                {/* ... (Nội dung footer giữ nguyên) ... */}
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">
                                     Chi tiết đặt tour
                                 </h3>
@@ -522,9 +548,16 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                 <Button
                                     type="submit"
                                     className="w-full text-lg font-semibold py-3 mt-4"
+                                    disabled={createBookingMutation.isPending}
                                 >
-                                    <CreditCard size={20} className="mr-2" />
-                                    Tiến hành thanh toán
+                                    {createBookingMutation.isPending ? (
+                                        "Đang xử lý..."
+                                    ) : (
+                                        <>
+                                            <CreditCard size={20} className="mr-2 inline-block" />
+                                            Tiến hành thanh toán
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </form>
@@ -532,7 +565,6 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                 </motion.div>
             )}
         </AnimatePresence>,
-        // (Giữ nguyên) Đích đến của Portal
         document.body
     );
 }

@@ -20,3 +20,16 @@ export interface BookingFormData {
     otherAdults: Participant[];
     children: Participant[];
 }
+
+// [MỚI] Interface chi tiết Booking trả về từ API (dùng cho trang Payment)
+export interface BookingDetail {
+    bookingID: string;
+    tourName: string;
+    finalAmount: number;
+    status: "PROCESSING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+    bookingDate: string;
+    numAdults: number;
+    numChildren: number;
+    customerName: string;
+    customerPhone: string;
+}
