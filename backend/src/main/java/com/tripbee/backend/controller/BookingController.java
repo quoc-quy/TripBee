@@ -2,10 +2,14 @@ package com.tripbee.backend.controller;
 
 import com.tripbee.backend.dto.BookingRequest;
 import com.tripbee.backend.model.Account;
+import com.tripbee.backend.model.Booking;
 import com.tripbee.backend.service.BookingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -17,23 +21,54 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    // Yêu cầu phải đăng nhập
+    // API Tạo Booking: Trả về bookingID để frontend chuyển trang
     @PostMapping
     public ResponseEntity<?> createBooking(
             @RequestBody BookingRequest request,
-            @AuthenticationPrincipal Account currentUser // Lấy thông tin user từ JWT
+            @AuthenticationPrincipal Account currentUser
     ) {
         if (currentUser == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
-        boolean success = bookingService.processBooking(request, currentUser);
+        try {
+            Booking newBooking = bookingService.processBooking(request, currentUser);
 
-        if (success) {
-            return ResponseEntity.ok("Booking request received successfully.");
-        } else {
-            // [TODO: Trả về lỗi chi tiết hơn]
-            return ResponseEntity.badRequest().body("Failed to process booking.");
+            // Trả về ID của booking vừa tạo để frontend điều hướng
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Booking created successfully");
+            response.put("bookingID", newBooking.getBookingID());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to process booking: " + e.getMessage());
+        }
+    }
+
+    // API Lấy thông tin Booking: Dùng cho trang Thanh Toán (Payment Page)
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getBookingById(@PathVariable String id) {
+        try {
+            Booking booking = bookingService.getBookingById(id);
+
+            // Tạo response object thủ công để tránh lỗi vòng lặp (Infinite Recursion)
+            // hoặc lỗi Lazy Loading của Hibernate khi trả về JSON
+            Map<String, Object> response = new HashMap<>();
+            response.put("bookingID", booking.getBookingID());
+            response.put("tourName", booking.getTour().getTitle());
+            response.put("finalAmount", booking.getFinalAmount());
+            response.put("status", booking.getStatus());
+            response.put("bookingDate", booking.getBookingDate());
+            response.put("numAdults", booking.getNumAdults());
+            response.put("numChildren", booking.getNumChildren());
+
+            // Thông tin khách hàng (để hiển thị nếu cần)
+            response.put("customerName", booking.getUser().getName());
+            response.put("customerPhone", booking.getUser().getPhoneNumber());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Booking not found");
         }
     }
 }
