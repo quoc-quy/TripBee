@@ -1,7 +1,7 @@
 // src/main/java/com/tripbee/backend/admin/service/PromotionAdminService.java
 package com.tripbee.backend.admin.service;
 
-import com.tripbee.backend.admin.dto.PromotionAdminResponse;
+import com.tripbee.backend.admin.dto.response.promotions.PromotionAdminResponse;
 import com.tripbee.backend.admin.dto.request.PromotionRequest;
 import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.Promotion;

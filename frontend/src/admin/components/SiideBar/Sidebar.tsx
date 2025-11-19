@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Map, Users, Calendar, Settings, Tag } from 'lucide-react';
+import { LayoutDashboard, Map, Users, Calendar, Settings, Tag, MessageSquare } from 'lucide-react';
 
 interface SidebarProps {
   activeMenu: string;
@@ -14,7 +14,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu }) => {
     { id: 'user', label: 'Quản lý Người dùng', icon: Users },
     { id: 'destination', label: 'Quản lý Điểm đến', icon: Map },
     { id: 'booking', label: 'Quản lý Booking', icon: Calendar },
-    { id: 'settings', label: 'Cài đặt', icon: Settings }
+    { id: 'settings', label: 'Cài đặt', icon: Settings },
+    { id: 'contact-message', label: 'Tin nhắn liên hệ', icon: MessageSquare },
   ];
 
   return (

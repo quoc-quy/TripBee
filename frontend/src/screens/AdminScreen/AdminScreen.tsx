@@ -10,6 +10,9 @@ const getMenuFromPath = (path: string): string => {
   if (path.startsWith("/admin/manage-destination")) return "destination";
   if (path.startsWith("/admin/users")) return "user";
 
+  // 1. Thêm dòng này để Sidebar biết đang ở trang tin nhắn
+  if (path.startsWith("/admin/contact-messages")) return "contact-message";
+
   return "dashboard";
 };
 
@@ -29,6 +32,7 @@ export default function AdminScreen() {
     else if (menu === "destination") navigate("/admin/manage-destination");
     else if (menu === "promotion") navigate("/admin/promotions");
     else if (menu === "user") navigate("/admin/users");
+    else if (menu === "contact-message") navigate("/admin/contact-messages");
   };
 
   useEffect(() => {

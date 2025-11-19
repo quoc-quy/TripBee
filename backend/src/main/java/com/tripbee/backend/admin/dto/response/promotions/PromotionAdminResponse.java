@@ -1,5 +1,5 @@
 // src/main/java/com/tripbee/backend/admin/dto/PromotionAdminResponse.java
-package com.tripbee.backend.admin.dto;
+package com.tripbee.backend.admin.dto.response.promotions;
 
 import com.tripbee.backend.model.Promotion;
 import com.tripbee.backend.model.enums.PromotionStatus;
