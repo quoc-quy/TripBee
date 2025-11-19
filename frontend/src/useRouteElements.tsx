@@ -26,6 +26,7 @@ import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionSc
 import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
 import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
 import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
+import ContactMessageScreen from "./admin/screens/ContactMessageScreen/ContactMessageScreen";
 
 
 export default function useRouteElements() {
@@ -103,6 +104,7 @@ export default function useRouteElements() {
         </MainLayout>
       ),
     },
+    
     {
       path: "/admin",
       element: <AdminScreen />,
@@ -123,6 +125,7 @@ export default function useRouteElements() {
         { path: "users", element: <UserAdminScreen /> },
         { path: "users/:id", element: <UserDetailScreen /> },
         { path: "users/:id/edit", element: <UserEditScreen /> },
+        { path: "contact-messages", element: <ContactMessageScreen /> }
       ],
     },
     // {
