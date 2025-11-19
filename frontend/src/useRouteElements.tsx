@@ -27,6 +27,7 @@ import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
 import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
 import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
 import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
+import ContactMessageScreen from "./admin/screens/ContactMessageScreen/ContactMessageScreen";
 
 export default function useRouteElements() {
     const rootElements = useRoutes([
@@ -131,6 +132,7 @@ export default function useRouteElements() {
                 { path: "users", element: <UserAdminScreen /> },
                 { path: "users/:id", element: <UserDetailScreen /> },
                 { path: "users/:id/edit", element: <UserEditScreen /> },
+                { path: "contact-messages", element: <ContactMessageScreen /> },
             ],
         },
         // {
