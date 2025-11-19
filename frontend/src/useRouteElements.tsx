@@ -26,143 +26,148 @@ import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionSc
 import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
 import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
 import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
-import ContactMessageScreen from "./admin/screens/ContactMessageScreen/ContactMessageScreen";
-
+import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
 
 export default function useRouteElements() {
-  const rootElements = useRoutes([
-    {
-      path: "/",
-      index: true,
-      element: (
-        <MainLayout>
-          <HomeScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/login",
-      element: (
-        <MainLayout>
-          <LoginScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/register",
-      element: (
-        <MainLayout>
-          <RegisterScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/tours",
-      element: (
-        <MainLayout>
-          <TourScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/tours",
-      element: (
-        <MainLayout>
-          <TourScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/tours/:id",
-      element: (
-        <MainLayout>
-          <TourDetailScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/destinations",
-      element: (
-        <MainLayout>
-          <DestinationScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/about",
-      element: (
-        <MainLayout>
-          <AboutScreen />
-        </MainLayout>
-      ),
-    },
-    {
-      path: "/contact",
-      element: (
-        <MainLayout>
-          <ContactScreen />
-        </MainLayout>
-      ),
-    },
-    
-    {
-      path: "/admin",
-      element: <AdminScreen />,
-      children: [
-        { path: "dashboard", element: <DashboardScreen /> },
-        { path: "manage-tour", element: <ManageTourScreen /> },
-        { path: "tours/new", element: <FormTourScreen /> },
-        { path: "tours/:id/edit", element: <FormTourScreen /> },
-        { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
-        { path: "manage-destination", element: <ManageDestinationScreen /> },
-        { path: "destinations/:id/edit", element: <FormDestinationScreen /> },
-        { path: "destinations/new", element: <FormDestinationScreen /> },
+    const rootElements = useRoutes([
         {
-          path: "destinations/detail/:id",
-          element: <DestinationDeatilScreen />,
-        },
-        { path: "promotions", element: <ManagePromotionScreen /> },
-        { path: "users", element: <UserAdminScreen /> },
-        { path: "users/:id", element: <UserDetailScreen /> },
-        { path: "users/:id/edit", element: <UserEditScreen /> },
-        { path: "contact-messages", element: <ContactMessageScreen /> }
-      ],
-    },
-    // {
-    //   path: "/account",
-    //   element: (
-    //     <MainLayout>
-    //       <AccountDetail />
-    //     </MainLayout>
-    //   ),
-    // },
-    {
-      path: "/account",
-      element: (
-        <MainLayout>
-          <AccountLayout />
-        </MainLayout>
-      ),
-      children: [
-        {
-          path: "/account/profile",
-          element: <Profile />,
+            path: "/",
+            index: true,
+            element: (
+                <MainLayout>
+                    <HomeScreen />
+                </MainLayout>
+            ),
         },
         {
-          path: "/account/password",
-          element: <ChangePassword />,
+            path: "/login",
+            element: (
+                <MainLayout>
+                    <LoginScreen />
+                </MainLayout>
+            ),
         },
         {
-          path: "/account/historyTour",
-          element: <HistoryTour />,
+            path: "/register",
+            element: (
+                <MainLayout>
+                    <RegisterScreen />
+                </MainLayout>
+            ),
         },
         {
-          path: "/account/favouriteTour",
-          element: <FavouriteTour />,
+            path: "/tours",
+            element: (
+                <MainLayout>
+                    <TourScreen />
+                </MainLayout>
+            ),
         },
-      ],
-    },
-  ]);
+        {
+            path: "/tours",
+            element: (
+                <MainLayout>
+                    <TourScreen />
+                </MainLayout>
+            ),
+        },
+        {
+            path: "/tours/:id",
+            element: (
+                <MainLayout>
+                    <TourDetailScreen />
+                </MainLayout>
+            ),
+        },
+        {
+            path: "/payment/:id",
+            element: (
+                <MainLayout>
+                    <PaymentScreen />
+                </MainLayout>
+            ),
+        },
+        {
+            path: "/destinations",
+            element: (
+                <MainLayout>
+                    <DestinationScreen />
+                </MainLayout>
+            ),
+        },
+        {
+            path: "/about",
+            element: (
+                <MainLayout>
+                    <AboutScreen />
+                </MainLayout>
+            ),
+        },
+        {
+            path: "/contact",
+            element: (
+                <MainLayout>
+                    <ContactScreen />
+                </MainLayout>
+            ),
+        },
+        {
+            path: "/admin",
+            element: <AdminScreen />,
+            children: [
+                { path: "dashboard", element: <DashboardScreen /> },
+                { path: "manage-tour", element: <ManageTourScreen /> },
+                { path: "tours/new", element: <FormTourScreen /> },
+                { path: "tours/:id/edit", element: <FormTourScreen /> },
+                { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
+                { path: "manage-destination", element: <ManageDestinationScreen /> },
+                { path: "destinations/:id/edit", element: <FormDestinationScreen /> },
+                { path: "destinations/new", element: <FormDestinationScreen /> },
+                {
+                    path: "destinations/detail/:id",
+                    element: <DestinationDeatilScreen />,
+                },
+                { path: "promotions", element: <ManagePromotionScreen /> },
+                { path: "users", element: <UserAdminScreen /> },
+                { path: "users/:id", element: <UserDetailScreen /> },
+                { path: "users/:id/edit", element: <UserEditScreen /> },
+            ],
+        },
+        // {
+        //   path: "/account",
+        //   element: (
+        //     <MainLayout>
+        //       <AccountDetail />
+        //     </MainLayout>
+        //   ),
+        // },
+        {
+            path: "/account",
+            element: (
+                <MainLayout>
+                    <AccountLayout />
+                </MainLayout>
+            ),
+            children: [
+                {
+                    path: "/account/profile",
+                    element: <Profile />,
+                },
+                {
+                    path: "/account/password",
+                    element: <ChangePassword />,
+                },
+                {
+                    path: "/account/historyTour",
+                    element: <HistoryTour />,
+                },
+                {
+                    path: "/account/favouriteTour",
+                    element: <FavouriteTour />,
+                },
+            ],
+        },
+    ]);
 
-  return rootElements;
+    return rootElements;
 }
