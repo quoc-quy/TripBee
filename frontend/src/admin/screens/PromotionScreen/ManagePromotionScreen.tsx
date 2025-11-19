@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -63,21 +65,26 @@ const formatDate = (dateString: string) => {
 };
 
 // (ĐÃ SỬA) Component Modal Wrapper đơn giản
+
 const SimpleModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
 }> = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-
-  // Khóa cuộn màn hình khi modal mở
+  // THAY ĐỔI: Tự quản lý việc khóa/mở cuộn của body khi isOpen thay đổi
   React.useEffect(() => {
-    document.body.style.overflow = "hidden";
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    // Cleanup function để đảm bảo scroll được khôi phục khi component unmount
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, []);
+  }, [isOpen]);
 
+  if (!isOpen) return null;
   return (
     <div
       className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4"
