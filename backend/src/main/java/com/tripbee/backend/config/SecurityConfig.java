@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
                         .requestMatchers("/api/admin/**", "/api/admin/tours/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/webhooks/**").permitAll()
 //                        .requestMatchers("/api/admin/**").hasAuthority(RoleType.ADMIN.name())
 //                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
