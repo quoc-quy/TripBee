@@ -1,5 +1,6 @@
 package com.tripbee.backend.service;
 
+import com.tripbee.backend.dto.BookingHistoryResponse;
 import com.tripbee.backend.dto.BookingRequest;
 import com.tripbee.backend.model.*;
 import com.tripbee.backend.model.enums.BookingStatus;
@@ -10,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -118,5 +121,16 @@ public class BookingService {
 
         bookingRepository.save(booking);
         System.out.println("Successfully updated Booking " + bookingId + " to CONFIRMED.");
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingHistoryResponse> getUserBookingHistory(Account currentUser) {
+        String userID = currentUser.getUser().getUserID();
+
+        List<Booking> bookings = bookingRepository.findAllByUser_userID(userID);
+
+        return bookings.stream()
+                .map(BookingHistoryResponse::new)
+                .collect(Collectors.toList());
     }
 }
