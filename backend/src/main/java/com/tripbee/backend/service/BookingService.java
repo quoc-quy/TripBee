@@ -3,6 +3,7 @@ package com.tripbee.backend.service;
 import com.tripbee.backend.dto.BookingHistoryResponse;
 import com.tripbee.backend.dto.BookingRequest;
 import com.tripbee.backend.model.*;
+import com.tripbee.backend.service.EmailService.PaymentSuccessEmailData;
 import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.PaymentStatus;
 import com.tripbee.backend.repository.*;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,17 +24,20 @@ public class BookingService {
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final InvoiceRepository invoiceRepository;
+    private final EmailService emailService;
 
     public BookingService(TourRepository tourRepository,
                           BookingRepository bookingRepository,
                           UserRepository userRepository,
                           PaymentRepository paymentRepository,
-                          InvoiceRepository invoiceRepository) {
+                          InvoiceRepository invoiceRepository,
+                          EmailService emailService) {
         this.tourRepository = tourRepository;
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
         this.invoiceRepository = invoiceRepository;
+        this.emailService = emailService;
     }
 
     // 1. Logic tạo Booking mới
@@ -52,6 +57,8 @@ public class BookingService {
 
         // Tạo Booking
         Booking booking = new Booking();
+        String customID = "tbbk-" + UUID.randomUUID().toString();
+        booking.setBookingID(customID);
         booking.setTour(tour);
         booking.setUser(user);
         booking.setNumAdults(request.getNumAdults());
@@ -119,8 +126,36 @@ public class BookingService {
             invoiceRepository.save(invoice);
         }
 
-        bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
         System.out.println("Successfully updated Booking " + bookingId + " to CONFIRMED.");
+
+        try {
+            String customerEmail = savedBooking.getUser().getEmail();
+            String customerName = savedBooking.getUser().getName();
+
+            if (customerEmail != null && !customerEmail.isEmpty()) {
+                // [FIX] Lấy dữ liệu cần thiết ngay trong Transaction để tránh LazyInitializationException
+                PaymentSuccessEmailData emailData = PaymentSuccessEmailData.builder()
+                        .toEmail(customerEmail)
+                        .customerName(customerName)
+                        .bookingId(savedBooking.getBookingID())
+                        .tourTitle(savedBooking.getTour().getTitle())      // Hibernate sẽ query Tour tại đây
+                        .startDate(savedBooking.getTour().getStartDate())  // Hibernate sẽ query Tour tại đây
+                        .numAdults(savedBooking.getNumAdults())
+                        .numChildren(savedBooking.getNumChildren())
+                        .finalAmount(savedBooking.getFinalAmount())
+                        .build();
+
+                // Gọi hàm Async với DTO
+                emailService.sendPaymentSuccessEmail(emailData);
+            } else {
+                System.out.println("User email is empty, skipping email notification.");
+            }
+        } catch (Exception e) {
+            // Log lỗi email nhưng KHÔNG throw exception để tránh rollback giao dịch thanh toán
+            System.err.println("Error triggering payment email: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Transactional(readOnly = true)
