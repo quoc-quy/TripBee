@@ -102,5 +102,34 @@ export const schemaProfile = yup.object({
   avatarUrl: yup.string().notRequired().nullable(),
 });
 
+export const schemaChangePassword = yup.object({
+  oldPassword: yup
+    .string()
+    .required("Mật khẩu cũ là bắt buộc")
+    .min(6, "Độ dài từ 6 đến 160 kí tự")
+    .max(160, "Độ dài từ 6 đến 160 kí tự"),
+
+  newPassword: yup
+    .string()
+    .required("Mật khẩu mới là bắt buộc")
+    .min(6, "Độ dài từ 6 đến 160 kí tự")
+    .max(160, "Độ dài từ 6 đến 160 kí tự")
+    .test(
+      "is-different",
+      "Mật khẩu mới phải khác mật khẩu cũ",
+      function (value) {
+        return value !== this.parent.oldPassword;
+      }
+    ),
+
+  confirmNewPassword: yup
+    .string()
+    .required("Xác nhận mật khẩu mới là bắt buộc")
+    .min(6, "Độ dài từ 6 đến 160 kí tự")
+    .max(160, "Độ dài từ 6 đến 160 kí tự")
+    .oneOf([yup.ref("newPassword")], "Mật khẩu xác nhận không khớp"),
+});
+
+export type SchemaChangePassword = yup.InferType<typeof schemaChangePassword>;
 export type Schema = yup.InferType<typeof schema>;
 export type SchemaProfile = yup.InferType<typeof schemaProfile>;

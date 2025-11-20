@@ -6,6 +6,11 @@ interface SuccessResponse<T> {
   message: string;
 }
 
+export type ChangePasswordBody = {
+  oldPassword: string;
+  newPassword: string;
+};
+
 export type UpdateProfileBody = {
   name?: string;
   phoneNumber?: string;
@@ -16,6 +21,9 @@ export type UpdateProfileBody = {
 const userApi = {
   updateProfile(body: UpdateProfileBody) {
     return http.put<SuccessResponse<User>>("auth/me", body);
+  },
+  changePassword(body: ChangePasswordBody) {
+    return http.put<SuccessResponse<string>>("auth/password", body);
   },
 };
 
