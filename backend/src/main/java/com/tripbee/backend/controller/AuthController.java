@@ -71,6 +71,27 @@ public class AuthController {
         return ResponseEntity.ok(updatedProfile);
     }
 
+    @PutMapping("/password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            authService.changePassword(request, currentUser);
+            return ResponseEntity.ok("Đổi mật khẩu thành công.");
+        } catch (IllegalArgumentException e) {
+            // Lỗi từ AuthService (mật khẩu cũ không chính xác)
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            // Các lỗi khác
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi server.");
+        }
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<LoginResponse> logout() {
         // Trong kiến trúc JWT không trạng thái, việc logout thực tế xảy ra ở client

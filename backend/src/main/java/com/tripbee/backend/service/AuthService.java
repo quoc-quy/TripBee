@@ -1,5 +1,6 @@
 package com.tripbee.backend.service;
 
+import com.tripbee.backend.dto.ChangePasswordRequest;
 import com.tripbee.backend.dto.LoginRequest;
 import com.tripbee.backend.dto.LoginResponse;
 import com.tripbee.backend.dto.RegisterRequest;
@@ -109,5 +110,19 @@ public class AuthService {
                 account.getUserName(),
                 account.getRole().name()
         );
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordRequest request, Account currentUser) {
+        String currentHashedPassword = currentUser.getPassword();
+
+        if (!passwordEncoder.matches(request.getOldPassword(), currentHashedPassword)) {
+            throw new IllegalArgumentException("Mật khẩu cũ không chính xác.");
+        }
+
+        String newHashedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        currentUser.setPassword(newHashedPassword);
+        accountRepository.save(currentUser);
     }
 }
