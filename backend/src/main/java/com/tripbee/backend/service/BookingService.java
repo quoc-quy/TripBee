@@ -1,5 +1,6 @@
 package com.tripbee.backend.service;
 
+import com.tripbee.backend.dto.BookingHistoryResponse;
 import com.tripbee.backend.dto.BookingRequest;
 import com.tripbee.backend.model.*;
 import com.tripbee.backend.service.EmailService.PaymentSuccessEmailData;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -153,5 +156,16 @@ public class BookingService {
             System.err.println("Error triggering payment email: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingHistoryResponse> getUserBookingHistory(Account currentUser) {
+        String userID = currentUser.getUser().getUserID();
+
+        List<Booking> bookings = bookingRepository.findAllByUser_userID(userID);
+
+        return bookings.stream()
+                .map(BookingHistoryResponse::new)
+                .collect(Collectors.toList());
     }
 }

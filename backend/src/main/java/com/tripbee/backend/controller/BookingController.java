@@ -1,14 +1,17 @@
 package com.tripbee.backend.controller;
 
+import com.tripbee.backend.dto.BookingHistoryResponse;
 import com.tripbee.backend.dto.BookingRequest;
 import com.tripbee.backend.model.Account;
 import com.tripbee.backend.model.Booking;
 import com.tripbee.backend.service.BookingService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -70,5 +73,17 @@ public class BookingController {
         } catch (Exception e) {
             return ResponseEntity.status(404).body("Booking not found");
         }
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<BookingHistoryResponse>> getBookingHistory(
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<BookingHistoryResponse> history = bookingService.getUserBookingHistory(currentUser);
+        return ResponseEntity.ok(history);
     }
 }
