@@ -4,12 +4,12 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, User, Users, Baby, CreditCard } from "lucide-react";
-// [MỚI] Import các hook và API cần thiết
+import { X, User, Users, Baby, CreditCard, Store, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { bookingApi } from "../../apis/booking.api";
 import { getProfile } from "../../apis/auth.api";
+import { toast } from "react-toastify"; // [MỚI] Import toast
 
 import type { TourDetails } from "../../types/tour";
 import type { BookingFormData } from "../../types/booking.type";
@@ -17,7 +17,7 @@ import { formatCurrency } from "../../utils/utils";
 import Button from "../Button";
 import { AppContext } from "../../contexts/app.context";
 
-// --- Validation Schemas (Giữ nguyên) ---
+// --- Validation Schemas ---
 const phoneRegex = /^[0-9]{10}$/;
 const cccdRegex = /^[0-9]{12}$/;
 
@@ -54,6 +54,11 @@ const bookingFormSchema = yup.object({
     note: yup.string().optional(),
     otherAdults: yup.array().of(adultParticipantSchema),
     children: yup.array().of(childParticipantSchema),
+    // [MỚI] Validate phương thức thanh toán
+    paymentMethod: yup
+        .string()
+        .oneOf(["QR", "COUNTER"])
+        .required("Vui lòng chọn phương thức thanh toán"),
 });
 
 // --- Props cho Modal ---
@@ -137,7 +142,7 @@ const FormSelect = ({ label, id, register, error, required = false }: FormSelect
 // --- Component Modal Chính ---
 export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: BookingModalProps) {
     const { isAuthenticated } = useContext(AppContext);
-    const navigate = useNavigate(); // Hook điều hướng
+    const navigate = useNavigate();
 
     // Lấy thông tin user để điền sẵn vào form
     const { data: profileData } = useQuery({
@@ -147,22 +152,35 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
     });
     const user = profileData?.data;
 
-    // [MỚI] Hook mutation để gọi API tạo booking
+    // [MỚI] Cập nhật mutation để xử lý logic rẽ nhánh
     const createBookingMutation = useMutation({
-        mutationFn: (body: any) => bookingApi.createBooking(body),
-        onSuccess: (response) => {
-            // API trả về object có chứa bookingID
+        // mutationFn nhận vào payload chứa cả apiBody và paymentMethod (để dùng ở onSuccess)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mutationFn: (params: { apiBody: any; paymentMethod: string }) =>
+            bookingApi.createBooking(params.apiBody),
+
+        onSuccess: (response, variables) => {
             const bookingID = response.data.bookingID;
+            const { paymentMethod } = variables;
 
             // 1. Đóng modal
             onClose();
 
-            // 2. Chuyển hướng sang trang thanh toán với ID vừa tạo
-            navigate(`/payment/${bookingID}`);
+            // 2. Xử lý theo phương thức thanh toán
+            if (paymentMethod === "QR") {
+                // Chuyển hướng sang trang thanh toán
+                navigate(`/payment/${bookingID}`);
+            } else {
+                // Thanh toán tại quầy: Chỉ hiện thông báo thành công
+                toast.success(
+                    "Đặt tour thành công! Vui lòng đến quầy TripBee để hoàn tất thanh toán."
+                );
+                navigate("/account/historyTour"); // Có thể chuyển về lịch sử hoặc giữ nguyên trang
+            }
         },
         onError: (error) => {
             console.error("Lỗi đặt tour:", error);
-            alert("Đặt tour thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau!");
+            toast.error("Đặt tour thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau!");
         },
     });
 
@@ -178,8 +196,10 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
             bookerName: "",
             bookerPhone: "",
             bookerEmail: "",
+            note: "",
             otherAdults: [],
             children: [],
+            paymentMethod: "QR", // Mặc định chọn QR
         },
     });
 
@@ -210,10 +230,9 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         }
     }, [user, setValue]);
 
-    // Logic cập nhật số lượng form người tham gia dựa trên props bookingDetails
+    // Logic cập nhật số lượng form người tham gia
     useEffect(() => {
         if (isOpen) {
-            // Xử lý người lớn đi cùng (trừ người đặt)
             const requiredOtherAdults = Math.max(0, bookingDetails.adults - 1);
             const currentOtherAdults = adultFields.length;
             if (requiredOtherAdults > currentOtherAdults) {
@@ -229,7 +248,6 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                 );
             }
 
-            // Xử lý trẻ em
             const requiredChildren = bookingDetails.children;
             const currentChildren = childrenFields.length;
             if (requiredChildren > currentChildren) {
@@ -284,18 +302,19 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
     }, [isOpen]);
 
     const onSubmit = (data: BookingFormData) => {
-        // Chuẩn bị dữ liệu payload
-        const payload = {
+        // Tách paymentMethod ra khỏi dữ liệu gửi API (nếu API backend không nhận trường này)
+        const { paymentMethod, ...restData } = data;
+
+        const apiBody = {
             tourID: tour.tourID,
             numAdults: bookingDetails.adults,
             numChildren: bookingDetails.children,
             totalPrice: bookingDetails.totalPrice,
-            // Spread toàn bộ dữ liệu từ form (bookerName, otherAdults, children...)
-            ...data,
+            ...restData, // bookerName, otherAdults, children, note
         };
 
-        // Gọi API
-        createBookingMutation.mutate(payload);
+        // Gọi mutation với params chứa cả apiBody và paymentMethod
+        createBookingMutation.mutate({ apiBody, paymentMethod });
     };
 
     return createPortal(
@@ -513,6 +532,52 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                         className="w-full p-2.5 border rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                     ></textarea>
                                 </div>
+
+                                {/* [MỚI] 4. Phương thức thanh toán */}
+                                <div className="border border-gray-200 rounded-lg p-4">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <CreditCard size={20} className="mr-2 text-purple-600" />
+                                        Phương thức thanh toán
+                                    </h3>
+                                    <div className="flex flex-col gap-3">
+                                        {/* Option 1: QR */}
+                                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                            <input
+                                                type="radio"
+                                                value="QR"
+                                                {...register("paymentMethod")}
+                                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                            />
+                                            <div className="ml-3 flex items-center">
+                                                <QrCode className="text-gray-600 mr-2" size={20} />
+                                                <span className="text-gray-800 font-medium">
+                                                    Thanh toán bằng mã QR
+                                                </span>
+                                            </div>
+                                        </label>
+
+                                        {/* Option 2: Counter */}
+                                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                            <input
+                                                type="radio"
+                                                value="COUNTER"
+                                                {...register("paymentMethod")}
+                                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                            />
+                                            <div className="ml-3 flex items-center">
+                                                <Store className="text-gray-600 mr-2" size={20} />
+                                                <span className="text-gray-800 font-medium">
+                                                    Thanh toán tại quầy TripBee
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {errors.paymentMethod && (
+                                        <p className="mt-2 text-xs text-red-600">
+                                            {errors.paymentMethod.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Footer: Tổng tiền & Nút submit */}
@@ -555,7 +620,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     ) : (
                                         <>
                                             <CreditCard size={20} className="mr-2 inline-block" />
-                                            Tiến hành thanh toán
+                                            Xác nhận đặt tour
                                         </>
                                     )}
                                 </Button>
