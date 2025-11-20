@@ -29,41 +29,39 @@ public class WebhookController {
             String content = webhookData.getContent();
             String bookingId = null;
 
-            // 2. [LOGIC MỚI] Cắt chuỗi dựa vào khoảng trắng
-            // Mẫu nội dung: "ACC_NO  PHONE  BOOKING_ID  TRACE..."
-            // Cắt theo khoảng trắng (\\s+)
+            // 2. [CẬP NHẬT REGEX] Tìm chuỗi có tiền tố 'tbbk'
+            // Cấu trúc: tbbk (có thể viết hoa/thường) + tùy chọn dấu cách/gạch ngang + chuỗi Hex UUID
+            // Ví dụ khớp: "tbbkc494...", "TBBK-c494...", "tbbk c494..."
             if (content != null) {
-                String[] parts = content.trim().split("\\s+");
+                // Regex này chia thành các nhóm (groups) để dễ dàng tái tạo lại định dạng chuẩn
+                // Group 1: tbbk
+                // Group 2-6: Các phần của UUID
+                String regex = "(?i)(tbbk)[\\s-]?([a-f0-9]{8})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{12})";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(content);
 
-                // Lấy phần tử thứ 3 (index 2) nếu có đủ độ dài
-                if (parts.length >= 3) {
-                    bookingId = parts[2];
-                } else {
-                    // Fallback: Nếu format lạ (ví dụ dính liền), thử tìm chuỗi 32 ký tự Hex
-                    // bookingId = ... (có thể thêm regex dự phòng ở đây nếu cần)
-                    System.out.println("Format warning: Content does not have enough parts split by space.");
+                if (matcher.find()) {
+                    // Tái tạo lại chuỗi theo định dạng chuẩn của Database: tbbk-xxxxxxxx-xxxx-...
+                    bookingId = String.format("%s-%s-%s-%s-%s-%s",
+                            matcher.group(1).toLowerCase(), // tbbk (ép về chữ thường cho chuẩn)
+                            matcher.group(2),
+                            matcher.group(3),
+                            matcher.group(4),
+                            matcher.group(5),
+                            matcher.group(6)
+                    );
                 }
             }
 
             if (bookingId == null) {
-                return ResponseEntity.ok("Ignored: Booking ID not found in content");
-            }
-
-            // 3. [LOGIC MỚI] Chuẩn hóa UUID (Thêm dấu gạch ngang)
-            // Nếu ID là chuỗi 32 ký tự hex (chưa có gạch ngang), ta format lại thành chuẩn UUID
-            // Input:  1e7a6c5f851e4f1b809d6a17a14a9677
-            // Output: 1e7a6c5f-851e-4f1b-809d-6a17a14a9677
-            if (bookingId.matches("^[a-fA-F0-9]{32}$")) {
-                bookingId = bookingId.replaceFirst(
-                        "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
-                        "$1-$2-$3-$4-$5"
-                );
-                System.out.println("Formatted Booking ID to UUID: " + bookingId);
+                System.out.println("Regex mismatch. Content: " + content);
+                return ResponseEntity.ok("Ignored: Booking ID (tbbk-...) pattern not found in content" + content);
             }
 
             System.out.println("Final Processing Booking ID: " + bookingId);
+            System.out.println("content: " + content);
 
-            // 4. Gọi Service xử lý
+            // 3. Gọi Service xử lý
             bookingService.processPaymentWebhook(
                     bookingId,
                     webhookData.getTransferAmount(),
