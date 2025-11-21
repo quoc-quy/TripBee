@@ -1,14 +1,18 @@
 package com.tripbee.backend.controller;
 
 import com.tripbee.backend.dto.ReviewDto;
+import com.tripbee.backend.dto.ReviewRequest;
+import com.tripbee.backend.model.Account;
 import com.tripbee.backend.service.ReviewService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-// (1) Định nghĩa đường dẫn cơ sở cho tất cả API bên trong
-@RequestMapping("/api/tours/{tourId}/reviews")
+// FIX LỖI: Đổi base path sang /api/reviews để tránh xung đột path và khớp với frontend POST
+@RequestMapping("/api/reviews")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -17,21 +21,58 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    // (2) Xử lý request GET tới /api/tours/{tourId}/reviews
-    @GetMapping
+    // API lấy review cho trang chi tiết tour (Final Path: /api/reviews/tour/{tourId})
+    // Phương thức GET list reviews của bạn đã bị lỗi ở đây do xung đột path cũ.
+    @GetMapping("/tour/{tourId}")
     public ResponseEntity<Page<ReviewDto>> getReviewsForTour(
             @PathVariable String tourId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
-        // (3) Gọi service
         Page<ReviewDto> reviewPage = reviewService.getApprovedReviewsForTour(tourId, page, size);
-
-        // (4) Trả về kết quả (đã bao gồm thông tin phân trang)
         return ResponseEntity.ok(reviewPage);
     }
 
-    // [TODO] Bạn có thể thêm API POST (để tạo review mới) vào đây sau
-    // @PostMapping
-    // public ResponseEntity<?> createReview(...) {}
+    /**
+     * API TẠO REVIEW MỚI
+     * Final Path: /api/reviews
+     */
+    @PostMapping
+    public ResponseEntity<?> createReview(
+            @RequestBody ReviewRequest request,
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            reviewService.createReview(request, currentUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Đánh giá của bạn đã được gửi và đang chờ duyệt.");
+        } catch (Exception e) {
+            if (e.getMessage().contains("đã đánh giá")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            } else if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } else {
+                return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * API KIỂM TRA ĐÃ REVIEW CHƯA
+     * Final Path: /api/reviews/tour/{tourId}/reviewed
+     */
+    @GetMapping("/tour/{tourId}/reviewed")
+    public ResponseEntity<Boolean> checkReviewed(
+            @PathVariable String tourId,
+            @AuthenticationPrincipal Account currentUser
+    ) {
+        if (currentUser == null) {
+            return ResponseEntity.ok(false);
+        }
+        boolean reviewed = reviewService.hasUserReviewedTour(tourId, currentUser);
+        return ResponseEntity.ok(reviewed);
+    }
 }
