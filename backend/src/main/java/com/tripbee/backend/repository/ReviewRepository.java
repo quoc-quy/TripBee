@@ -1,6 +1,8 @@
 package com.tripbee.backend.repository;
 
 import com.tripbee.backend.model.Review;
+import com.tripbee.backend.model.Tour;
+import com.tripbee.backend.model.User;
 import com.tripbee.backend.model.enums.ReviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +25,6 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
             @Param("status") ReviewStatus status,
             Pageable pageable
     );
+
+    boolean existsByUserAndTour(User user, Tour tour);
 }
