@@ -2,20 +2,30 @@
 import http from "../utils/http";
 import type { ReviewApiResponse } from "../types/review.type";
 
+interface CreateReviewBody {
+  tourId: string;
+  rating: number;
+  comment: string;
+}
+
 export const reviewApi = {
-    /**
-     * Lấy danh sách review đã được duyệt cho 1 tour, có phân trang
-     * API: GET /api/tours/{tourId}/reviews
-     */
-    getReviewsForTour: (
-        tourId: string,
-        params: {
-            page: number;
-            size: number;
-        }
-    ) => {
-        return http.get<ReviewApiResponse>(`tours/${tourId}/reviews`, {
-            params,
-        });
-    },
+  getReviewsForTour: (
+    tourId: string,
+    params: {
+      page: number;
+      size: number;
+    }
+  ) => {
+    return http.get<ReviewApiResponse>(`reviews/tour/${tourId}`, {
+      params,
+    });
+  },
+
+  createReview: (body: CreateReviewBody) => {
+    return http.post<string>(`reviews`, body);
+  },
+
+  hasReviewed: (tourId: string) => {
+    return http.get<boolean>(`reviews/tour/${tourId}/reviewed`);
+  },
 };

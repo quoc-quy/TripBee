@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { bookingApi } from "../../../../apis/booking.api";
-import { FaCalendarAlt, FaUsers } from "react-icons/fa";
 import { formatCurrency } from "../../../../utils/utils";
+import { FaCalendarAlt, FaUsers } from "react-icons/fa";
+import { Link } from "react-router-dom"; // Thêm Link
+import { ReviewButton } from "../../../../components/ReviewButton/ReviewButton"; // Import component đã tách
 
 const StatusBadge = ({ status }: { status: string }) => {
   let classes = "";
@@ -98,7 +100,12 @@ export default function HistoryTour() {
               <div className="p-4 md:p-6 md:w-3/4 flex flex-col justify-between">
                 <div>
                   <h4 className="text-xl font-bold text-gray-900 mb-2">
-                    {booking.tourTitle}
+                    <Link
+                      to={`/tours/${booking.tourID}`}
+                      className="hover:text-blue-600"
+                    >
+                      {booking.tourTitle}
+                    </Link>
                   </h4>
 
                   <div className="flex flex-wrap items-center text-sm text-gray-600 space-x-4 mb-3">
@@ -124,10 +131,18 @@ export default function HistoryTour() {
                       {formatCurrency(booking.finalAmount)}
                     </span>
                     <span className="text-xs text-gray-400 mt-1">
-                      ID: {booking.bookingID}
+                      Mã Booking: {booking.bookingID}
                     </span>
                   </div>
-                  <StatusBadge status={booking.status} />
+                  <div className="flex items-center space-x-4">
+                    <StatusBadge status={booking.status} />
+                    {/* Sử dụng ReviewButton đã tách */}
+                    <ReviewButton
+                      tourId={booking.tourID}
+                      tourTitle={booking.tourTitle}
+                      status={booking.status}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
