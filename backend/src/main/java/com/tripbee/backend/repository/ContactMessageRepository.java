@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ContactMessageRepository extends JpaRepository<ContactMessage, String>,
         JpaSpecificationExecutor<ContactMessage> {
+    long count();
 }
