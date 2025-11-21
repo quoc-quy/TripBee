@@ -1,6 +1,9 @@
 package com.tripbee.backend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -22,6 +25,10 @@ public class User {
     private String avatarURL;
 
     private String address;
+
+    @Column(nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     public String getUserID() {
         return userID;
@@ -109,6 +116,14 @@ public class User {
 
     public void setContactMessages(Set<ContactMessage> contactMessages) {
         this.contactMessages = contactMessages;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     // --- Mối quan hệ ---
