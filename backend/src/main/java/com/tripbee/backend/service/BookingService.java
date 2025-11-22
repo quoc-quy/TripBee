@@ -12,8 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,6 +69,27 @@ public class BookingService {
         booking.setFinalAmount(totalPrice); // Có thể trừ khuyến mãi nếu có
         booking.setStatus(BookingStatus.PROCESSING); // Trạng thái chờ thanh toán
 
+        // [NEW LOGIC] Xử lý danh sách người tham gia (Participants)
+        if (request.getParticipants() != null && !request.getParticipants().isEmpty()) {
+            Set<Participant> participantSet = new HashSet<>();
+
+            for (BookingRequest.ParticipantDto dto : request.getParticipants()) {
+                Participant p = new Participant();
+                p.setCustomerName(dto.getCustomerName());
+                p.setCustomerPhone(dto.getCustomerPhone());
+                p.setIdentification(dto.getIdentification());
+                p.setGender(dto.getGender());
+                p.setParticipantType(dto.getParticipantType());
+
+                // Quan trọng: Gán Booking cho Participant để tạo khóa ngoại đúng
+                p.setBooking(booking);
+
+                participantSet.add(p);
+            }
+
+            booking.setParticipants(participantSet);
+        }
+
         // Tạo Invoice (Hóa đơn) rỗng đi kèm
         Invoice invoice = new Invoice();
         invoice.setBooking(booking);
@@ -77,7 +100,7 @@ public class BookingService {
 
         booking.setInvoice(invoice);
 
-        // Lưu Booking (Cascade sẽ tự lưu Invoice)
+        // Lưu Booking (Cascade sẽ tự lưu Invoice và Participants)
         return bookingRepository.save(booking);
     }
 
