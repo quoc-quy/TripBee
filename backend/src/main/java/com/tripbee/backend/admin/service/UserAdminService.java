@@ -1,14 +1,17 @@
 package com.tripbee.backend.admin.service;
 
+import com.tripbee.backend.admin.dto.request.UserCreateRequest;
 import com.tripbee.backend.admin.dto.request.UserLockRequest;
 import com.tripbee.backend.admin.dto.request.UserUpdateRequest;
 import com.tripbee.backend.admin.dto.response.user.UserAdminResponse;
 import com.tripbee.backend.admin.dto.response.user.UserBookingHistoryResponse;
 import com.tripbee.backend.admin.dto.response.user.UserDetailResponse;
 import com.tripbee.backend.admin.dto.response.user.UserStatsResponse;
+import com.tripbee.backend.exception.ConflictException;
 import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.Account;
 import com.tripbee.backend.model.Booking;
+import com.tripbee.backend.model.User;
 import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.RoleType;
 import com.tripbee.backend.repository.AccountRepository;
@@ -21,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,13 +41,15 @@ public class UserAdminService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserAdminService(AccountRepository accountRepository,
                             UserRepository userRepository,
-                            BookingRepository bookingRepository) {
+                            BookingRepository bookingRepository, PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Lấy danh sách user
@@ -200,6 +206,33 @@ public class UserAdminService {
         map.put("newUsersThisMonth", newUsers);
 
         return map;
+    }
+    @Transactional
+    public UserAdminResponse createUser(UserCreateRequest req) {
+
+        // Kiểm tra trùng email
+        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
+            throw new ConflictException("Email đã tồn tại");
+        }
+
+        // Tạo User
+        User user = new User();
+        user.setName(req.getName());
+        user.setEmail(req.getEmail());
+        user.setPhoneNumber(req.getPhoneNumber());
+        userRepository.save(user);
+
+        // Tạo Account
+        Account acc = new Account();
+        acc.setUser(user);
+        acc.setUserName(req.getEmail());
+        acc.setPassword(passwordEncoder.encode(req.getPassword()));
+        acc.setLocked(req.isLocked());
+        acc.setRole(RoleType.CUSTOMER);
+
+        accountRepository.save(acc);
+
+        return new UserAdminResponse(acc);
     }
 
 }

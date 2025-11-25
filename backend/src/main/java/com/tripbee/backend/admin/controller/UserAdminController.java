@@ -1,5 +1,6 @@
 package com.tripbee.backend.admin.controller;
 
+import com.tripbee.backend.admin.dto.request.UserCreateRequest;
 import com.tripbee.backend.admin.dto.request.UserLockRequest;
 import com.tripbee.backend.admin.dto.request.UserUpdateRequest;
 import com.tripbee.backend.admin.dto.response.user.UserAdminResponse;
@@ -83,6 +84,13 @@ public class UserAdminController {
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getUserStats() {
         return ResponseEntity.ok(userAdminService.getUserStats());
+    }
+    @PostMapping
+    public ResponseEntity<UserAdminResponse> createUser(
+            @RequestBody UserCreateRequest req) {
+
+        UserAdminResponse res = userAdminService.createUser(req);
+        return ResponseEntity.status(201).body(res);
     }
 }
 
