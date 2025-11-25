@@ -111,7 +111,29 @@ public class PromotionAdminService {
         }
 
         Promotion p = new Promotion();
-        p.setPromotionID(UUID.randomUUID().toString()); // Tạo ID mới
+        // --- ĐOẠN CODE MỚI: TỰ ĐỘNG SINH ID ---
+        String prefix = "promo-";
+        // Lấy 1 dòng kết quả lớn nhất
+        List<String> lastIds = promotionRepository.findLatestPromotionId(prefix, PageRequest.of(0, 1));
+
+        String newId;
+        if (lastIds.isEmpty()) {
+            newId = prefix + "001"; // Nếu chưa có gì thì bắt đầu từ 001
+        } else {
+            String lastId = lastIds.get(0);
+            try {
+                // Cắt bỏ phần "promo-" và lấy số (ví dụ "008" -> 8)
+                int number = Integer.parseInt(lastId.substring(prefix.length()));
+                // Tăng lên 1 và format lại thành 3 chữ số (8 -> "009")
+                newId = prefix + String.format("%03d", number + 1);
+            } catch (NumberFormatException e) {
+                // Phòng trường hợp ID cũ bị lỗi format, quay về mặc định an toàn
+                newId = prefix + System.currentTimeMillis();
+            }
+        }
+        p.setPromotionID(newId);
+        // --- KẾT THÚC ĐOẠN CODE MỚI ---
+
         mapRequestToPromotion(req, p);
         p.setCurrentUsage(0); // Mới tạo thì số lần dùng là 0
 
