@@ -24,8 +24,8 @@ import FavouriteTour from "./screens/Account/pages/FavouriteTour";
 import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
 import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionScreen";
 import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
-import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
-import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
+// import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
+// import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
 import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
 import ContactMessageScreen from "./admin/screens/ContactMessageScreen/ContactMessageScreen";
 
@@ -130,8 +130,8 @@ export default function useRouteElements() {
                 },
                 { path: "promotions", element: <ManagePromotionScreen /> },
                 { path: "users", element: <UserAdminScreen /> },
-                { path: "users/:id", element: <UserDetailScreen /> },
-                { path: "users/:id/edit", element: <UserEditScreen /> },
+                // { path: "users/:id", element: <UserDetailScreen /> },
+                // { path: "users/:id/edit", element: <UserEditScreen /> },
                 { path: "contact-messages", element: <ContactMessageScreen /> },
             ],
         },
