@@ -71,14 +71,12 @@ const SimpleModal: React.FC<{
   onClose: () => void;
   children: React.ReactNode;
 }> = ({ isOpen, onClose, children }) => {
-  // THAY ĐỔI: Tự quản lý việc khóa/mở cuộn của body khi isOpen thay đổi
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
-    // Cleanup function để đảm bảo scroll được khôi phục khi component unmount
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -88,10 +86,9 @@ const SimpleModal: React.FC<{
   return (
     <div
       className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4"
-      onClick={onClose}
+      // onClick={onClose}  <--- XÓA HOẶC COMMENT DÒNG NÀY ĐỂ KHÔNG TẮT KHI CLICK RA NGOÀI
     >
       <div
-        // THAY ĐỔI: Thêm flex flex-col và h-full. h-full đảm bảo nó kéo dài hết chiều cao của max-h-[90vh]
         className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col h-full"
         onClick={(e) => e.stopPropagation()}
       >
@@ -262,11 +259,23 @@ export default function ManagePromotionScreen() {
               </tr>
             ) : (
               promotions.map((promotion: PromotionAdmin) => {
-                const label =
-                  STATUS_LABELS[promotion.status] || promotion.status;
+                // --- LOGIC MỚI: KIỂM TRA HẾT HẠN ---
+                const now = new Date();
+                const endDate = new Date(promotion.endDate);
+
+                // Kiểm tra: Nếu ngày hiện tại lớn hơn ngày kết thúc -> coi như hết hạn
+                const isDateExpired = now > endDate;
+
+                // Xác định trạng thái hiển thị:
+                // Nếu quá hạn thì ép về EXPIRED, ngược lại dùng status gốc từ API
+                const displayStatus = isDateExpired
+                  ? "EXPIRED"
+                  : promotion.status;
+
+                const label = STATUS_LABELS[displayStatus] || displayStatus;
                 const color =
-                  STATUS_COLORS[promotion.status] ||
-                  "bg-gray-100 text-gray-700";
+                  STATUS_COLORS[displayStatus] || "bg-gray-100 text-gray-700";
+                // -----------------------------------
 
                 const isPercentage =
                   promotion.discountType === "PERCENTAGE" ||
@@ -288,7 +297,12 @@ export default function ManagePromotionScreen() {
                 return (
                   <tr
                     key={promotion.promotionID}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-all"
+                    className={`border-b border-gray-100 transition-all ${
+                      // --- LOGIC MỚI: STYLE MỜ ĐI NẾU HẾT HẠN ---
+                      displayStatus === "EXPIRED"
+                        ? "bg-gray-50 opacity-60 grayscale-[0.5]" // Làm mờ và hơi xám
+                        : "hover:bg-gray-50"
+                    }`}
                   >
                     <td className="px-5 py-4 text-center text-sm">
                       {promotion.promotionID}
@@ -317,13 +331,25 @@ export default function ManagePromotionScreen() {
                         <Calendar size={14} className="text-gray-500" />
                         {formatDate(promotion.startDate)}
                       </div>
-                      <div className="flex items-center gap-1 text-gray-700">
-                        <Clock size={14} className="text-gray-500" />
+                      {/* Tô đỏ ngày kết thúc nếu đã hết hạn */}
+                      <div
+                        className={`flex items-center gap-1 ${
+                          isDateExpired
+                            ? "text-red-600 font-medium"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <Clock
+                          size={14}
+                          className={
+                            isDateExpired ? "text-red-500" : "text-gray-500"
+                          }
+                        />
                         {formatDate(promotion.endDate)}
                       </div>
                     </td>
                     <td className="px-5 py-4 text-center text-sm font-semibold">
-                      {promotion.limitUsage === 0 // 0 là vô hạn theo logic trong Form
+                      {promotion.limitUsage === 0
                         ? "Vô hạn"
                         : promotion.limitUsage.toLocaleString()}
                     </td>
@@ -340,7 +366,7 @@ export default function ManagePromotionScreen() {
                     <td className="px-5 py-4 text-center text-sm">
                       <div className="inline-flex gap-2">
                         <button
-                          onClick={() => handleEdit(promotion.promotionID)} // Dùng logic mở modal mới
+                          onClick={() => handleEdit(promotion.promotionID)}
                           className="border border-blue-500 text-blue-500 rounded-lg p-2 hover:bg-blue-50"
                           aria-label="Chỉnh sửa"
                         >
