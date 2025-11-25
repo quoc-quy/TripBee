@@ -1,7 +1,9 @@
 import http from "../../utils/http";
 import type {
+  UserAdmin,
   UserAdminListParams,
   UserAdminListResponse,
+  UserCreatePayload,
   UserLockPayload
 } from "../types/userAdmin.type";
 
@@ -46,7 +48,8 @@ export const userAdminApi = {
   return http.get("/admin/users/stats-summary");
 },
 getUserStats: () => http.get("/admin/users/stats"),
-
+createUser: (payload: UserCreatePayload) =>
+    http.post<UserAdmin>(URL, payload),
 
   
 };
