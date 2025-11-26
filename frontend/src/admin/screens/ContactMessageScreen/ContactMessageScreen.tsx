@@ -1,25 +1,27 @@
 // src/admin/screens/ContactMessageScreen/ContactMessageScreen.tsx
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Search, Mail, Phone, Calendar, User } from 'lucide-react';
-import { contactAdminApi } from '../../apis/contactAdmin.api';
-import type { ContactMessage } from '../../types/contactAdmin.type'; // Import type để gợi ý code tốt hơn
+import { Search, Mail, Phone, Calendar, User } from "lucide-react";
+import { contactAdminApi } from "../../apis/contactAdmin.api";
+import type { ContactMessage } from "../../types/contactAdmin.type"; // Import type để gợi ý code tốt hơn
 
 const ContactMessageScreen = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const SIZE = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-contact-messages", page, searchTerm],
     queryFn: () =>
-      contactAdminApi.getAllMessages({
-        page,
-        size: SIZE,
-        search: searchTerm,
-      }).then((res) => res.data),
+      contactAdminApi
+        .getAllMessages({
+          page,
+          size: SIZE,
+          search: searchTerm,
+        })
+        .then((res) => res.data),
     placeholderData: keepPreviousData,
   });
   // Thay vì lấy trực tiếp: const messages = data?.content || [];
@@ -35,7 +37,10 @@ const ContactMessageScreen = () => {
       const idB = b.contactMessId || b.id || "";
 
       // So sánh chuỗi có chứa số (numeric: true giúp so sánh msg-2 và msg-10 đúng chuẩn)
-      return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+      return idA.localeCompare(idB, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
     });
   }, [data]);
 
@@ -54,13 +59,18 @@ const ContactMessageScreen = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Tin nhắn liên hệ</h1>
-        <p className="text-gray-500">Quản lý danh sách tin nhắn từ khách hàng</p>
+        <p className="text-gray-500">
+          Quản lý danh sách tin nhắn từ khách hàng
+        </p>
       </div>
 
       {/* Search Bar */}
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={20}
+          />
           <input
             type="text"
             placeholder="Tìm theo ID, email, phone..."
@@ -81,38 +91,65 @@ const ContactMessageScreen = () => {
                 <th className="px-4 py-4 w-64">Liên hệ (Email / Phone)</th>
                 <th className="px-4 py-4 w-32">User ID</th>
                 <th className="px-4 py-4">Nội dung tin nhắn</th>
-                <th className="px-4 py-4 w-48 whitespace-nowrap">Thời gian gửi</th>
+                <th className="px-4 py-4 w-48 whitespace-nowrap">
+                  Thời gian gửi
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Đang tải dữ liệu...</td>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
+                    Đang tải dữ liệu...
+                  </td>
                 </tr>
               ) : messages.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Không có tin nhắn nào.</td>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
+                    Không có tin nhắn nào.
+                  </td>
                 </tr>
               ) : (
                 messages.map((msg) => (
                   // Sử dụng msg.contactMessid làm key
-                  <tr key={msg.contactMessId || Math.random()} className="hover:bg-gray-50 transition-colors">
-
+                  <tr
+                    key={msg.contactMessId || Math.random()}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     {/* 1. Hiển thị ID (Sửa lỗi hiển thị) */}
                     <td className="px-4 py-4 font-bold text-gray-700">
                       {/* Dùng contactMessid thay vì id */}
-                      {msg.contactMessId || (msg as any).id || <span className="text-red-400 text-xs">(Null)</span>}
+                      {msg.contactMessId || (msg as any).id || (
+                        <span className="text-red-400 text-xs">(Null)</span>
+                      )}
                     </td>
 
                     {/* 2. Email & Phone */}
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 text-gray-700" title={msg.email}>
-                          <Mail size={14} className="text-blue-500 flex-shrink-0" />
-                          <span className="truncate max-w-[180px]">{msg.email}</span>
+                        <div
+                          className="flex items-center gap-2 text-gray-700"
+                          title={msg.email}
+                        >
+                          <Mail
+                            size={14}
+                            className="text-blue-500 flex-shrink-0"
+                          />
+                          <span className="truncate max-w-[180px]">
+                            {msg.email}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-700">
-                          <Phone size={14} className="text-green-500 flex-shrink-0" />
+                          <Phone
+                            size={14}
+                            className="text-green-500 flex-shrink-0"
+                          />
                           <span>{msg.phone}</span>
                         </div>
                       </div>
@@ -138,7 +175,10 @@ const ContactMessageScreen = () => {
 
                     {/* 4. Nội dung */}
                     <td className="px-4 py-4">
-                      <p className="text-gray-800 line-clamp-2 text-sm" title={msg.message}>
+                      <p
+                        className="text-gray-800 line-clamp-2 text-sm"
+                        title={msg.message}
+                      >
                         {msg.message}
                       </p>
                     </td>
@@ -148,11 +188,12 @@ const ContactMessageScreen = () => {
                       <div className="flex items-center gap-1.5">
                         <Calendar size={14} className="flex-shrink-0" />
                         <span className="text-xs">
-                          {msg.sentAt ? new Date(msg.sentAt).toLocaleString('vi-VN') : '-'}
+                          {msg.sentAt
+                            ? new Date(msg.sentAt).toLocaleString("vi-VN")
+                            : "-"}
                         </span>
                       </div>
                     </td>
-
                   </tr>
                 ))
               )}
