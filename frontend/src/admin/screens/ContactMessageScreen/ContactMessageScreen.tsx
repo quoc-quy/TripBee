@@ -1,14 +1,15 @@
-// src/admin/screens/ContactMessageScreen/ContactMessageScreen.tsx
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Search, Mail, Phone, Calendar, User } from "lucide-react";
 import { contactAdminApi } from "../../apis/contactAdmin.api";
-import type { ContactMessage } from "../../types/contactAdmin.type"; // Import type để gợi ý code tốt hơn
+import { debounce } from "lodash"; // Import debounce từ lodash
+
+// Helper để lấy ID an toàn
+const getMessageId = (msg: any) => msg.contactMessId || msg.id || "";
 
 const ContactMessageScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [inputValue, setInputValue] = useState(""); // State riêng cho input để gõ mượt hơn
   const [page, setPage] = useState(0);
   const SIZE = 10;
 
@@ -24,19 +25,12 @@ const ContactMessageScreen = () => {
         .then((res) => res.data),
     placeholderData: keepPreviousData,
   });
-  // Thay vì lấy trực tiếp: const messages = data?.content || [];
-  // Hãy dùng useMemo để sắp xếp lại:
+
   const messages = useMemo(() => {
     const list = data?.content || [];
-
-    // Tạo bản sao mảng (...) để không ảnh hưởng data gốc và sort
     return [...list].sort((a, b) => {
-      // Lấy ID, nếu null thì coi như chuỗi rỗng
-      // (Lưu ý: Đảm bảo bạn đã sửa tên trường ID khớp với API như câu trả lời trước, ví dụ: contactMessId)
-      const idA = a.contactMessId || a.id || "";
-      const idB = b.contactMessId || b.id || "";
-
-      // So sánh chuỗi có chứa số (numeric: true giúp so sánh msg-2 và msg-10 đúng chuẩn)
+      const idA = getMessageId(a);
+      const idB = getMessageId(b);
       return idA.localeCompare(idB, undefined, {
         numeric: true,
         sensitivity: "base",
@@ -44,15 +38,21 @@ const ContactMessageScreen = () => {
     });
   }, [data]);
 
-  // --- KẾT THÚC SỬA ---
   const totalPages = data?.totalPages || 0;
+
+  // (CẬP NHẬT) Sử dụng debounce của lodash để tối ưu việc gọi API
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setSearchTerm(value);
+      setPage(0);
+    }, 500),
+    []
+  );
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setTimeout(() => {
-      setSearchTerm(value);
-      setPage(0);
-    }, 500);
+    setInputValue(value); // Cập nhật UI ngay lập tức
+    debouncedSearch(value); // Trì hoãn việc set searchTerm (gọi API)
   };
 
   return (
@@ -73,6 +73,7 @@ const ContactMessageScreen = () => {
           />
           <input
             type="text"
+            value={inputValue} // Bind vào state inputValue
             placeholder="Tìm theo ID, email, phone..."
             onChange={handleSearch}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -86,7 +87,6 @@ const ContactMessageScreen = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-100 border-b border-gray-200 uppercase text-gray-600 text-xs font-bold">
               <tr>
-                {/* Cột ID */}
                 <th className="px-4 py-4 w-24 whitespace-nowrap">ID</th>
                 <th className="px-4 py-4 w-64">Liên hệ (Email / Phone)</th>
                 <th className="px-4 py-4 w-32">User ID</th>
@@ -117,20 +117,18 @@ const ContactMessageScreen = () => {
                 </tr>
               ) : (
                 messages.map((msg) => (
-                  // Sử dụng msg.contactMessid làm key
                   <tr
-                    key={msg.contactMessId || Math.random()}
+                    key={getMessageId(msg) || Math.random()}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    {/* 1. Hiển thị ID (Sửa lỗi hiển thị) */}
+                    {/* ID Column */}
                     <td className="px-4 py-4 font-bold text-gray-700">
-                      {/* Dùng contactMessid thay vì id */}
-                      {msg.contactMessId || (msg as any).id || (
+                      {getMessageId(msg) || (
                         <span className="text-red-400 text-xs">(Null)</span>
                       )}
                     </td>
 
-                    {/* 2. Email & Phone */}
+                    {/* Email & Phone */}
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1.5">
                         <div
@@ -155,25 +153,21 @@ const ContactMessageScreen = () => {
                       </div>
                     </td>
 
-                    {/* 3. User ID / Loại thành viên */}
+                    {/* User ID / Type */}
                     <td className="px-4 py-4 text-gray-600">
-                      {/* Kiểm tra nếu email bắt đầu bằng 'guest' (không phân biệt hoa thường) */}
                       {msg.email.toLowerCase().startsWith("guest") ? (
                         <span className="text-gray-400 italic text-xs bg-gray-100 px-2 py-1 rounded-md">
                           Khách vãng lai
                         </span>
                       ) : (
-                        // Nếu không phải guest -> Là thành viên
                         <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-max text-xs font-medium">
                           <User size={12} />
                           <span>Thành viên</span>
-                          {/* Nếu muốn hiện thêm ID thì bỏ comment dòng dưới */}
-                          {/* <span className="ml-1 text-[10px] opacity-70">#{msg.userId}</span> */}
                         </div>
                       )}
                     </td>
 
-                    {/* 4. Nội dung */}
+                    {/* Content */}
                     <td className="px-4 py-4">
                       <p
                         className="text-gray-800 line-clamp-2 text-sm"
@@ -183,7 +177,7 @@ const ContactMessageScreen = () => {
                       </p>
                     </td>
 
-                    {/* 5. Thời gian */}
+                    {/* Date */}
                     <td className="px-4 py-4 text-gray-500">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={14} className="flex-shrink-0" />

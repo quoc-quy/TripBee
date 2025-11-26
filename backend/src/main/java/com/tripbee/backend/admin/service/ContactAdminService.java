@@ -1,3 +1,5 @@
+// File: src/main/java/com/tripbee/backend/admin/service/ContactAdminService.java
+
 package com.tripbee.backend.admin.service;
 
 import com.tripbee.backend.admin.dto.response.ContactMessage.ContactMessageResponse;
@@ -39,7 +41,11 @@ public class ContactAdminService {
                 Predicate phoneLike = cb.like(cb.lower(root.get("phone")), keyword);
                 Predicate messageLike = cb.like(cb.lower(root.get("message")), keyword);
 
-                predicates.add(cb.or(emailLike, phoneLike, messageLike));
+                // --- (THÊM MỚI) Tìm kiếm theo ID ---
+                Predicate idLike = cb.like(cb.lower(root.get("contactMessID")), keyword);
+
+                // Thêm idLike vào trong danh sách OR
+                predicates.add(cb.or(emailLike, phoneLike, messageLike, idLike));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
