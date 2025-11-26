@@ -1,9 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Edit2, PlusCircle, Tag, Calendar, Clock } from "lucide-react";
+import {
+  Edit2,
+  PlusCircle,
+  Tag,
+  Calendar,
+  Clock,
+  Gift,
+  CheckCircle,
+  Clock3,
+  Ban,
+} from "lucide-react";
 import { omitBy, isUndefined } from "lodash";
 import { promotionAdminApi } from "../../apis/promotionAdmin.api";
 import type {
@@ -11,21 +21,77 @@ import type {
   PromotionListAdminParams,
 } from "../../types/promotionAdmin";
 import { formatCurrency } from "../../../utils/utils";
-// (MỚI) Import FormPromotionScreen
 import FormPromotionScreen from "./FormPromotionScreen";
 
-// ==== Kiểu dữ liệu cho query param ====
-type ParsedPromotionParams = {
-  page: number;
-  size: number;
-  search?: string;
-  status?: string;
-  discountType?: string;
+// ==== Component StatCard ====
+type StatCardProps = {
+  title: string;
+  value: number | string;
+  icon: React.ReactNode;
+  bgClass: string;
 };
 
-// ==== Map trạng thái sang tiếng Việt và màu sắc ====
-// ... (STATUS_LABELS, STATUS_COLORS, DISCOUNT_TYPE_LABELS_MAP, parseSearchParams, formatDate giữ nguyên)
+function StatCard({ title, value, icon, bgClass }: StatCardProps) {
+  return (
+    <div className="bg-white shadow-md rounded-3xl p-6 flex items-center gap-5 border border-gray-200 hover:shadow-lg transition">
+      <div
+        className={`w-14 h-14 rounded-2xl flex items-center justify-center ${bgClass}`}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <p className="text-gray-600">{title}</p>
+      </div>
+    </div>
+  );
+}
 
+// ==== Hook Tính Toán Stats ====
+interface PromotionStats {
+  totalPromotions: number;
+  activePromotions: number;
+  pendingPromotions: number;
+  expiredPromotions: number;
+}
+
+const usePromotionStats = (promotions: PromotionAdmin[]): PromotionStats => {
+  return useMemo(() => {
+    let total = 0;
+    let active = 0;
+    let pending = 0;
+    let expired = 0;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    promotions.forEach((p) => {
+      const startDate = new Date(p.startDate);
+      const endDate = new Date(p.endDate);
+      const currentNow = new Date();
+
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      currentNow.setHours(0, 0, 0, 0);
+
+      if (endDate < currentNow) {
+        expired++;
+      } else if (startDate > currentNow) {
+        pending++;
+      } else if (p.status === "ACTIVE") {
+        active++;
+      }
+    });
+
+    return {
+      totalPromotions: promotions.length,
+      activePromotions: active,
+      pendingPromotions: pending,
+      expiredPromotions: expired,
+    };
+  }, [promotions]);
+};
+
+// ==== Constants & Helpers ====
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Đang hoạt động",
   PENDING: "Sắp diễn ra",
@@ -43,12 +109,21 @@ const DISCOUNT_TYPE_LABELS_MAP: Record<string, string> = {
   FIXED_AMOUNT: "Cố định",
 };
 
+// Type tạm thời cho parse search param
+type ParsedPromotionParams = {
+  page: number;
+  size: number;
+  search?: string;
+  status?: string;
+  discountType?: string;
+};
+
 const parseSearchParams = (
   searchParams: URLSearchParams
 ): ParsedPromotionParams => {
   const params = {
     page: searchParams.get("page") ? Number(searchParams.get("page")) : 0,
-    size: searchParams.get("size") ? Number(searchParams.get("size")) : 10,
+    size: searchParams.get("size") ? Number(searchParams.get("size")) : 30,
     search: searchParams.get("search") || undefined,
     status: searchParams.get("status") || undefined,
     discountType: searchParams.get("discountType") || undefined,
@@ -63,8 +138,6 @@ const formatDate = (dateString: string) => {
     return dateString;
   }
 };
-
-// (ĐÃ SỬA) Component Modal Wrapper đơn giản
 
 const SimpleModal: React.FC<{
   isOpen: boolean;
@@ -84,10 +157,7 @@ const SimpleModal: React.FC<{
 
   if (!isOpen) return null;
   return (
-    <div
-      className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4"
-      // onClick={onClose}  <--- XÓA HOẶC COMMENT DÒNG NÀY ĐỂ KHÔNG TẮT KHI CLICK RA NGOÀI
-    >
+    <div className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4">
       <div
         className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col h-full"
         onClick={(e) => e.stopPropagation()}
@@ -103,14 +173,11 @@ export default function ManagePromotionScreen() {
   const queryParams = parseSearchParams(searchParams);
   const navigate = useNavigate();
 
-  // (MỚI) State cho Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPromotionId, setEditingPromotionId] = useState<
     string | undefined
   >(undefined);
 
-  // === Lấy danh sách khuyến mãi ===
-  // Thêm refetch để refresh data sau khi đóng modal
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-promotions", queryParams],
     queryFn: () =>
@@ -123,6 +190,8 @@ export default function ManagePromotionScreen() {
   const promotions = data?.content || [];
   const totalPages = data?.totalPages || 0;
   const currentPage = data?.number || 0;
+
+  const stats = usePromotionStats(promotions);
 
   const handlePageChange = (page: number) => {
     const newParams = { ...queryParams, page };
@@ -143,24 +212,21 @@ export default function ManagePromotionScreen() {
     }
   };
 
-  // (LOGIC MỚI) Hàm xử lý khi nhấn Tạo mới (Mở modal)
   const handleCreate = () => {
-    setEditingPromotionId(undefined); // Đảm bảo là tạo mới
+    setEditingPromotionId(undefined);
     setIsModalOpen(true);
   };
 
-  // (LOGIC MỚI) Hàm xử lý khi nhấn Chỉnh sửa (Mở modal)
   const handleEdit = (id: string) => {
-    setEditingPromotionId(id); // Set ID để form load data
+    setEditingPromotionId(id);
     setIsModalOpen(true);
   };
 
-  // (MỚI) Hàm đóng modal và refresh data
   const handleCloseModal = (shouldRefetch: boolean = false) => {
     setIsModalOpen(false);
     setEditingPromotionId(undefined);
     if (shouldRefetch) {
-      refetch(); // Refresh danh sách sau khi tạo/sửa thành công
+      refetch();
     }
   };
 
@@ -177,14 +243,14 @@ export default function ManagePromotionScreen() {
           </p>
         </div>
         <button
-          onClick={handleCreate} // Dùng logic mở modal mới
+          onClick={handleCreate}
           className="bg-green-600 hover:bg-green-700 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg transition-all active:scale-95 flex items-center gap-2"
         >
           <PlusCircle size={20} /> Tạo mã mới
         </button>
       </div>
 
-      {/* Bộ lọc */}
+      {/* 1. (ĐÃ CHUYỂN LÊN) Bộ lọc Filter */}
       <div className="bg-white shadow-md rounded-xl p-5 flex flex-wrap items-center gap-4 mb-6">
         <input
           type="text"
@@ -219,6 +285,40 @@ export default function ManagePromotionScreen() {
           <option value="EXPIRED">Đã hết hạn</option>
         </select>
       </div>
+
+      {/* 2. (ĐÃ CHUYỂN XUỐNG) Stat cards */}
+      {isLoading ? (
+        <div className="text-center py-8 text-gray-500">
+          Đang tải thống kê...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            title="Tổng số mã"
+            value={stats.totalPromotions}
+            icon={<Gift className="w-6 h-6 text-blue-600" />}
+            bgClass="bg-blue-100"
+          />
+          <StatCard
+            title="Đang hoạt động"
+            value={stats.activePromotions}
+            icon={<CheckCircle className="w-6 h-6 text-green-600" />}
+            bgClass="bg-green-100"
+          />
+          <StatCard
+            title="Sắp diễn ra"
+            value={stats.pendingPromotions}
+            icon={<Clock3 className="w-6 h-6 text-yellow-600" />}
+            bgClass="bg-yellow-100"
+          />
+          <StatCard
+            title="Đã hết hạn"
+            value={stats.expiredPromotions}
+            icon={<Ban className="w-6 h-6 text-red-600" />}
+            bgClass="bg-red-100"
+          />
+        </div>
+      )}
 
       {/* Bảng dữ liệu */}
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -259,15 +359,10 @@ export default function ManagePromotionScreen() {
               </tr>
             ) : (
               promotions.map((promotion: PromotionAdmin) => {
-                // --- LOGIC MỚI: KIỂM TRA HẾT HẠN ---
                 const now = new Date();
                 const endDate = new Date(promotion.endDate);
-
-                // Kiểm tra: Nếu ngày hiện tại lớn hơn ngày kết thúc -> coi như hết hạn
                 const isDateExpired = now > endDate;
 
-                // Xác định trạng thái hiển thị:
-                // Nếu quá hạn thì ép về EXPIRED, ngược lại dùng status gốc từ API
                 const displayStatus = isDateExpired
                   ? "EXPIRED"
                   : promotion.status;
@@ -275,7 +370,6 @@ export default function ManagePromotionScreen() {
                 const label = STATUS_LABELS[displayStatus] || displayStatus;
                 const color =
                   STATUS_COLORS[displayStatus] || "bg-gray-100 text-gray-700";
-                // -----------------------------------
 
                 const isPercentage =
                   promotion.discountType === "PERCENTAGE" ||
@@ -298,9 +392,8 @@ export default function ManagePromotionScreen() {
                   <tr
                     key={promotion.promotionID}
                     className={`border-b border-gray-100 transition-all ${
-                      // --- LOGIC MỚI: STYLE MỜ ĐI NẾU HẾT HẠN ---
                       displayStatus === "EXPIRED"
-                        ? "bg-gray-50 opacity-60 grayscale-[0.5]" // Làm mờ và hơi xám
+                        ? "bg-gray-50 opacity-60 grayscale-[0.5]"
                         : "hover:bg-gray-50"
                     }`}
                   >
@@ -331,7 +424,6 @@ export default function ManagePromotionScreen() {
                         <Calendar size={14} className="text-gray-500" />
                         {formatDate(promotion.startDate)}
                       </div>
-                      {/* Tô đỏ ngày kết thúc nếu đã hết hạn */}
                       <div
                         className={`flex items-center gap-1 ${
                           isDateExpired
@@ -407,15 +499,11 @@ export default function ManagePromotionScreen() {
         </div>
       )}
 
-      {/* (MỚI) Modal Form */}
-      <SimpleModal
-        isOpen={isModalOpen}
-        onClose={() => handleCloseModal()} // Đóng modal không refresh
-      >
-        {/* Truyền ID và callback vào FormPromotionScreen */}
+      {/* Modal Form */}
+      <SimpleModal isOpen={isModalOpen} onClose={() => handleCloseModal()}>
         <FormPromotionScreen
           promotionId={editingPromotionId}
-          onClose={() => handleCloseModal(true)} // Đóng modal VÀ refresh sau khi lưu thành công
+          onClose={() => handleCloseModal(true)}
         />
       </SimpleModal>
     </div>
