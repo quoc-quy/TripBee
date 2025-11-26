@@ -25,6 +25,7 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
             @Param("status") ReviewStatus status,
             Pageable pageable
     );
+    Page<Review> findByStatus(ReviewStatus status, Pageable pageable);
 
     boolean existsByUserAndTour(User user, Tour tour);
 }
