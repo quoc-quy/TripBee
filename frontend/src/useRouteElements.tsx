@@ -26,6 +26,7 @@ import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionSc
 import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
 import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
 import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
+import ManageBookingScreen from "./admin/screens/ManageBooking/ManageBookingScreen";
 
 
 export default function useRouteElements() {
@@ -115,14 +116,12 @@ export default function useRouteElements() {
         { path: "manage-destination", element: <ManageDestinationScreen /> },
         { path: "destinations/:id/edit", element: <FormDestinationScreen /> },
         { path: "destinations/new", element: <FormDestinationScreen /> },
-        {
-          path: "destinations/detail/:id",
-          element: <DestinationDeatilScreen />,
-        },
+        { path: "destinations/detail/:id", element: <DestinationDeatilScreen />, },
         { path: "promotions", element: <ManagePromotionScreen /> },
         { path: "users", element: <UserAdminScreen /> },
         { path: "users/:id", element: <UserDetailScreen /> },
         { path: "users/:id/edit", element: <UserEditScreen /> },
+        { path: "manage-booking", element: <ManageBookingScreen /> },
       ],
     },
     // {

@@ -29,6 +29,7 @@ export default function AdminScreen() {
     else if (menu === "destination") navigate("/admin/manage-destination");
     else if (menu === "promotion") navigate("/admin/promotions");
     else if (menu === "user") navigate("/admin/users");
+    else if (menu === "booking") navigate("/admin/manage-booking");
   };
 
   useEffect(() => {
