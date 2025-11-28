@@ -16,7 +16,7 @@ import java.util.Set;
 public class Promotion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private String promotionID;
 
     @Column(nullable = false, unique = true)

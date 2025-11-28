@@ -33,3 +33,10 @@ export type UserUpdatePayload = {
     email: string;
     phoneNumber: string;
 };
+export type UserCreatePayload = {
+  name: string
+  email: string
+  password: string
+  phoneNumber?: string
+  locked: boolean
+}

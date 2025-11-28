@@ -1,6 +1,6 @@
 package com.tripbee.backend.admin.controller;
 
-import com.tripbee.backend.admin.dto.PromotionAdminResponse;
+import com.tripbee.backend.admin.dto.response.promotions.PromotionAdminResponse;
 import com.tripbee.backend.admin.dto.request.PromotionRequest;
 import com.tripbee.backend.admin.service.PromotionAdminService;
 import com.tripbee.backend.model.Promotion;

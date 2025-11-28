@@ -1,6 +1,9 @@
 package com.tripbee.backend.dto;
 
+import com.tripbee.backend.model.enums.Gender;
+import com.tripbee.backend.model.enums.ParticipantType;
 import lombok.Data;
+import java.util.List;
 
 // DTO để nhận dữ liệu đặt tour từ client
 @Data
@@ -10,10 +13,13 @@ public class BookingRequest {
     private int numChildren;
     private String promotionCode; // Mã khuyến mãi (nếu có)
 
+    // [NEW] Danh sách người tham gia
+    private List<ParticipantDto> participants;
+
     // Thông tin cơ bản của người đặt (có thể lấy từ token)
     // Trường hợp này, ta sẽ lấy userID từ JWT Token
 
-    // Getter/Setter thủ công
+    // Getter/Setter thủ công cho các trường cũ (giữ nguyên style của bạn)
     public String getTourID() {
         return tourID;
     }
@@ -44,5 +50,23 @@ public class BookingRequest {
 
     public void setPromotionCode(String promotionCode) {
         this.promotionCode = promotionCode;
+    }
+
+    public List<ParticipantDto> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<ParticipantDto> participants) {
+        this.participants = participants;
+    }
+
+    // [NEW] Inner class DTO cho từng người tham gia
+    @Data
+    public static class ParticipantDto {
+        private String customerName;
+        private String customerPhone;
+        private String identification;
+        private Gender gender;             // Enum: MALE, FEMALE, OTHER
+        private ParticipantType participantType; // Enum: ADULT, CHILD
     }
 }

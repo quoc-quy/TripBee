@@ -1,25 +1,27 @@
-// frontend-demo/src/components/BookingModal/BookingModal.tsx
-
 import { createPortal } from "react-dom";
 import { useContext, useEffect } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, User, Users, Baby, CreditCard } from "lucide-react";
+import { X, User, Users, Baby, CreditCard, Store, QrCode } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { bookingApi } from "../../apis/booking.api";
+import { getProfile } from "../../apis/auth.api";
+import { toast } from "react-toastify";
 
 import type { TourDetails } from "../../types/tour";
-import type { BookingFormData, Participant } from "../../types/booking.type";
+import type { BookingFormData, ParticipantDto, Gender } from "../../types/booking.type";
 import { formatCurrency } from "../../utils/utils";
 import Button from "../Button";
 import { AppContext } from "../../contexts/app.context";
-import { useQuery } from "@tanstack/react-query";
-import { getProfile } from "../../apis/auth.api";
 
-// --- Validation Schemas (Giữ nguyên) ---
+// --- Regex & Validation ---
 const phoneRegex = /^[0-9]{10}$/;
 const cccdRegex = /^[0-9]{12}$/;
 
+// Schema cho người đi cùng
 const participantSchema = yup.object({
     name: yup.string().min(2, "Tên phải có ít nhất 2 ký tự").required("Họ tên là bắt buộc"),
     gender: yup.string().oneOf(["Nam", "Nữ", "Khác"]).required("Giới tính là bắt buộc"),
@@ -43,34 +45,42 @@ const adultParticipantSchema = participantSchema.shape({
     cccd: yup.string().matches(cccdRegex, "CCCD phải đúng 12 số").required("CCCD là bắt buộc"),
 });
 
+// Schema chính cho Form
 const bookingFormSchema = yup.object({
+    // Người đặt (cũng là người lớn 1)
     bookerName: yup.string().min(2, "Tên phải có ít nhất 2 ký tự").required("Họ tên là bắt buộc"),
     bookerPhone: yup
         .string()
         .matches(phoneRegex, "SĐT phải đúng 10 số")
         .required("SĐT là bắt buộc"),
     bookerEmail: yup.string().email("Email không hợp lệ").required("Email là bắt buộc"),
+    bookerGender: yup.string().oneOf(["Nam", "Nữ", "Khác"]).required("Giới tính là bắt buộc"), // [MỚI]
+    bookerCccd: yup
+        .string()
+        .matches(cccdRegex, "CCCD phải đúng 12 số")
+        .required("CCCD là bắt buộc"), // [MỚI]
+
     note: yup.string().optional(),
     otherAdults: yup.array().of(adultParticipantSchema),
     children: yup.array().of(childParticipantSchema),
+    paymentMethod: yup
+        .string()
+        .oneOf(["QR", "COUNTER"])
+        .required("Vui lòng chọn phương thức thanh toán"),
 });
 
-// --- Props cho Modal (Giữ nguyên) ---
-interface BookingModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    tour: TourDetails;
-    bookingDetails: {
-        adults: number;
-        children: number;
-        totalPrice: number;
-    };
-}
+// --- Helper: Chuyển đổi Gender ---
+const mapGenderToEnum = (gender: string): Gender => {
+    if (gender === "Nam") return "MALE";
+    if (gender === "Nữ") return "FEMALE";
+    return "OTHER";
+};
 
 // --- Component Input Tùy Chỉnh (Giữ nguyên) ---
 type FormInputProps = {
     label: string;
     id: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     register: ReturnType<(typeof useForm<BookingFormData>)["register"]>;
     error?: string;
     type?: string;
@@ -107,6 +117,7 @@ const FormInput = ({
 type FormSelectProps = {
     label: string;
     id: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     register: ReturnType<(typeof useForm<BookingFormData>)["register"]>;
     error?: string;
     required?: boolean;
@@ -132,12 +143,22 @@ const FormSelect = ({ label, id, register, error, required = false }: FormSelect
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
 );
-// --- Kết thúc Component Input Tùy Chỉnh ---
 
 // --- Component Modal Chính ---
+interface BookingModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    tour: TourDetails;
+    bookingDetails: {
+        adults: number;
+        children: number;
+        totalPrice: number;
+    };
+}
+
 export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: BookingModalProps) {
-    // ... (Toàn bộ logic hooks: useQuery, useForm, useFieldArray... giữ nguyên) ...
     const { isAuthenticated } = useContext(AppContext);
+    const navigate = useNavigate();
 
     const { data: profileData } = useQuery({
         queryKey: ["userProfile"],
@@ -145,6 +166,29 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         enabled: isAuthenticated,
     });
     const user = profileData?.data;
+
+    const createBookingMutation = useMutation({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mutationFn: (params: { apiBody: any; paymentMethod: string }) =>
+            bookingApi.createBooking(params.apiBody),
+
+        onSuccess: (response, variables) => {
+            const bookingID = response.data.bookingID;
+            onClose();
+            if (variables.paymentMethod === "QR") {
+                navigate(`/payment/${bookingID}`);
+            } else {
+                toast.success(
+                    "Đặt tour thành công! Vui lòng đến quầy TripBee để hoàn tất thanh toán."
+                );
+                navigate("/account/historyTour");
+            }
+        },
+        onError: (error) => {
+            console.error("Lỗi đặt tour:", error);
+            toast.error("Đặt tour thất bại. Vui lòng kiểm tra lại thông tin!");
+        },
+    });
 
     const {
         register,
@@ -158,8 +202,12 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
             bookerName: "",
             bookerPhone: "",
             bookerEmail: "",
+            bookerGender: "",
+            bookerCccd: "",
+            note: "",
             otherAdults: [],
             children: [],
+            paymentMethod: "QR",
         },
     });
 
@@ -181,18 +229,23 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         name: "children",
     });
 
+    // Auto-fill user info
     useEffect(() => {
         if (user) {
             setValue("bookerName", user.name || "");
             setValue("bookerPhone", user.phoneNumber || "");
             setValue("bookerEmail", user.email || "");
+            // Lưu ý: User model hiện tại chưa có giới tính/CCCD nên vẫn phải nhập
         }
     }, [user, setValue]);
 
+    // Logic số lượng người tham gia
     useEffect(() => {
         if (isOpen) {
+            // Người đặt là 1 người lớn, nên số người lớn còn lại = Tổng - 1
             const requiredOtherAdults = Math.max(0, bookingDetails.adults - 1);
             const currentOtherAdults = adultFields.length;
+
             if (requiredOtherAdults > currentOtherAdults) {
                 for (let i = 0; i < requiredOtherAdults - currentOtherAdults; i++) {
                     appendAdult({ name: "", cccd: "", gender: "", phone: "" });
@@ -230,41 +283,83 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
         appendChild,
         removeChildren,
         adultFields.length,
+        childrenFields.length,
     ]);
 
-    // (Giữ nguyên) Logic khóa cuộn (scroll lock)
+    // Lock scroll & ESC key
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "unset";
-        }
+        if (isOpen) document.body.style.overflow = "hidden";
+        else document.body.style.overflow = "unset";
         return () => {
             document.body.style.overflow = "unset";
         };
     }, [isOpen]);
 
-    // (Giữ nguyên) Logic chặn phím ESC
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
-                event.preventDefault();
-            }
+            if (event.key === "Escape") event.preventDefault();
         };
-        if (isOpen) {
-            document.addEventListener("keydown", handleEsc);
-        }
+        if (isOpen) document.addEventListener("keydown", handleEsc);
         return () => {
             document.removeEventListener("keydown", handleEsc);
         };
     }, [isOpen]);
 
     const onSubmit = (data: BookingFormData) => {
-        console.log("Dữ liệu form hợp lệ:", data);
-        // TODO: GỌI API THANH TOÁN / TẠO BOOKING
+        // 1. Tạo danh sách participants từ form
+        const participants: ParticipantDto[] = [];
+
+        // a. Thêm người đặt (Booker) vào danh sách participants
+        // (Chỉ khi bookingDetails.adults > 0, nhưng thường là luôn > 0)
+        if (bookingDetails.adults > 0) {
+            participants.push({
+                customerName: data.bookerName,
+                customerPhone: data.bookerPhone,
+                identification: data.bookerCccd,
+                gender: mapGenderToEnum(data.bookerGender),
+                participantType: "ADULT",
+            });
+        }
+
+        // b. Thêm người lớn đi cùng
+        data.otherAdults.forEach((p) => {
+            participants.push({
+                customerName: p.name,
+                customerPhone: p.phone || "",
+                identification: p.cccd || "",
+                gender: mapGenderToEnum(p.gender),
+                participantType: "ADULT",
+            });
+        });
+
+        // c. Thêm trẻ em
+        data.children.forEach((p) => {
+            participants.push({
+                customerName: p.name,
+                customerPhone: p.phone || "",
+                identification: p.cccd || "",
+                gender: mapGenderToEnum(p.gender),
+                participantType: "CHILD",
+            });
+        });
+
+        // 2. Tạo payload gửi API
+        const apiBody = {
+            tourID: tour.tourID,
+            numAdults: bookingDetails.adults,
+            numChildren: bookingDetails.children,
+            totalPrice: bookingDetails.totalPrice,
+            participants: participants, // Gửi mảng này xuống Backend
+            // Các trường phụ (nếu backend cần log thêm)
+            bookerName: data.bookerName,
+            bookerPhone: data.bookerPhone,
+            bookerEmail: data.bookerEmail,
+            note: data.note,
+        };
+
+        createBookingMutation.mutate({ apiBody, paymentMethod: data.paymentMethod });
     };
 
-    // (SỬA) Bọc JSX trong createPortal
     return createPortal(
         <AnimatePresence>
             {isOpen && (
@@ -272,18 +367,16 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    // (SỬA) Tăng z-index và xóa onClick
                     className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4"
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        // (SỬA) Thêm class flex, flex-col và max-h
                         className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[95vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* (SỬA) Thêm flex-shrink-0 cho Header */}
+                        {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b flex-shrink-0">
                             <h2 className="text-2xl font-semibold text-gray-800">
                                 Thông tin đặt tour
@@ -293,21 +386,17 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                             </button>
                         </div>
 
-                        {/* (SỬA) Thêm class cho Form để nó quản lý layout */}
+                        {/* Form Body */}
                         <form
                             onSubmit={handleSubmit(onSubmit)}
-                            // class="flex-1" -> chiếm không gian còn lại
-                            // class="overflow-hidden" -> để nó chứa div con có overflow-y-auto
-                            // class="flex flex-col" -> để xếp content và footer theo chiều dọc
                             className="flex-1 overflow-hidden flex flex-col"
                         >
-                            {/* (SỬA) Thêm flex-1 và overflow-y-auto cho Vùng cuộn */}
                             <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                                {/* 1. Thông tin người đặt (Giữ nguyên) */}
+                                {/* 1. Thông tin người đặt */}
                                 <div className="border border-gray-200 rounded-lg p-4">
                                     <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                                         <User size={20} className="mr-2 text-blue-600" />
-                                        Thông tin người đặt (1 người lớn)
+                                        Thông tin người đặt (Người lớn 1)
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <FormInput
@@ -326,9 +415,27 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                             placeholder="0912345678"
                                             required
                                         />
+
+                                        {/* [MỚI] Thêm Giới tính & CCCD cho Booker */}
+                                        <FormSelect
+                                            label="Giới tính"
+                                            id="bookerGender"
+                                            register={register}
+                                            error={errors.bookerGender?.message}
+                                            required
+                                        />
+                                        <FormInput
+                                            label="CCCD/CMND"
+                                            id="bookerCccd"
+                                            register={register}
+                                            error={errors.bookerCccd?.message}
+                                            placeholder="12 số"
+                                            required
+                                        />
+
                                         <div className="md:col-span-2">
                                             <FormInput
-                                                label="Email"
+                                                label="Email nhận vé"
                                                 id="bookerEmail"
                                                 register={register}
                                                 error={errors.bookerEmail?.message}
@@ -340,7 +447,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     </div>
                                 </div>
 
-                                {/* 2. Người lớn đi cùng (Giữ nguyên) */}
+                                {/* 2. Người lớn đi cùng */}
                                 {adultFields.length > 0 && (
                                     <div className="border border-gray-200 rounded-lg p-4">
                                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -406,7 +513,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     </div>
                                 )}
 
-                                {/* 3. Trẻ em đi cùng (Giữ nguyên) */}
+                                {/* 3. Trẻ em đi cùng */}
                                 {childrenFields.length > 0 && (
                                     <div className="border border-gray-200 rounded-lg p-4">
                                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -470,7 +577,7 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                     </div>
                                 )}
 
-                                {/* Ghi chú (Giữ nguyên) */}
+                                {/* Ghi chú & Payment (Giữ nguyên như cũ) */}
                                 <div>
                                     <label
                                         htmlFor="note"
@@ -486,14 +593,52 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                         className="w-full p-2.5 border rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                     ></textarea>
                                 </div>
+
+                                <div className="border border-gray-200 rounded-lg p-4">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <CreditCard size={20} className="mr-2 text-purple-600" />
+                                        Phương thức thanh toán
+                                    </h3>
+                                    <div className="flex flex-col gap-3">
+                                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                            <input
+                                                type="radio"
+                                                value="QR"
+                                                {...register("paymentMethod")}
+                                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                            />
+                                            <div className="ml-3 flex items-center">
+                                                <QrCode className="text-gray-600 mr-2" size={20} />
+                                                <span className="text-gray-800 font-medium">
+                                                    Thanh toán bằng mã QR
+                                                </span>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                            <input
+                                                type="radio"
+                                                value="COUNTER"
+                                                {...register("paymentMethod")}
+                                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                            />
+                                            <div className="ml-3 flex items-center">
+                                                <Store className="text-gray-600 mr-2" size={20} />
+                                                <span className="text-gray-800 font-medium">
+                                                    Thanh toán tại quầy TripBee
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {errors.paymentMethod && (
+                                        <p className="mt-2 text-xs text-red-600">
+                                            {errors.paymentMethod.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* (SỬA) Thêm flex-shrink-0 cho Footer */}
+                            {/* Footer */}
                             <div className="p-6 bg-gray-50 border-t flex-shrink-0">
-                                {/* ... (Nội dung footer giữ nguyên) ... */}
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                                    Chi tiết đặt tour
-                                </h3>
                                 <div className="space-y-2 text-sm text-gray-700">
                                     <div className="flex justify-between">
                                         <span>Tour:</span>
@@ -522,9 +667,16 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                                 <Button
                                     type="submit"
                                     className="w-full text-lg font-semibold py-3 mt-4"
+                                    disabled={createBookingMutation.isPending}
                                 >
-                                    <CreditCard size={20} className="mr-2" />
-                                    Tiến hành thanh toán
+                                    {createBookingMutation.isPending ? (
+                                        "Đang xử lý..."
+                                    ) : (
+                                        <>
+                                            <CreditCard size={20} className="mr-2 inline-block" />{" "}
+                                            Xác nhận đặt tour
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </form>
@@ -532,7 +684,6 @@ export default function BookingModal({ isOpen, onClose, tour, bookingDetails }: 
                 </motion.div>
             )}
         </AnimatePresence>,
-        // (Giữ nguyên) Đích đến của Portal
         document.body
     );
 }

@@ -24,10 +24,11 @@ import FavouriteTour from "./screens/Account/pages/FavouriteTour";
 import ManagePromotionScreen from "./admin/screens/PromotionScreen/ManagePromotionScreen";
 import FormPromotionScreen from "./admin/screens/PromotionScreen/FormPromotionScreen";
 import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
-import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
-import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
-import ManageBookingScreen from "./admin/screens/ManageBooking/ManageBookingScreen";
-
+// import UserDetailScreen from "./admin/screens/ManageUserScreen/UserDetailAdminScreen";
+// import UserEditScreen from "./admin/screens/ManageUserScreen/UserEditAdminScreen";
+import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
+import ContactMessageScreen from "./admin/screens/ContactMessageScreen/ContactMessageScreen";
+import ManageReviewScreen from "./admin/screens/ReviewScreen/ManageReviewScreen";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -81,6 +82,14 @@ export default function useRouteElements() {
       ),
     },
     {
+      path: "/payment/:id",
+      element: (
+        <MainLayout>
+          <PaymentScreen />
+        </MainLayout>
+      ),
+    },
+    {
       path: "/destinations",
       element: (
         <MainLayout>
@@ -116,12 +125,19 @@ export default function useRouteElements() {
         { path: "manage-destination", element: <ManageDestinationScreen /> },
         { path: "destinations/:id/edit", element: <FormDestinationScreen /> },
         { path: "destinations/new", element: <FormDestinationScreen /> },
-        { path: "destinations/detail/:id", element: <DestinationDeatilScreen />, },
+        {
+          path: "destinations/detail/:id",
+          element: <DestinationDeatilScreen />,
+        },
         { path: "promotions", element: <ManagePromotionScreen /> },
         { path: "users", element: <UserAdminScreen /> },
-        { path: "users/:id", element: <UserDetailScreen /> },
-        { path: "users/:id/edit", element: <UserEditScreen /> },
-        { path: "manage-booking", element: <ManageBookingScreen /> },
+        // { path: "users/:id", element: <UserDetailScreen /> },
+        // { path: "users/:id/edit", element: <UserEditScreen /> },
+        { path: "contact-messages", element: <ContactMessageScreen /> },
+        {
+          path: "/admin/reviews",
+          element: <ManageReviewScreen />,
+        },
       ],
     },
     // {

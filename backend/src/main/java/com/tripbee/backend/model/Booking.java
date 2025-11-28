@@ -15,7 +15,7 @@ import java.util.Set;
 public class Booking {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private String bookingID;
 
     @Column(nullable = false, updatable = false)
