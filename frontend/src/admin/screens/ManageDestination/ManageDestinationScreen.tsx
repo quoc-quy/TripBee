@@ -128,7 +128,7 @@ const ManageDestinationScreen: React.FC = () => {
           </p>
         </div>
         <button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg transition-all active:scale-95">
-          + Tạo tour mới
+          + Tạo điểm đến mới
         </button>
       </div>
 

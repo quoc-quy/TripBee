@@ -1,7 +1,7 @@
 
 import http from "../../utils/http";
 import type { TourListAdminParams } from "../../types/tour";
-import type { TourDetailAdmin } from "../types/tourAdmin";
+import type { SimpleTour, TourDetailAdmin } from "../types/tourAdmin";
 
 export const tourAdminApi = {
   getAllTours: (params: TourListAdminParams) => {
@@ -24,4 +24,7 @@ export const tourAdminApi = {
       },
     });
   },
+
+  getOpenToursSimple: () =>
+    http.get<SimpleTour[]>("/admin/tours/open-simple"),
 };

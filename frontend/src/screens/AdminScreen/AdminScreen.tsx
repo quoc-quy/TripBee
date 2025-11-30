@@ -10,6 +10,8 @@ const getMenuFromPath = (path: string): string => {
   if (path.startsWith("/admin/manage-destination")) return "destination";
   if (path.startsWith("/admin/reviews")) return "review";
   if (path.startsWith("/admin/users")) return "user";
+  if (path.startsWith("/admin/tour-types")) return "tour-type";
+  if (path.startsWith("/admin/manage-booking")) return "booking";
 
   // 1. Thêm dòng này để Sidebar biết đang ở trang tin nhắn
   if (path.startsWith("/admin/contact-messages")) return "contact-message";
@@ -36,6 +38,8 @@ export default function AdminScreen() {
     else if (menu === "booking") navigate("/admin/manage-booking");
     else if (menu === "contact-message") navigate("/admin/contact-messages");
     else if (menu === "review") navigate("/admin/reviews");
+    else if (menu === "tour-type") navigate("/admin/tour-types");
+
 
   };
 
