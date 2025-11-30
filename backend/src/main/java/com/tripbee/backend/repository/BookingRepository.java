@@ -3,15 +3,18 @@ package com.tripbee.backend.repository;
 import com.tripbee.backend.admin.dto.response.dashboard.TopTourDto;
 import com.tripbee.backend.model.Booking;
 import com.tripbee.backend.model.enums.BookingStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-public interface BookingRepository extends JpaRepository<Booking, String> {
+public interface BookingRepository extends JpaRepository<Booking, String>, JpaSpecificationExecutor<Booking> {
 
     List<Booking> findByUser_UserID(String userId);
 
@@ -38,4 +41,15 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
             "GROUP BY b.tour.title " +
             "ORDER BY COUNT(b) DESC")
     List<TopTourDto> findTopSellingTours(@Param("status") BookingStatus status, Pageable pageable);
+
+    long countByBookingDateBetween(LocalDateTime start, LocalDateTime end);
+
+    long countByBookingDateBetweenAndStatus(LocalDateTime start, LocalDateTime end, BookingStatus status);
+
+    List<Booking> findByStatus(BookingStatus status);
+
+    // Lấy tất cả booking của 1 tour (trừ đã hủy nếu muốn)
+    List<Booking> findByTour_TourIDAndStatusNot(String tourID, BookingStatus status);
+
+    Page<Booking> findByStatus(BookingStatus status, Pageable pageable);
 }

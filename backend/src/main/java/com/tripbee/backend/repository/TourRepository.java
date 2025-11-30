@@ -2,12 +2,14 @@ package com.tripbee.backend.repository;
 
 import com.tripbee.backend.model.Destination;
 import com.tripbee.backend.model.Tour;
+import com.tripbee.backend.model.enums.TourStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query; // (MỚI)
 import org.springframework.data.repository.query.Param; // (MỚI)
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional; // (MỚI)
 
 @Repository
@@ -31,4 +33,6 @@ public interface TourRepository extends JpaRepository<Tour, String>, JpaSpecific
             "WHERE t.tourID = :id")
     @Override
     Optional<Tour> findById(@Param("id") String id);
+
+    List<Tour> findByStatus(TourStatus status);
 }

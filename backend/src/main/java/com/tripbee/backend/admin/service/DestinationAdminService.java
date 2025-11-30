@@ -22,6 +22,7 @@ public class DestinationAdminService {
 
     private final DestinationRepository destinationRepository;
 
+
     public DestinationAdminService(DestinationRepository destinationRepository) {
         this.destinationRepository = destinationRepository;
     }
@@ -95,10 +96,50 @@ public class DestinationAdminService {
         return new DestinationDetailAdminResponse(des);
     }
 
+    // tạo mã
+    private String buildDestinationId(String region) {
+        if (region == null) {
+            region = "";
+        }
+        String normalized = region.trim().toLowerCase();
+
+        String regionCode;
+        switch (normalized) {
+            case "miền bắc":
+            case "mien bac":
+            case "mb":
+                regionCode = "mb";
+                break;
+            case "miền trung":
+            case "mien trung":
+            case "mt":
+                regionCode = "mt";
+                break;
+            case "miền nam":
+            case "mien nam":
+            case "mn":
+                regionCode = "mn";
+                break;
+            default:
+                // fallback, tùy bạn muốn xử lý thế nào
+                regionCode = "xx";
+        }
+
+        // Đếm số destination hiện có trong miền này
+        long count = destinationRepository.countByRegionIgnoreCase(region);
+        long nextIndex = count + 1; // số thứ tự tiếp theo
+
+        String indexStr = String.format("%02d", nextIndex); // 01, 02, 03, ...
+
+        return "dest-" + regionCode + "-" + indexStr;
+    }
+
+
     @Transactional
     public Destination createDestination(DestinationRequest req) {
         Destination d = new Destination();
-        d.setDestinationID(UUID.randomUUID().toString());
+        String destId = buildDestinationId(req.getRegion());
+        d.setDestinationID(destId);
         d.setNameDes(req.getNameDes());
         d.setRegion(req.getRegion());
         d.setLocation(req.getLocation());
@@ -147,4 +188,6 @@ public class DestinationAdminService {
 
         return destinationRepository.save(d);
     }
+
+
 }

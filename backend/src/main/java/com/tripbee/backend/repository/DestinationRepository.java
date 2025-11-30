@@ -30,4 +30,7 @@ public interface DestinationRepository extends JpaRepository<Destination, String
             "tourDestinations.tour"
     })
     Optional<Destination> findById(String id);
+
+    // tạo mã
+    long countByRegionIgnoreCase(String region);
 }

@@ -1,0 +1,408 @@
+package com.tripbee.backend.admin.service;
+
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.tripbee.backend.admin.dto.response.booking.BookingAdminResponse;
+import com.tripbee.backend.admin.dto.response.booking.BookingDetailResponse;
+import com.tripbee.backend.admin.dto.response.booking.BookingStatsResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourParticipantsResponse;
+import com.tripbee.backend.model.*;
+import com.tripbee.backend.model.enums.BookingStatus;
+import com.tripbee.backend.model.enums.PaymentStatus;
+import com.tripbee.backend.repository.BookingRepository;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import java.io.ByteArrayOutputStream;
+import java.time.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class BookingAdminService {
+
+    private final BookingRepository bookingRepository;
+
+    public BookingAdminService(BookingRepository bookingRepository) {
+        this.bookingRepository = bookingRepository;
+    }
+
+    /** xây khoảng thời gian: nếu null thì lấy tháng hiện tại */
+    private LocalDateTime[] buildRange(LocalDate fromDate, LocalDate toDate) {
+        LocalDate today = LocalDate.now();
+        LocalDate firstOfMonth = today.withDayOfMonth(1);
+
+        LocalDate from = (fromDate != null) ? fromDate : firstOfMonth;
+        LocalDate to = (toDate != null) ? toDate : today;
+
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
+        return new LocalDateTime[]{start, end};
+    }
+
+    public Page<BookingAdminResponse> getAllBookings(
+            int page,
+            int size,
+            String search,
+            BookingStatus status,
+            String sort,
+            LocalDate fromDate,
+            LocalDate toDate
+    ) {
+        LocalDateTime[] range = buildRange(fromDate, toDate);
+        LocalDateTime start = range[0];
+        LocalDateTime end = range[1];
+
+        Sort sortSpec;
+        switch (sort == null ? "" : sort) {
+            case "newest" -> sortSpec = Sort.by(Sort.Direction.DESC, "bookingDate");
+            case "oldest" -> sortSpec = Sort.by(Sort.Direction.ASC, "bookingDate");
+            case "priceDesc" -> sortSpec = Sort.by(Sort.Direction.DESC, "finalAmount");
+            case "priceAsc" -> sortSpec = Sort.by(Sort.Direction.ASC, "finalAmount");
+            default -> sortSpec = Sort.by(Sort.Direction.DESC, "bookingDate");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sortSpec);
+
+        Specification<Booking> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // lọc theo khoảng thời gian đặt
+            predicates.add(cb.between(root.get("bookingDate"), start, end));
+
+            // search: mã booking, tên user, tên tour
+            if (search != null && !search.isBlank()) {
+                String pattern = "%" + search.toLowerCase() + "%";
+
+                Predicate byCode = cb.like(cb.lower(root.get("bookingID")), pattern);
+                Predicate byUser = cb.like(
+                        cb.lower(root.join("user").get("fullName")),
+                        pattern
+                );
+                Predicate byTour = cb.like(
+                        cb.lower(root.join("tour").get("title")),
+                        pattern
+                );
+
+                predicates.add(cb.or(byCode, byUser, byTour));
+            }
+
+            // filter status
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Booking> pageData = bookingRepository.findAll(spec, pageable);
+        return pageData.map(BookingAdminResponse::new);
+    }
+
+    public BookingStatsResponse getStats(LocalDate fromDate, LocalDate toDate) {
+        LocalDateTime[] range = buildRange(fromDate, toDate);
+        LocalDateTime start = range[0];
+        LocalDateTime end = range[1];
+
+        long total = bookingRepository.countByBookingDateBetween(start, end);
+        long processing = bookingRepository.countByBookingDateBetweenAndStatus(start, end, BookingStatus.PROCESSING);
+        long confirmed = bookingRepository.countByBookingDateBetweenAndStatus(start, end, BookingStatus.CONFIRMED);
+        long completed = bookingRepository.countByBookingDateBetweenAndStatus(start, end, BookingStatus.COMPLETED);
+        long canceled = bookingRepository.countByBookingDateBetweenAndStatus(start, end, BookingStatus.CANCELED);
+
+        return new BookingStatsResponse(total, processing, confirmed, completed, canceled);
+    }
+
+    /** ấy thông tin chi tiết */
+    @Transactional
+    public BookingDetailResponse getBookingDetail(String bookingID) {
+        Booking booking = bookingRepository.findById(bookingID)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found: " + bookingID));
+
+        BookingDetailResponse dto = new BookingDetailResponse();
+
+        // Booking basic
+        dto.setBookingID(booking.getBookingID());
+        dto.setBookingDate(booking.getBookingDate());
+        dto.setStatus(booking.getStatus());
+        dto.setNumAdults(booking.getNumAdults());
+        dto.setNumChildren(booking.getNumChildren());
+        dto.setTotalPrice(booking.getTotalPrice() != null ? booking.getTotalPrice() : 0.0);
+        dto.setDiscountAmount(booking.getDiscountAmount() != null ? booking.getDiscountAmount() : 0.0);
+        dto.setFinalAmount(booking.getFinalAmount() != null ? booking.getFinalAmount() : 0.0);
+
+        // ===== Customer =====
+        User user = booking.getUser();
+        if (user != null) {
+            BookingDetailResponse.CustomerInfo c = new BookingDetailResponse.CustomerInfo();
+            c.setUserID(user.getUserID());
+            c.setName(user.getName());
+            c.setEmail(user.getEmail());
+            c.setPhone(user.getPhoneNumber());
+            dto.setCustomer(c);
+        }
+
+        // ===== Tour =====
+        Tour tour = booking.getTour();
+        if (tour != null) {
+            BookingDetailResponse.TourInfo t = new BookingDetailResponse.TourInfo();
+            t.setTourID(tour.getTourID());
+            t.setName(tour.getTitle());
+            t.setCode(null); // chưa có field code, sau này có thì map vào
+            t.setDepartureDate(tour.getStartDate());
+            t.setDestinationName(null); // nếu bạn có Destination thì map lại sau
+            dto.setTour(t);
+        }
+
+        // ===== Promotion =====
+        Promotion promotion = booking.getPromotion();
+        if (promotion != null) {
+            BookingDetailResponse.PromotionInfo p = new BookingDetailResponse.PromotionInfo();
+            p.setPromotionID(promotion.getPromotionID());
+            p.setCode(promotion.getTitle()); // dùng title như code
+            // name: ưu tiên description, fallback title
+            String name = promotion.getDescription() != null && !promotion.getDescription().isBlank()
+                    ? promotion.getDescription()
+                    : promotion.getTitle();
+            p.setName(name);
+            p.setDiscountPercent(promotion.getDiscountPercentage());
+            dto.setPromotion(p);
+        }
+
+        // ===== Invoice + Payments =====
+        Invoice invoice = booking.getInvoice();
+        if (invoice != null) {
+            BookingDetailResponse.InvoiceInfo inv = new BookingDetailResponse.InvoiceInfo();
+            inv.setInvoiceID(invoice.getInvoiceID());
+            inv.setTotalAmount(invoice.getTotalAmount());
+            inv.setTaxPercentage(invoice.getTaxPercentage());
+            inv.setCreatedAt(invoice.getCreatedAt());
+            dto.setInvoice(inv);
+
+            // Payments
+            List<Payment> payments = invoice.getPayments() == null
+                    ? Collections.emptyList()
+                    : new ArrayList<>(invoice.getPayments());
+
+            List<BookingDetailResponse.PaymentInfo> paymentDtos = payments.stream().map(pay -> {
+                BookingDetailResponse.PaymentInfo pi = new BookingDetailResponse.PaymentInfo();
+                pi.setPaymentID(pay.getPaymentID());
+                pi.setAmountPaid(pay.getAmountPaid());
+                pi.setPaymentDate(pay.getPaymentDate());
+                pi.setStatus(pay.getStatus());
+                pi.setPaymentMethod(pay.getPaymentMethod());
+                pi.setTransactionCode(pay.getTransactionCode());
+                return pi;
+            }).collect(Collectors.toList());
+
+            dto.setPayments(paymentDtos);
+        } else {
+            dto.setInvoice(null);
+            dto.setPayments(Collections.emptyList());
+        }
+
+        // ===== Participants =====
+        List<Participant> participants = booking.getParticipants() == null
+                ? Collections.emptyList()
+                : new ArrayList<>(booking.getParticipants());
+
+        List<BookingDetailResponse.ParticipantInfo> participantDtos = participants.stream().map(pa -> {
+            BookingDetailResponse.ParticipantInfo info = new BookingDetailResponse.ParticipantInfo();
+            info.setParticipantID(pa.getParticipantID());
+            info.setCustomerName(pa.getCustomerName());
+            info.setCustomerPhone(pa.getCustomerPhone());
+            info.setIdentification(pa.getIdentification());
+            info.setGender(pa.getGender() != null ? pa.getGender().name() : null);
+            info.setParticipantType(pa.getParticipantType() != null ? pa.getParticipantType().name() : null);
+            return info;
+        }).collect(Collectors.toList());
+
+        dto.setParticipants(participantDtos);
+
+        return dto;
+    }
+
+    public TourParticipantsResponse getParticipantsByTour(String tourId) {
+        // Lấy tất cả booking thuộc tour, bỏ booking đã hủy
+        List<Booking> bookings =
+                bookingRepository.findByTour_TourIDAndStatusNot(tourId, BookingStatus.CANCELED);
+
+        TourParticipantsResponse res = new TourParticipantsResponse();
+        res.setTourId(tourId);
+
+        if (bookings.isEmpty()) {
+            res.setTourName(null);
+            res.setParticipants(List.of());
+            return res;
+        }
+
+        Tour tour = bookings.get(0).getTour();
+        res.setTourName(tour.getTitle());
+
+        List<TourParticipantsResponse.ParticipantInfo> participantInfos =
+                bookings.stream()
+                        .filter(b -> b.getParticipants() != null)
+                        .flatMap(b -> b.getParticipants().stream().map(p -> {
+                            TourParticipantsResponse.ParticipantInfo dto =
+                                    new TourParticipantsResponse.ParticipantInfo();
+                            dto.setParticipantId(p.getParticipantID());
+                            dto.setFullName(p.getCustomerName());
+                            dto.setPhone(p.getCustomerPhone());
+                            dto.setIdentification(p.getIdentification());
+                            dto.setGender(p.getGender() != null ? p.getGender().name() : null);
+                            dto.setParticipantType(p.getParticipantType() != null ? p.getParticipantType().name() : null);
+
+                            dto.setBookingId(b.getBookingID());
+                            dto.setBookingDate(b.getBookingDate());
+                            dto.setBookingStatus(b.getStatus());
+
+                            return dto;
+                        }))
+                        .toList();
+
+        res.setParticipants(participantInfos);
+        return res;
+    }
+
+//    tạo file
+// Hàm mới: tạo PDF từ DTO ở trên
+public byte[] exportParticipantsByTour(String tourId) throws Exception {
+    TourParticipantsResponse dto = getParticipantsByTour(tourId);
+    if (dto == null) {
+        throw new IllegalArgumentException("Không tìm thấy tour hoặc không có dữ liệu.");
+    }
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+    Document document = new Document(PageSize.A4, 36, 36, 36, 36);
+    PdfWriter.getInstance(document, baos);
+    document.open();
+
+    // Font tiếng Việt (đơn giản thì dùng font hệ thống .ttf)
+    // Nếu không cần tiếng Việt trong PDF viewer thì có thể dùng font default
+    BaseFont bf = BaseFont.createFont(
+            BaseFont.HELVETICA,
+            BaseFont.WINANSI,
+            BaseFont.NOT_EMBEDDED
+    );
+    Font titleFont = new Font(bf, 16, Font.BOLD);
+    Font normalFont = new Font(bf, 11, Font.NORMAL);
+    Font headerFont = new Font(bf, 11, Font.BOLD);
+
+    // Tiêu đề
+    Paragraph title = new Paragraph("DANH SÁCH KHÁCH THAM GIA TOUR", titleFont);
+    title.setAlignment(Element.ALIGN_CENTER);
+    title.setSpacingAfter(12f);
+    document.add(title);
+
+    // Thông tin tour
+    Paragraph tourInfo = new Paragraph(
+            "Tour: " + (dto.getTourName() != null ? dto.getTourName() : dto.getTourId()),
+            normalFont
+    );
+    tourInfo.setSpacingAfter(4f);
+    document.add(tourInfo);
+
+    Paragraph totalInfo = new Paragraph(
+            "Tổng số khách tham gia: " + dto.getParticipants().size(),
+            normalFont
+    );
+    totalInfo.setSpacingAfter(10f);
+    document.add(totalInfo);
+
+    // Bảng danh sách khách
+    PdfPTable table = new PdfPTable(8); // 8 cột
+    table.setWidthPercentage(100);
+    table.setWidths(new float[]{3f, 3f, 3f, 2f, 2f, 3f, 3f, 3f});
+    table.setHeaderRows(1);
+
+    // helper header cell
+    PdfPCell headerCell;
+
+    String[] headers = new String[]{
+            "Tên khách",
+            "Điện thoại",
+            "Giấy tờ",
+            "Giới tính",
+            "Loại khách",
+    };
+
+    for (String h : headers) {
+        headerCell = new PdfPCell(new Phrase(h, headerFont));
+        headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        headerCell.setPadding(5f);
+        table.addCell(headerCell);
+    }
+
+    for (TourParticipantsResponse.ParticipantInfo p : dto.getParticipants()) {
+        table.addCell(new Phrase(
+                nvl(p.getFullName()), normalFont
+        ));
+        table.addCell(new Phrase(
+                nvl(p.getPhone()), normalFont
+        ));
+        table.addCell(new Phrase(
+                nvl(p.getIdentification()), normalFont
+        ));
+        table.addCell(new Phrase(
+                mapGender(p.getGender()), normalFont
+        ));
+        table.addCell(new Phrase(
+                mapParticipantType(p.getParticipantType()), normalFont
+        ));
+
+    }
+
+    document.add(table);
+    document.close();
+
+    return baos.toByteArray();
+}
+
+    private String nvl(String s) {
+        return s == null ? "" : s;
+    }
+
+    private String mapGender(String gender) {
+        if (gender == null) return "";
+        return switch (gender) {
+            case "MALE" -> "Nam";
+            case "FEMALE" -> "Nữ";
+            default -> "Khác";
+        };
+    }
+
+    private String mapParticipantType(String type) {
+        if (type == null) return "";
+        return switch (type) {
+            case "ADULT" -> "Người lớn";
+            case "CHILD" -> "Trẻ em";
+            default -> type;
+        };
+    }
+
+    public Page<BookingAdminResponse> getCanceledBookings(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "bookingDate"));
+        Page<Booking> pageData = bookingRepository.findByStatus(BookingStatus.CANCELED, pageable);
+        return pageData.map(BookingAdminResponse::new);
+    }
+
+
+
+
+
+}

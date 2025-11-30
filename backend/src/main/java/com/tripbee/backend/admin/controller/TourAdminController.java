@@ -3,11 +3,14 @@ package com.tripbee.backend.admin.controller;
 import com.tripbee.backend.admin.dto.request.TourRequest;
 import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourSimpleResponse;
 import com.tripbee.backend.admin.service.TourAdminService;
 import com.tripbee.backend.model.Tour;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/tours")
@@ -48,5 +51,10 @@ public class TourAdminController {
                                        @RequestBody TourRequest request) {
         Tour updated = tourAdminService.updateTour(id, request);
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/open-simple")
+    public ResponseEntity<List<TourSimpleResponse>> getOpenToursSimple() {
+        return ResponseEntity.ok(tourAdminService.getOpenToursSimple());
     }
 }

@@ -3,6 +3,7 @@ package com.tripbee.backend.admin.service;
 import com.tripbee.backend.admin.dto.request.TourRequest;
 import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourSimpleResponse;
 import com.tripbee.backend.model.Destination;
 import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination;
@@ -172,4 +173,15 @@ public class TourAdminService {
         return tourRepository.save(tour);
     }
 
+    public List<TourSimpleResponse> getOpenToursSimple() {
+        // Nếu status của bạn là ACTIVE thì đổi TourStatus.OPEN -> TourStatus.ACTIVE
+        List<Tour> tours = tourRepository.findByStatus(TourStatus.ACTIVE);
+
+        return tours.stream()
+                .map(t -> new TourSimpleResponse(
+                        t.getTourID(),
+                        t.getTitle()
+                ))
+                .toList();
+    }
 }
