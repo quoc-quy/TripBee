@@ -122,7 +122,6 @@ const TourTypeDetailAdminScreen: React.FC = () => {
                 {tourType.totalTours}
               </div>
             </div>
-            <ListOrdered className="text-blue-500" size={32} />
           </div>
 
           <p className="text-[11px] text-gray-500">

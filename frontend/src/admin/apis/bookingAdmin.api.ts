@@ -4,7 +4,6 @@ import type {
   BookingAdminListParams,
   BookingDetailAdmin,
   BookingStatsAdmin,
-  CustomerByTourResponse,
   PageResponse,
 } from "../types/bookingAdmin";
 import type { TourParticipants } from "../types/tourAdmin";

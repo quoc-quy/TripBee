@@ -1,6 +1,7 @@
 import type { BookingStatus } from "@/types/booking.type";
 import type { tourDestinationAdmin } from "./tourDestinationAdmin";
 import type { TourTypeAdminParams } from "./tourTypeAdmin";
+import type { ItineraryAdmin } from "./itineraryAdmin";
 
 export interface TourAdmin {
   tourID: string;
@@ -70,6 +71,14 @@ export interface TourDetailAdmin {
       region: string;
     } | null;
   }[];
+
+  
+  promotions?: {
+    promotionID: string;
+    title: string;
+  }[];
+
+  itineraries?: ItineraryAdmin[];
 }
 
 export interface SimpleTour {

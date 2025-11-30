@@ -83,12 +83,7 @@ const CanceledBookingsScreen: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleBack}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-gray-300 bg-white hover:bg-gray-100"
-          >
-            <ArrowLeft size={16} />
-          </button>
+          
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Xử lý đơn hủy tour

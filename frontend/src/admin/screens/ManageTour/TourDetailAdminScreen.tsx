@@ -11,8 +11,6 @@ import {
   Users,
   DollarSign,
   MapPin,
-  Star,
-  MessageCircle,
 } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -29,11 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
   COMPLETED: "bg-gray-200 text-gray-700",
 };
 
-type ExtendedTourDetail = TourDetailAdmin & {
-  totalComments?: number;
-  totalReviews?: number;
-  averageRating?: number;
-};
+type ExtendedTourDetail = TourDetailAdmin;
 
 export default function TourDetailAdminScreen() {
   const { id } = useParams();
@@ -74,20 +68,11 @@ export default function TourDetailAdminScreen() {
       .filter(Boolean)
       .join(" • ") || "Chưa cấu hình";
 
-  const avgRating =
-    typeof tour.averageRating === "number"
-      ? tour.averageRating.toFixed(1)
-      : tour.ranking
-      ? Number(tour.ranking).toFixed(1)
-      : "0.0";
-
-  const totalReviews = tour.totalReviews ?? 0;
-  const totalComments = tour.totalComments ?? 0;
-
   return (
     <div className="p-8 bg-gray-50 min-h-screen text-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
+        
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
             Chi tiết tour
@@ -98,8 +83,8 @@ export default function TourDetailAdminScreen() {
         </div>
       </div>
 
-      {/* Hàng trên: Thông tin tour + Thời gian + Đánh giá */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+      {/* Hàng trên: Thông tin tour + Thời gian */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Thông tin tour */}
         <div className="bg-white rounded-2xl shadow-sm p-6 lg:col-span-2">
           <div className="flex justify-between items-start mb-4">
@@ -159,6 +144,16 @@ export default function TourDetailAdminScreen() {
                   </span>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-700 mt-2">
+                <MapPin size={16} />
+                <span className="line-clamp-2">
+                  Lộ trình:{" "}
+                  <span className="font-medium">
+                    {routeNames}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -191,32 +186,6 @@ export default function TourDetailAdminScreen() {
               <span className="font-medium">{tour.endDate}</span>
             </span>
           </div>
-
-        </div>
-
-        {/* Đánh giá & bình luận */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 lg:col-span-1 ">
-          <h2 className="text-base font-semibold text-gray-800 mb-3">
-            Đánh giá & bình luận
-          </h2>
-
-          <div className="flex items-baseline gap-2 mb-2">
-            <Star size={20} className="text-yellow-500 fill-yellow-400" />
-            <span className="text-2xl font-semibold text-gray-900">
-              {avgRating}
-            </span>
-            <span className="text-xs text-gray-500">/ 5.0</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-gray-700 mb-1 mt-2">
-            <MessageCircle size={16} />
-            <span>
-              Tổng bình luận:{" "}
-              <span className="font-medium">{totalComments}</span>
-            </span>
-          </div>
-
-        
         </div>
       </div>
 
@@ -231,7 +200,7 @@ export default function TourDetailAdminScreen() {
       </section>
 
       {/* Lộ trình điểm đến */}
-      <section className="bg-white rounded-2xl shadow-sm p-6">
+      <section className="bg-white rounded-2xl shadow-sm p-6 mb-6">
         <h3 className="text-base font-semibold text-gray-800 mb-3">
           Lộ trình điểm đến
         </h3>
@@ -258,6 +227,39 @@ export default function TourDetailAdminScreen() {
           </div>
         ) : (
           <p className="text-sm text-gray-500">Chưa cấu hình điểm đến</p>
+        )}
+      </section>
+
+      {/* Lịch trình chi tiết */}
+      <section className="bg-white rounded-2xl shadow-sm p-6">
+        <h3 className="text-base font-semibold text-gray-800 mb-3">
+          Lịch trình chi tiết
+        </h3>
+        {tour.itineraries && tour.itineraries.length > 0 ? (
+          <div className="space-y-4 text-sm">
+            {tour.itineraries.map((it) => (
+              <div
+                key={it.itineraryID || it.dayNumber}
+                className="flex gap-3"
+              >
+                <div className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-semibold mt-2">
+                  {it.dayNumber}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900">
+                    {it.title || `Ngày ${it.dayNumber}`}
+                  </p>
+                  <p className="mt-1 text-gray-700 whitespace-pre-line">
+                    {it.description || "Chưa có mô tả chi tiết"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Chưa cấu hình lịch trình chi tiết.
+          </p>
         )}
       </section>
     </div>
