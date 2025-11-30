@@ -1,12 +1,12 @@
 package com.tripbee.backend.admin.dto.response.tour;
 
-import com.tripbee.backend.model.Destination;
-import com.tripbee.backend.model.Tour;
-import com.tripbee.backend.model.TourDestination;
-import com.tripbee.backend.model.TourType;
+import com.tripbee.backend.admin.dto.response.itinerary.ItineraryAdminResponse;
+import com.tripbee.backend.admin.dto.response.promotions.PromotionSimpleResponse;
+import com.tripbee.backend.model.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +29,9 @@ public class TourDetailAdminResponse {
 
     private TourTypeInfo tourType;
     private List<TourDestinationInfo> tourDestinations;
+    private List<PromotionSimpleResponse> promotions;
+    private List<ItineraryAdminResponse> itineraries;
+
 
     public TourDetailAdminResponse(Tour tour) {
         this.tourID = tour.getTourID();
@@ -54,6 +57,20 @@ public class TourDetailAdminResponse {
         if (tour.getTourDestinations() != null) {
             this.tourDestinations = tour.getTourDestinations().stream()
                     .map(TourDestinationInfo::new)
+                    .collect(Collectors.toList());
+        }
+
+        if (tour.getTourPromotions() != null) {
+            this.promotions = tour.getTourPromotions().stream()
+                    .map(tp -> new PromotionSimpleResponse(tp.getPromotion()))
+                    .collect(Collectors.toList());
+        }
+
+        // NEW: itineraries (sort theo dayNumber)
+        if (tour.getItineraries() != null) {
+            this.itineraries = tour.getItineraries().stream()
+                    .sorted(Comparator.comparingInt(Itinerary::getDayNumber))
+                    .map(ItineraryAdminResponse::new)
                     .collect(Collectors.toList());
         }
     }
