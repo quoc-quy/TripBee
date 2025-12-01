@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, RefreshCw, Trash2 } from "lucide-react";
 
 import type { BookingAdmin } from "../../types/bookingAdmin";
 import type { BookingStatus } from "@/types/booking.type";
@@ -64,13 +64,21 @@ const CanceledBookingsScreen: React.FC = () => {
     refetch();
   };
 
-  const handleProcessOne = async (id: string) => {
+  const handleCancel = async (id: string) => {
     const ok = window.confirm(
-      "Xác nhận xử lý (xóa / hoàn tất) booking đã hủy này?"
+      "Bạn có chắc chắn muốn duyệt hủy booking này không? Khách sẽ nhận email xác nhận hủy tour."
     );
     if (!ok) return;
 
-    
+    try {
+      await bookingAdminApi.approveCancel(id);
+      alert("Đã duyệt hủy booking thành công và gửi email cho khách.");
+      refetch();
+    } catch (error) {
+      console.error(error);
+      alert("Xử lý thất bại. Vui lòng thử lại.");
+    }
+
   };
 
   const handlePageChange = (nextPage: number) => {
@@ -83,7 +91,7 @@ const CanceledBookingsScreen: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          
+
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Xử lý đơn hủy tour
@@ -190,24 +198,35 @@ const CanceledBookingsScreen: React.FC = () => {
 
                   <td className="px-5 py-4 align-top">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        paymentBadgeClassMap[b.paymentStatus]
-                      }`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${paymentBadgeClassMap[b.paymentStatus]
+                        }`}
                     >
                       {paymentLabelMap[b.paymentStatus]}
                     </span>
                   </td>
 
                   <td className="px-5 py-4 align-top text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleProcessOne(b.bookingID)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500 text-red-500 text-xs font-medium hover:bg-red-50"
-                    >
-                      <Trash2 size={14} />
-                      Hủy
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                        {/* Nút xem chi tiết */}
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/bookings/detail/${b.bookingID}`)}
+                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-500 text-blue-600 bg-white text-xs font-medium hover:bg-blue-50" >
+                        Chi tiết đơn
+                      </button>
+                      {/* Nút duyệt hủy */}
+                      <button
+                        type="button"
+                        onClick={() => handleCancel(b.bookingID)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-medium hover:bg-red-600 border border-transparent"
+                      >
+                        Hủy
+                      </button>
+
+                    
+                    </div>
                   </td>
+
                 </tr>
               ))
             )}

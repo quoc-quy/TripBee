@@ -41,4 +41,8 @@ export const bookingAdminApi = {
   getCanceledBookings: (params: { page: number; size: number }) =>
     http.get("/admin/bookings/canceled", { params }),
 
+  // duyệt hủy 
+  approveCancel: (id: string) =>
+    http.post<void>(`/admin/bookings/${id}/cancel`),
+
 };
