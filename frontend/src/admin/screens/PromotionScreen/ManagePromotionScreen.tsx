@@ -1,3 +1,5 @@
+// src/admin/screens/PromotionScreen/ManagePromotionScreen.tsx
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from "react";
@@ -129,6 +131,26 @@ const SimpleModal: React.FC<{
   );
 };
 
+// === START LOGIC MỚI ===
+
+// Hàm tính toán trạng thái hiển thị (Client-side)
+const calculateDisplayStatus = (promotion: PromotionAdmin): string => {
+  const now = new Date();
+  const endDate = new Date(promotion.endDate);
+
+  // Logic ưu tiên:
+  // 1. Nếu status DB là "INACTIVE" -> Inactive
+  if (promotion.status === "INACTIVE") {
+    return "INACTIVE";
+  }
+  // 2. Nếu date > endDate HOẶC status DB là "EXPIRED" -> Expired
+  if (now > endDate || promotion.status === "EXPIRED") {
+    return "EXPIRED";
+  }
+  // 3. Còn lại -> Active
+  return "ACTIVE";
+};
+
 export default function ManagePromotionScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParams = parseSearchParams(searchParams);
@@ -140,18 +162,36 @@ export default function ManagePromotionScreen() {
     string | undefined
   >(undefined);
 
-  // 1. Query lấy dữ liệu cho Bảng (Phân trang bình thường)
+  // 1. TẠO QUERY PARAMS CHO API: Bỏ status=ACTIVE/EXPIRED để API trả về hết
+  const apiQueryParams = useMemo(() => {
+    const params = {
+      page: queryParams.page,
+      size: queryParams.size,
+      search: queryParams.search,
+      discountType: queryParams.discountType,
+    };
+
+    // Nếu filter là INACTIVE, gửi thẳng xuống API để API lọc
+    if (queryParams.status === "INACTIVE") {
+      return { ...params, status: "INACTIVE" };
+    }
+
+    // Nếu filter là ACTIVE, EXPIRED, hoặc ALL, KHÔNG gửi status.
+    // Chúng ta sẽ lọc trên Client sau khi có dữ liệu thô.
+    return params;
+  }, [queryParams]);
+
+  // 2. Query lấy dữ liệu cho Bảng (Sử dụng apiQueryParams mới)
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["admin-promotions", queryParams],
+    queryKey: ["admin-promotions", apiQueryParams],
     queryFn: () =>
       promotionAdminApi
-        .getAllPromotions(queryParams as PromotionListAdminParams)
+        .getAllPromotions(apiQueryParams as PromotionListAdminParams)
         .then((res) => res.data),
     placeholderData: keepPreviousData,
   });
 
-  // 2. (SỬA ĐỔI) Query lấy TẤT CẢ dữ liệu để tính toán thống kê chính xác
-  // Thay vì gọi 4 api riêng lẻ, ta gọi 1 lần lấy size lớn để Frontend tự đếm active/expired theo ngày giờ
+  // 3. Query lấy TẤT CẢ dữ liệu để tính toán thống kê chính xác
   const {
     data: allPromotionsData,
     isLoading: isLoadingStats,
@@ -160,12 +200,12 @@ export default function ManagePromotionScreen() {
     queryKey: ["admin-all-promotions-stats"],
     queryFn: () =>
       promotionAdminApi
-        .getAllPromotions({ size: 1000 }) // Lấy số lượng lớn để cover hết
+        .getAllPromotions({ size: 1000 })
         .then((res) => res.data),
-    staleTime: 1000 * 60 * 5, // Cache 5 phút để đỡ gọi nhiều
+    staleTime: 1000 * 60 * 5,
   });
 
-  // 3. (SỬA ĐỔI) Logic tính toán Stats tại Client
+  // 4. Logic tính toán Stats tại Client (Giữ nguyên)
   const stats = useMemo(() => {
     const list = allPromotionsData?.content || [];
     const total = allPromotionsData?.totalElements || 0;
@@ -173,22 +213,14 @@ export default function ManagePromotionScreen() {
     let active = 0;
     let inactive = 0;
     let expired = 0;
-    const now = new Date();
 
     list.forEach((p) => {
-      const endDate = new Date(p.endDate);
-      const isDateExpired = now > endDate;
-
-      // Logic ưu tiên:
-      // 1. Nếu status DB là "INACTIVE" -> tính là Inactive
-      // 2. Nếu date > endDate -> tính là Expired (bất kể DB là Active hay không)
-      // 3. Còn lại -> Active
-
-      if (p.status === "INACTIVE") {
+      const displayStatus = calculateDisplayStatus(p);
+      if (displayStatus === "INACTIVE") {
         inactive++;
-      } else if (isDateExpired || p.status === "EXPIRED") {
+      } else if (displayStatus === "EXPIRED") {
         expired++;
-      } else if (p.status === "ACTIVE") {
+      } else if (displayStatus === "ACTIVE") {
         active++;
       }
     });
@@ -196,10 +228,23 @@ export default function ManagePromotionScreen() {
     return { total, active, inactive, expired };
   }, [allPromotionsData]);
 
-  const promotions = data?.content || [];
+  const rawPromotions: PromotionAdmin[] = data?.content || [];
   const totalPages = data?.totalPages || 0;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const currentPage = data?.number || 0;
+
+  // 5. LỌC THÊM TRÊN CLIENT DỰA TRÊN TRẠNG THÁI HIỂN THỊ
+  const promotions = useMemo(() => {
+    // Nếu filter là INACTIVE, API đã lọc, chỉ cần trả về kết quả
+    if (queryParams.status === "INACTIVE") return rawPromotions;
+
+    // Nếu không có filter status, hoặc filter là ALL, giữ nguyên danh sách
+    if (!queryParams.status || queryParams.status === "") return rawPromotions;
+
+    // Lọc lại dựa trên trạng thái hiển thị được tính toán trên Client
+    return rawPromotions.filter(
+      (p) => calculateDisplayStatus(p) === queryParams.status
+    );
+  }, [rawPromotions, queryParams.status]);
 
   const handlePageChange = (page: number) => {
     const newParams = { ...queryParams, page };
@@ -281,6 +326,7 @@ export default function ManagePromotionScreen() {
           <option value="FIXED_AMOUNT">Số tiền cố định</option>
         </select>
 
+        {/* --- Bộ lọc Trạng thái --- */}
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 min-w-[150px]"
           value={queryParams.status || ""}
@@ -293,6 +339,7 @@ export default function ManagePromotionScreen() {
           <option value="INACTIVE">Không hoạt động</option>
           <option value="EXPIRED">Đã hết hạn</option>
         </select>
+        {/* --- Hết Bộ lọc Trạng thái --- */}
       </div>
 
       {/* Stat Cards Section (Sử dụng stats đã tính toán lại) */}
@@ -332,7 +379,6 @@ export default function ManagePromotionScreen() {
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-200 text-gray-600 text-sm uppercase border-b border-gray-200">
             <tr>
-              <th className="px-5 py-3 text-center font-bold text-black">ID</th>
               <th className="px-5 py-3 font-bold text-black">Mã KM</th>
               <th className="px-5 py-3 font-bold text-black">Loại/Giá trị</th>
               <th className="px-5 py-3 font-bold text-black">Thời gian</th>
@@ -354,28 +400,20 @@ export default function ManagePromotionScreen() {
           <tbody className="text-gray-800">
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="text-center py-8 text-gray-500">
+                <td colSpan={7} className="text-center py-8 text-gray-500">
                   Đang tải dữ liệu khuyến mãi...
                 </td>
               </tr>
             ) : promotions.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-8 text-gray-500">
+                <td colSpan={7} className="text-center py-8 text-gray-500">
                   Không tìm thấy mã khuyến mãi nào.
                 </td>
               </tr>
             ) : (
               promotions.map((promotion: PromotionAdmin) => {
-                const now = new Date();
-                const endDate = new Date(promotion.endDate);
-                // Logic hiển thị status (chỉ UI - Đồng bộ với logic Stats)
-                const isDateExpired = now > endDate;
-                const displayStatus =
-                  promotion.status === "INACTIVE"
-                    ? "INACTIVE"
-                    : isDateExpired || promotion.status === "EXPIRED"
-                    ? "EXPIRED"
-                    : "ACTIVE";
+                // SỬ DỤNG HÀM MỚI ĐỂ ĐỒNG BỘ TRẠNG THÁI HIỂN THỊ
+                const displayStatus = calculateDisplayStatus(promotion);
 
                 const label = STATUS_LABELS[displayStatus] || displayStatus;
                 const color =
@@ -406,9 +444,6 @@ export default function ManagePromotionScreen() {
                         : "hover:bg-gray-50"
                     }`}
                   >
-                    <td className="px-5 py-4 text-center text-sm">
-                      {promotion.promotionID}
-                    </td>
                     <td className="px-5 py-4">
                       <p className="font-semibold text-gray-900 text-sm">
                         {promotion.title}
