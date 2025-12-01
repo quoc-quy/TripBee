@@ -13,17 +13,14 @@ import com.tripbee.backend.model.*;
 import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.PaymentStatus;
 import com.tripbee.backend.repository.BookingRepository;
+import com.tripbee.backend.service.EmailService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfWriter;
+import org.springframework.core.io.ClassPathResource;
+import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.time.*;
 import java.util.ArrayList;
@@ -35,9 +32,11 @@ import java.util.stream.Collectors;
 public class BookingAdminService {
 
     private final BookingRepository bookingRepository;
+    private final EmailService emailService;
 
-    public BookingAdminService(BookingRepository bookingRepository) {
+    public BookingAdminService(BookingRepository bookingRepository, EmailService emailService) {
         this.bookingRepository = bookingRepository;
+        this.emailService = emailService;
     }
 
     /** xây khoảng thời gian: nếu null thì lấy tháng hiện tại */
@@ -277,76 +276,77 @@ public class BookingAdminService {
         return res;
     }
 
-//    tạo file
-// Hàm mới: tạo PDF từ DTO ở trên
-public byte[] exportParticipantsByTour(String tourId) throws Exception {
-    TourParticipantsResponse dto = getParticipantsByTour(tourId);
-    if (dto == null) {
-        throw new IllegalArgumentException("Không tìm thấy tour hoặc không có dữ liệu.");
-    }
+    //    tạo file
+    public byte[] exportParticipantsByTour(String tourId) throws Exception {
+      TourParticipantsResponse dto = getParticipantsByTour(tourId);
+        if (dto == null) {
+            throw new IllegalArgumentException("Không tìm thấy tour hoặc không có dữ liệu.");
+      }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4, 36, 36, 36, 36);
+        PdfWriter.getInstance(document, baos);
+        document.open();
 
-    Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-    PdfWriter.getInstance(document, baos);
-    document.open();
+        // ====== FONT UNICODE TIẾNG VIỆT ======
+        String fontPath = new ClassPathResource("/fonts/dejavu-sans.ttf")
+                .getFile()
+                .getAbsolutePath();
 
-    // Font tiếng Việt (đơn giản thì dùng font hệ thống .ttf)
-    // Nếu không cần tiếng Việt trong PDF viewer thì có thể dùng font default
-    BaseFont bf = BaseFont.createFont(
-            BaseFont.HELVETICA,
-            BaseFont.WINANSI,
-            BaseFont.NOT_EMBEDDED
-    );
-    Font titleFont = new Font(bf, 16, Font.BOLD);
-    Font normalFont = new Font(bf, 11, Font.NORMAL);
-    Font headerFont = new Font(bf, 11, Font.BOLD);
+         BaseFont bf = BaseFont.createFont(
+                 fontPath,
+                 BaseFont.IDENTITY_H,
+                 BaseFont.EMBEDDED
+         );
+        Font titleFont = new Font(bf, 16, Font.BOLD);
+      Font normalFont = new Font(bf, 11, Font.NORMAL);
+      Font headerFont = new Font(bf, 11, Font.BOLD);
 
-    // Tiêu đề
-    Paragraph title = new Paragraph("DANH SÁCH KHÁCH THAM GIA TOUR", titleFont);
-    title.setAlignment(Element.ALIGN_CENTER);
-    title.setSpacingAfter(12f);
-    document.add(title);
+      // Tiêu đề
+      Paragraph title = new Paragraph("DANH SÁCH KHÁCH THAM GIA TOUR", titleFont);
+      title.setAlignment(Element.ALIGN_CENTER);
+      title.setSpacingAfter(12f);
+      document.add(title);
 
     // Thông tin tour
-    Paragraph tourInfo = new Paragraph(
-            "Tour: " + (dto.getTourName() != null ? dto.getTourName() : dto.getTourId()),
-            normalFont
-    );
-    tourInfo.setSpacingAfter(4f);
-    document.add(tourInfo);
+      Paragraph tourInfo = new Paragraph(
+              "Tour: " + (dto.getTourName() != null ? dto.getTourName() : dto.getTourId()),
+              normalFont
+      );
+       tourInfo.setSpacingAfter(4f);
+      document.add(tourInfo);
 
-    Paragraph totalInfo = new Paragraph(
-            "Tổng số khách tham gia: " + dto.getParticipants().size(),
-            normalFont
-    );
-    totalInfo.setSpacingAfter(10f);
-    document.add(totalInfo);
+     Paragraph totalInfo = new Paragraph(
+             "Tổng số khách tham gia: " + dto.getParticipants().size(),
+             normalFont
+     );
+     totalInfo.setSpacingAfter(10f);
+     document.add(totalInfo);
 
     // Bảng danh sách khách
-    PdfPTable table = new PdfPTable(8); // 8 cột
-    table.setWidthPercentage(100);
-    table.setWidths(new float[]{3f, 3f, 3f, 2f, 2f, 3f, 3f, 3f});
-    table.setHeaderRows(1);
+        PdfPTable table = new PdfPTable(5); // 5 cột
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{3f, 3f, 3f, 2f, 2f}); // 5 số tương ứng 5 cột
+        table.setHeaderRows(1);
 
-    // helper header cell
-    PdfPCell headerCell;
+// helper header cell
+        PdfPCell headerCell;
 
-    String[] headers = new String[]{
-            "Tên khách",
-            "Điện thoại",
-            "Giấy tờ",
-            "Giới tính",
-            "Loại khách",
-    };
+        String[] headers = new String[]{
+                "Tên khách",
+                "Điện thoại",
+                "Giấy tờ",
+                "Giới tính",
+                "Loại khách"
+        };
 
-    for (String h : headers) {
-        headerCell = new PdfPCell(new Phrase(h, headerFont));
-        headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
-        headerCell.setPadding(5f);
-        table.addCell(headerCell);
-    }
+        for (String h : headers) {
+            headerCell = new PdfPCell(new Phrase(h, headerFont));
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+            headerCell.setPadding(5f);
+            table.addCell(headerCell);
+        }
 
     for (TourParticipantsResponse.ParticipantInfo p : dto.getParticipants()) {
         table.addCell(new Phrase(
@@ -397,11 +397,44 @@ public byte[] exportParticipantsByTour(String tourId) throws Exception {
 
     public Page<BookingAdminResponse> getCanceledBookings(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "bookingDate"));
-        Page<Booking> pageData = bookingRepository.findByStatus(BookingStatus.CANCELED, pageable);
+        Page<Booking> pageData = bookingRepository.findByStatus(BookingStatus.CANCELLATION_REQUESTED, pageable);
         return pageData.map(BookingAdminResponse::new);
     }
 
+    // duyệt hủy 1 booking + gửi email
+    @Transactional
+    public void approveCancelBooking(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found: " + bookingId));
 
+        if (booking.getStatus() != BookingStatus.CANCELLATION_REQUESTED) {
+            throw new IllegalStateException("Booking không ở trạng thái CHỜ HỦY");
+        }
+
+        // cập nhật trạng thái
+        booking.setStatus(BookingStatus.CANCELED);
+        bookingRepository.save(booking);
+
+        // chuẩn bị data email
+        if (booking.getUser() != null && booking.getUser().getEmail() != null) {
+            var user = booking.getUser();
+            var tour = booking.getTour();
+
+            EmailService.BookingCanceledEmailData data =
+                    EmailService.BookingCanceledEmailData.builder()
+                            .toEmail(user.getEmail())
+                            .customerName(user.getName())
+                            .bookingId(booking.getBookingID())
+                            .tourTitle(tour != null ? tour.getTitle() : "(Không rõ tên tour)")
+                            .startDate(tour != null ? tour.getStartDate() : null)
+                            .numAdults(booking.getNumAdults())
+                            .numChildren(booking.getNumChildren())
+                            .finalAmount(booking.getFinalAmount())
+                            .build();
+
+            emailService.sendBookingCanceledEmail(data);
+        }
+    }
 
 
 

@@ -89,7 +89,7 @@ public class BookingAdminController {
         }
     }
 
-    // Danh sách booking ở trạng thái CANCELED
+    // Danh sách booking ở trạng thái CANCELLATION_REQUESTED
     @GetMapping("/canceled")
     public ResponseEntity<Page<BookingAdminResponse>> getCanceledBookings(
             @RequestParam(defaultValue = "0") int page,
@@ -98,5 +98,11 @@ public class BookingAdminController {
         return ResponseEntity.ok(bookingAdminService.getCanceledBookings(page, size));
     }
 
+    // Duyệt hủy một booking (từ CANCELLATION_REQUESTED -> CANCELED)
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> approveCancelBooking(@PathVariable String id) {
+        bookingAdminService.approveCancelBooking(id);
+        return ResponseEntity.ok().build();
+    }
 
 }
