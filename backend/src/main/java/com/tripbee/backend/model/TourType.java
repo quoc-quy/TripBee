@@ -13,7 +13,7 @@ import java.util.Set;
 public class TourType {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private String tourTypeID;
 
     @Column(nullable = false, unique = true)

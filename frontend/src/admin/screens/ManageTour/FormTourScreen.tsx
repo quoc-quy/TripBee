@@ -4,9 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 
 import { tourTypeApi } from "../../../apis/tourType.api";
 import { destinationAdminApi } from "../../apis/destinationAdmin.api";
+import { promotionAdminApi } from "@/admin/apis/promotionAdmin.api";
 import { tourAdminApi } from "../../apis/tourAdmin.api";
 
 import type { TourDetailAdmin } from "../../types/tourAdmin";
+import type { PromotionSimple } from "@/admin/types/promotionAdmin";
+import type { ItineraryAdmin } from "@/admin/types/itineraryAdmin";
 
 // ==== Types local ====
 
@@ -41,7 +44,10 @@ type TourForm = {
 
 type FormErrors = {
   [K in keyof TourForm]?: string;
-} & { form?: string };
+} & {
+  form?: string;
+  itineraries?: string;
+};
 
 const REGION_OPTIONS = [
   { value: "Miền Bắc", label: "Miền Bắc" },
@@ -72,6 +78,9 @@ export default function FormTourScreen() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const [selectedPromotions, setSelectedPromotions] = useState<PromotionSimple[]>([]);
+  const [itineraries, setItineraries] = useState<ItineraryAdmin[]>([]);
+
 
   const {
     data: tourTypes = [],
@@ -90,6 +99,15 @@ export default function FormTourScreen() {
       tourAdminApi.getTourById(id as string).then((res) => res.data),
     enabled: isEdit && !!id,
   });
+
+  // khuyến mãi
+  const { data: promotions = [], isLoading: loadingPromotions } =
+    useQuery<PromotionSimple[]>({
+      queryKey: ["admin-promotions-simple"],
+      queryFn: () =>
+        promotionAdminApi.getSimplePromotions().then((res) => res.data),
+    });
+
 
   const [form, setForm] = useState<TourForm>({
     title: "",
@@ -212,6 +230,26 @@ export default function FormTourScreen() {
       destinationId: "",
     });
 
+    // Khuyến mãi đã gán cho tour
+    const promoList: PromotionSimple[] =
+      tourDetail.promotions?.map((p) => ({
+        promotionID: p.promotionID,
+        title: p.title,
+      })) ?? [];
+
+    setSelectedPromotions(promoList);
+
+    // Lịch trình đã có
+    const itList: ItineraryAdmin[] =
+      tourDetail.itineraries?.map((it) => ({
+        itineraryID: it.itineraryID,
+        dayNumber: it.dayNumber,
+        title: it.title,
+        description: it.description,
+      })) ?? [];
+
+    setItineraries(itList.length > 0 ? itList : []);
+
     setSelectedDestinations(mappedDestinations);
     setErrors({});
   }, [tourDetail]);
@@ -307,6 +345,59 @@ export default function FormTourScreen() {
     }));
   };
 
+  const handlePromotionSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    if (!id) return;
+
+    const found = promotions.find((p) => p.promotionID === id);
+    if (!found) return;
+
+    setSelectedPromotions((prev) => {
+      const exists = prev.some((p) => p.promotionID === id);
+      if (exists) return prev;
+      return [...prev, found];
+    });
+  };
+
+  const handleRemovePromotion = (id: string) => {
+    setSelectedPromotions((prev) =>
+      prev.filter((p) => p.promotionID !== id)
+    );
+  };
+
+  const handleAddItineraryRow = () => {
+    setItineraries((prev) => [
+      ...prev,
+      {
+        dayNumber: prev.length + 1,
+        title: "",
+        description: "",
+      },
+    ]);
+  };
+
+  const handleItineraryChange = (
+    index: number,
+    field: "title" | "description"
+  ) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setItineraries((prev) =>
+      prev.map((it, i) =>
+        i === index ? { ...it, [field]: value } : it
+      )
+    );
+  };
+
+  const handleRemoveItineraryRow = (index: number) => {
+    setItineraries((prev) =>
+      prev
+        .filter((_, i) => i !== index)
+        .map((it, idx) => ({ ...it, dayNumber: idx + 1 }))
+    );
+  };
+
+
+
   const validate = (): FormErrors => {
     const newErrors: FormErrors = {};
 
@@ -319,6 +410,10 @@ export default function FormTourScreen() {
 
     if (selectedDestinations.length === 0) {
       newErrors.destinationId = "Chọn ít nhất một điểm đến";
+    }
+
+    if (itineraries.length === 0) {
+      newErrors.itineraries = "Cần thêm ít nhất một ngày lịch trình.";
     }
 
     const checkPositive = (
@@ -381,6 +476,14 @@ export default function FormTourScreen() {
       status: form.status,
       tourTypeId: form.tourTypeId,
       destinationIds: selectedDestinations.map((d) => d.destinationID),
+
+      // NEW
+      promotionIds: selectedPromotions.map((p) => p.promotionID),
+      itineraries: itineraries.map((it, index) => ({
+        dayNumber: index + 1,
+        title: it.title.trim(),
+        description: it.description.trim(),
+      })),
     };
 
     console.log("submit payload", payload);
@@ -762,6 +865,151 @@ export default function FormTourScreen() {
           </div>
         </section>
 
+        {/* khuyến mãi */}
+        <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Khuyến mãi áp dụng
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <select
+                className={inputBase}
+                onChange={handlePromotionSelect}
+                disabled={loadingPromotions}
+                value=""
+              >
+                <option value="">
+                  {loadingPromotions ? "Đang tải..." : "Chọn để thêm khuyến mãi"}
+                </option>
+                {promotions.map((p) => (
+                  <option key={p.promotionID} value={p.promotionID}>
+                    {p.title}
+                  </option>
+                ))}
+              </select>
+
+              {selectedPromotions.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {selectedPromotions.map((p) => (
+                    <div
+                      key={p.promotionID}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl border border-gray-200 bg-gray-50"
+                    >
+                      <span className="text-sm font-medium text-gray-800">
+                        {p.title}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePromotion(p.promotionID)}
+                        className="text-xs px-2 py-1 rounded-lg border border-red-200 text-red-500"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* lịch trình */}
+        <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Lịch trình chi tiết
+            </h2>
+            <button
+              type="button"
+              onClick={handleAddItineraryRow}
+              className="px-3 py-2 rounded-xl bg-blue-50 text-blue-600 text-xs font-medium border border-blue-200"
+            >
+              + Thêm ngày
+            </button>
+          </div>
+
+          {errors.itineraries && (
+            <p className="text-xs text-red-500">
+              {errors.itineraries}
+            </p>
+          )}
+
+          {itineraries.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              Chưa có lịch trình, bấm “Thêm ngày” để bắt đầu.
+            </p>
+          ) : (
+            <div className="border border-gray-200 rounded-2xl overflow-hidden">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
+                  <tr>
+                    <th className="px-4 py-2 w-20">Ngày</th>
+                    <th className="px-4 py-2 w-64">Tiêu đề</th>
+                    <th className="px-4 py-2">Mô tả</th>
+                    <th className="px-4 py-2 w-20 text-center">Xóa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itineraries.map((it, index) => (
+                    <tr key={index} className="border-t border-gray-200">
+                      <td className="px-4 py-2 text-center font-semibold">
+                        Ngày {index + 1}
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          value={it.title}
+                          onChange={handleItineraryChange(index, "title")}
+                          placeholder="Ví dụ: Khởi hành - tham quan Hà Nội"
+                          className={inputBase + " text-sm"}
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <textarea
+                          value={it.description}
+                          onChange={handleItineraryChange(index, "description")}
+                          placeholder="Mô tả chi tiết hoạt động trong ngày..."
+                          className={inputBase + " text-sm min-h-[80px]"}
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItineraryRow(index)}
+                          className="text-xs px-2 py-1 rounded-lg border border-red-200 text-red-500"
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+
+        {/* Mô tả */}
+        <section className="bg-white rounded-2xl shadow-sm p-6 space-y-3 border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Mô tả tour
+          </h2>
+          {errors.description && (
+            <p className="text-xs text-red-500 mb-1">
+              {errors.description}
+            </p>
+          )}
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Điểm nổi bật, lịch trình tóm tắt, dịch vụ bao gồm"
+            className={inputBase + " min-h-[160px] resize-y"}
+          />
+        </section>
+
+
         {/* Hình ảnh & trạng thái */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
           <div className="flex items-center justify-between">
@@ -845,24 +1093,9 @@ export default function FormTourScreen() {
           </div>
         </section>
 
-        {/* Mô tả */}
-        <section className="bg-white rounded-2xl shadow-sm p-6 space-y-3 border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Mô tả tour
-          </h2>
-          {errors.description && (
-            <p className="text-xs text-red-500 mb-1">
-              {errors.description}
-            </p>
-          )}
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Điểm nổi bật, lịch trình tóm tắt, dịch vụ bao gồm"
-            className={inputBase + " min-h-[160px] resize-y"}
-          />
-        </section>
+
+
+
 
         {/* Actions */}
         <div className="flex justify-end gap-3">

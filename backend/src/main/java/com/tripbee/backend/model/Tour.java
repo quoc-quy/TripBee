@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -240,23 +241,23 @@ public class Tour {
     private TourType tourType;
 
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TourDestination> tourDestinations;
+    private Set<TourDestination> tourDestinations = new HashSet<>();
 
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TourImage> tourImages; // Thư viện ảnh
+    private Set<TourImage> tourImages = new HashSet<>(); // Thư viện ảnh
 
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Itinerary> itineraries; // Lịch trình chi tiết
+    private Set<Itinerary> itineraries = new HashSet<>();  // Lịch trình chi tiết
 
     @OneToMany(mappedBy = "tour")
-    private Set<Booking> bookings;
+    private Set<Booking> bookings = new HashSet<>();
 
     @OneToMany(mappedBy = "tour")
-    private Set<Review> reviews;
+    private Set<Review> reviews = new HashSet<>();
 
     @OneToMany(mappedBy = "tour")
-    private Set<Favorite> favorites;
+    private Set<Favorite> favorites = new HashSet<>();
 
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TourPromotion> tourPromotions;
+    private Set<TourPromotion> tourPromotions = new HashSet<>();
 }

@@ -1,5 +1,7 @@
+import type { BookingStatus } from "@/types/booking.type";
 import type { tourDestinationAdmin } from "./tourDestinationAdmin";
 import type { TourTypeAdminParams } from "./tourTypeAdmin";
+import type { ItineraryAdmin } from "./itineraryAdmin";
 
 export interface TourAdmin {
   tourID: string;
@@ -69,4 +71,39 @@ export interface TourDetailAdmin {
       region: string;
     } | null;
   }[];
+
+  
+  promotions?: {
+    promotionID: string;
+    title: string;
+  }[];
+
+  itineraries?: ItineraryAdmin[];
+}
+
+export interface SimpleTour {
+  tourId: string;
+  title: string;
+}
+
+export interface TourParticipants {
+  tourId: string;
+  tourName: string | null;
+  participants: {
+    participantId: string;
+    fullName: string;
+    phone?: string;
+    identification?: string;
+    gender?: string;          // MALE/FEMALE/...
+    participantType?: string; // ADULT/CHILD/...
+    bookingId: string;
+    bookingDate: string;
+    bookingStatus: BookingStatus;
+  }[];
+}
+
+// Tour đơn giản cho combobox
+export interface SimpleTour {
+  tourId: string;
+  title: string;
 }

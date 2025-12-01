@@ -29,6 +29,15 @@ import UserAdminScreen from "./admin/screens/ManageUserScreen/ManageUserScreen";
 import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
 import ContactMessageScreen from "./admin/screens/ContactMessageScreen/ContactMessageScreen";
 import ManageReviewScreen from "./admin/screens/ReviewScreen/ManageReviewScreen";
+import ManageTourTypeScreen from "./admin/screens/ManageTourType/ManageTourTypeScreen";
+import FormTourTypeScreen from "./admin/screens/ManageTourType/FormTourTypeScreen";
+import TourTypeDetailAdminScreen from "./admin/screens/ManageTourType/TourTypeDetailAdminScreen";
+import ManageBookingScreen from "./admin/screens/ManageBookingScreen/ManageBookingScreen";
+import BookingDetailAdminScreen from "./admin/screens/ManageBookingScreen/BookingDetailAdminScreen";
+import TourParticipantsScreen from "./admin/screens/ManageBookingScreen/TourParticipantsScreen";
+import CanceledBookingsScreen from "./admin/screens/ManageBookingScreen/CanceledBookingsScreen";
+
+
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -138,6 +147,15 @@ export default function useRouteElements() {
           path: "/admin/reviews",
           element: <ManageReviewScreen />,
         },
+        { path: "tour-types", element: <ManageTourTypeScreen />, },
+        { path: "tour-types/new", element: <FormTourTypeScreen />, },
+        { path: "tour-types/:id/edit", element: <FormTourTypeScreen />, },
+        { path: "tour-types/detail/:id", element: <TourTypeDetailAdminScreen />, },
+        { path: "manage-booking", element: <ManageBookingScreen /> },
+        { path: "bookings/detail/:id", element: <BookingDetailAdminScreen /> },
+        { path: "tour-participants", element: <TourParticipantsScreen /> },
+        { path: "bookings/canceled", element: <CanceledBookingsScreen /> },
+
       ],
     },
     // {

@@ -2,12 +2,15 @@ package com.tripbee.backend.admin.controller;
 
 import com.tripbee.backend.admin.dto.response.promotions.PromotionAdminResponse;
 import com.tripbee.backend.admin.dto.request.PromotionRequest;
+import com.tripbee.backend.admin.dto.response.promotions.PromotionSimpleResponse;
 import com.tripbee.backend.admin.service.PromotionAdminService;
 import com.tripbee.backend.model.Promotion;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/promotions") // Đường dẫn API mới
@@ -70,5 +73,10 @@ public class PromotionAdminController {
 
         // ResourceNotFoundException sẽ tự động trả về 404
         return ResponseEntity.ok(detail);
+    }
+
+    @GetMapping("/simple")
+    public ResponseEntity<List<PromotionSimpleResponse>> getSimple() {
+        return ResponseEntity.ok(promotionAdminService.getActivePromotionsSimple());
     }
 }

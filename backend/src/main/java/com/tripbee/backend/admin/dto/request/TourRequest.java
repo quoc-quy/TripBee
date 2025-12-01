@@ -25,4 +25,7 @@ public class TourRequest {
     private String status;
     private String tourTypeId;
     private List<String> destinationIds;
+
+    private List<String> promotionIds;
+    private List<ItineraryRequest> itineraries;
 }

@@ -52,3 +52,9 @@ export interface PromotionListAdminParams {
   status?: "ACTIVE" | "PENDING" | "EXPIRED" | string;
   discountType?: "PERCENTAGE" | "FIXED_AMOUNT" | string;
 }
+
+// Khuyến mãi đơn giản cho combobox
+export interface PromotionSimple {
+  promotionID: string;
+  title: string;
+}

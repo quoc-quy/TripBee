@@ -8,6 +8,7 @@ import {
   Tag,
   MessageSquare,
   MessageSquareMore,
+  ListOrdered, 
 } from "lucide-react";
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu }) => {
     { id: "user", label: "Quản lý Người dùng", icon: Users },
     { id: "review", label: "Quản lý Review", icon: MessageSquareMore },
     { id: "destination", label: "Quản lý Điểm đến", icon: Map },
+    { id: "tour-type", label: "Quản lý Loại tour", icon: ListOrdered },
     { id: "booking", label: "Quản lý Booking", icon: Calendar },
     { id: "settings", label: "Cài đặt", icon: Settings },
     { id: "contact-message", label: "Tin nhắn liên hệ", icon: MessageSquare },

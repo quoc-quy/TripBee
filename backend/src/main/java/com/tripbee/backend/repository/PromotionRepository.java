@@ -1,6 +1,7 @@
 package com.tripbee.backend.repository;
 
 import com.tripbee.backend.model.Promotion;
+import com.tripbee.backend.model.enums.PromotionStatus;
 import org.springframework.data.domain.Pageable; // Nhớ thêm import này
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -18,4 +19,6 @@ public interface PromotionRepository extends JpaRepository<Promotion,String>,
     // Tìm ID có dạng 'promo-%' và sắp xếp giảm dần để lấy cái lớn nhất
     @Query("SELECT p.promotionID FROM Promotion p WHERE p.promotionID LIKE :prefix% ORDER BY LENGTH(p.promotionID) DESC, p.promotionID DESC")
     List<String> findLatestPromotionId(@Param("prefix") String prefix, Pageable pageable);
+
+    List<Promotion> findByStatus(PromotionStatus promotionStatus);
 }

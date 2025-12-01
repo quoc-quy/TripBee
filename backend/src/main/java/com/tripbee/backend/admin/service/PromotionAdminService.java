@@ -3,6 +3,7 @@ package com.tripbee.backend.admin.service;
 
 import com.tripbee.backend.admin.dto.response.promotions.PromotionAdminResponse;
 import com.tripbee.backend.admin.dto.request.PromotionRequest;
+import com.tripbee.backend.admin.dto.response.promotions.PromotionSimpleResponse;
 import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.Promotion;
 import com.tripbee.backend.model.enums.PromotionStatus;
@@ -213,5 +214,12 @@ public class PromotionAdminService {
             // Ném lỗi rõ ràng cho trạng thái không hợp lệ
             throw new IllegalArgumentException("Invalid status value: " + status);
         }
+    }
+
+    public List<PromotionSimpleResponse> getActivePromotionsSimple() {
+        List<Promotion> list = promotionRepository.findByStatus(PromotionStatus.ACTIVE);
+        return list.stream()
+                .map(PromotionSimpleResponse::new)
+                .toList();
     }
 }
