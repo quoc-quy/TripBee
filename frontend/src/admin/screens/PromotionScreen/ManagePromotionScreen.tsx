@@ -397,7 +397,6 @@ export default function ManagePromotionScreen() {
                     (promotion.discountAmount && promotion.discountAmount > 0)
                   ? "Cố định"
                   : DISCOUNT_TYPE_LABELS_MAP[promotion.discountType] || "N/A";
-
                 return (
                   <tr
                     key={promotion.promotionID}
