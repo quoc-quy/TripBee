@@ -165,7 +165,7 @@ const ContactMessageScreen = () => {
             {/* REMOVE ID AND USER ID COLUMN */}
             <thead className="bg-gray-100 border-b border-gray-200 uppercase text-gray-600 text-xs font-bold">
               <tr>
-                <th className="px-4 py-4 w-60">Liên hệ (Tên/Email/Phone)</th>
+                <th className="px-4 py-4 w-60">Liên hệ (Email/Phone)</th>
                 <th className="px-4 py-4">Nội dung tin nhắn</th>
                 <th className="px-4 py-4 w-48 whitespace-nowrap">
                   Thời gian gửi
@@ -201,18 +201,7 @@ const ContactMessageScreen = () => {
                     <td className="px-4 py-4 align-top w-60">
                       <div className="flex flex-col gap-1.5">
                         {/* User Type/Name */}
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {msg.email.toLowerCase().startsWith("guest") ? (
-                            <span className="text-gray-500 italic text-xs bg-gray-100 px-2 py-1 rounded-md">
-                              Khách vãng lai
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-max text-xs font-medium">
-                              <User size={12} />
-                              <span>Thành viên</span>
-                            </div>
-                          )}
-                        </p>
+
                         {/* Email */}
                         <div
                           className="flex items-center gap-2 text-gray-700"
