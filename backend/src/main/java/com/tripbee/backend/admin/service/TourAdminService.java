@@ -4,6 +4,7 @@ import com.tripbee.backend.admin.dto.request.ItineraryRequest;
 import com.tripbee.backend.admin.dto.request.TourRequest;
 import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourSimpleForParticipantsAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourSimpleResponse;
 import com.tripbee.backend.model.*;
 import com.tripbee.backend.model.enums.TourStatus;
@@ -80,48 +81,6 @@ public class TourAdminService {
         };
     }
 
-    // lưu tour
-//    @Transactional
-//    public Tour createTour(TourRequest dto) {
-//        Tour tour = new Tour();
-//        tour.setTitle(dto.getTitle());
-//        tour.setDescription(dto.getDescription());
-//        tour.setStartDate(dto.getStartDate());
-//        tour.setEndDate(dto.getEndDate());
-//        tour.setDurationDays(dto.getDurationDays());
-//        tour.setDurationNights(dto.getDurationNights());
-//        tour.setPriceAdult(dto.getPriceAdult());
-//        tour.setPriceChild(dto.getPriceChild());
-//        tour.setMinParticipants(dto.getMinGuests());
-//        tour.setMaxParticipants(dto.getMaxGuests());
-//        tour.setImageURL(dto.getImageURL());
-//
-//        // map status string -> enum
-//        tour.setStatus(TourStatus.valueOf(dto.getStatus())); // đảm bảo cùng tên
-//
-//        // tour type
-//        TourType tourType = tourTypeRepository.findById(dto.getTourTypeId())
-//                .orElseThrow(() -> new IllegalArgumentException("Invalid tourTypeId"));
-//        tour.setTourType(tourType);
-//
-//        // lưu tour trước để có tourID
-//        Tour saved = tourRepository.save(tour);
-//
-//        // tạo TourDestination
-//        if (dto.getDestinationIds() != null) {
-//            for (String desId : dto.getDestinationIds()) {
-//                Destination des = destinationRepository.findById(desId)
-//                        .orElseThrow(() -> new IllegalArgumentException("Invalid destinationId: " + desId));
-//
-//                TourDestination td = new TourDestination();
-//                td.setTour(saved);
-//                td.setDestination(des);
-//                tourDestinationRepository.save(td);
-//            }
-//        }
-//
-//        return saved;
-//    }
     @Transactional
     public Tour createTour(TourRequest dto) {
         Tour tour = new Tour();
@@ -204,51 +163,6 @@ public class TourAdminService {
         return new TourDetailAdminResponse(tour);
     }
 
-//    @Transactional
-//    public Tour updateTour(String id, TourRequest dto) {
-//        Tour tour = tourRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Tour not found"));
-//
-//        tour.setTitle(dto.getTitle());
-//        tour.setDescription(dto.getDescription());
-//        tour.setStartDate(dto.getStartDate());
-//        tour.setEndDate(dto.getEndDate());
-//        tour.setDurationDays(dto.getDurationDays());
-//        tour.setDurationNights(dto.getDurationNights());
-//        tour.setPriceAdult(dto.getPriceAdult());
-//        tour.setPriceChild(dto.getPriceChild());
-//        tour.setMinParticipants(dto.getMinGuests());
-//        tour.setMaxParticipants(dto.getMaxGuests());
-//        tour.setImageURL(dto.getImageURL());
-//        tour.setStatus(TourStatus.valueOf(dto.getStatus()));
-//
-//        // tour type
-//        TourType tourType = tourTypeRepository.findById(dto.getTourTypeId())
-//                .orElseThrow(() -> new IllegalArgumentException("Invalid tourTypeId"));
-//        tour.setTourType(tourType);
-//
-//        // XÓA CŨ ĐÚNG CÁCH (dùng orphanRemoval trên collection)
-//        if (tour.getTourDestinations() != null) {
-//            tour.getTourDestinations().clear(); // Hibernate tự xóa orphan
-//        }
-//
-//        // THÊM MỚI
-//        if (dto.getDestinationIds() != null) {
-//            for (String desId : dto.getDestinationIds()) {
-//                Destination des = destinationRepository.findById(desId)
-//                        .orElseThrow(() -> new IllegalArgumentException("Invalid destinationId: " + desId));
-//
-//                TourDestination td = new TourDestination();
-//                td.setTour(tour);
-//                td.setDestination(des);
-//
-//                // Quan trọng: add vào collection của tour
-//                tour.getTourDestinations().add(td);
-//            }
-//        }
-//
-//        return tourRepository.save(tour);
-//    }
 @Transactional
 public Tour updateTour(String id, TourRequest dto) {
     Tour tour = tourRepository.findById(id)
@@ -341,4 +255,51 @@ public Tour updateTour(String id, TourRequest dto) {
                 ))
                 .toList();
     }
+
+    public List<TourSimpleResponse> getCompletedToursSimple() {
+        List<Tour> tours = tourRepository.findByStatus(TourStatus.COMPLETED);
+
+        return tours.stream()
+                .map(t -> new TourSimpleResponse(
+                        t.getTourID(),
+                        t.getTitle()
+                ))
+                .toList();
+    }
+
+    public List<TourSimpleForParticipantsAdminResponse> searchToursForParticipants(String keyword) {
+        String kw = (keyword == null) ? "" : keyword.trim();
+
+        Specification<Tour> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // không lấy tour đã hủy
+            predicates.add(cb.notEqual(root.get("status"), TourStatus.CANCELED));
+
+            if (!kw.isBlank()) {
+                String pattern = "%" + kw.toLowerCase() + "%";
+
+                Predicate byTitle = cb.like(cb.lower(root.get("title")), pattern);
+
+                // nếu có field code thì dùng, nếu không thì bỏ
+                Predicate byCode = cb.like(cb.lower(root.get("code")), pattern);
+
+                predicates.add(cb.or(byTitle, byCode));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<Tour> tours = tourRepository.findAll(
+                spec,
+                Sort.by(Sort.Direction.DESC, "startDate")
+        );
+
+        return tours.stream()
+                .map(TourSimpleForParticipantsAdminResponse::new)
+                .toList();
+    }
+
+
 }
+

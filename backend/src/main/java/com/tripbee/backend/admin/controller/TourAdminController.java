@@ -3,23 +3,32 @@ package com.tripbee.backend.admin.controller;
 import com.tripbee.backend.admin.dto.request.TourRequest;
 import com.tripbee.backend.admin.dto.response.tour.TourAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tour.TourSimpleForParticipantsAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourSimpleResponse;
 import com.tripbee.backend.admin.service.TourAdminService;
 import com.tripbee.backend.model.Tour;
+import com.tripbee.backend.model.enums.TourStatus;
+import com.tripbee.backend.repository.TourRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.criteria.Predicate;
 
 @RestController
 @RequestMapping("/api/admin/tours")
 public class TourAdminController {
 
     private final TourAdminService tourAdminService;
+    private final TourRepository tourRepository;
 
-    public TourAdminController(TourAdminService tourAdminService) {
+    public TourAdminController(TourAdminService tourAdminService, TourRepository tourRepository) {
         this.tourAdminService = tourAdminService;
+        this.tourRepository = tourRepository;
     }
 
     @GetMapping
@@ -57,4 +66,23 @@ public class TourAdminController {
     public ResponseEntity<List<TourSimpleResponse>> getOpenToursSimple() {
         return ResponseEntity.ok(tourAdminService.getOpenToursSimple());
     }
+
+    // lấy danh sách tour đã hoàn thành
+    @GetMapping("/completed-simple")
+    public ResponseEntity<List<TourSimpleResponse>> getCompletedToursSimple() {
+        return ResponseEntity.ok(tourAdminService.getCompletedToursSimple());
+    }
+
+
+    @GetMapping("/participants-search")
+    public ResponseEntity<List<TourSimpleForParticipantsAdminResponse>> searchToursForParticipants(
+            @RequestParam(required = false) String keyword
+    ) {
+        return ResponseEntity.ok(
+                tourAdminService.searchToursForParticipants(keyword)
+        );
+    }
+
+
+
 }
