@@ -1,14 +1,19 @@
 // frontend-demo/src/components/TourBookingSection/TourBookingSection.tsx
 
-// (1. THÊM) Import useState
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react"; // (1) Import useContext
 import { useForm, Controller } from "react-hook-form";
 import { Calendar, Users, DollarSign, Heart } from "lucide-react";
-import type { TourDetails } from "../..//types/tour";
-import { formatCurrency } from "../..//utils/utils";
-import Button from "../..//components/Button";
-// (2. THÊM) Import Modal
+import type { TourDetails } from "../../types/tour";
+import { formatCurrency } from "../../utils/utils";
+import Button from "../../components/Button";
 import BookingModal from "../BookingModal";
+
+// (2) Import các thư viện cần thiết cho chức năng Favorite
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { AppContext } from "../../contexts/app.context";
+import { favoriteApi } from "../../apis/favorite.api";
+import type { AxiosError } from "axios";
 
 interface Props {
     tour: TourDetails;
@@ -21,17 +26,20 @@ interface BookingFormData {
 }
 
 export default function TourBookingSection({ tour }: Props) {
-    // (3. THÊM) State để quản lý modal
+    // (3) Lấy context và queryClient
+    const { isAuthenticated, favoriteIds, addFavoriteId, removeFavoriteId } =
+        useContext(AppContext);
+    const queryClient = useQueryClient();
+
+    // (4) Kiểm tra xem tour này đã được like chưa
+    const isLiked = favoriteIds.has(tour.tourID);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // (Giữ nguyên) react-hook-form
     const {
         control,
         watch,
         setValue,
-        // (4. SỬA) không cần handleSubmit ở đây nữa
-        // handleSubmit,
-        getValues, // Dùng getValues để lấy dữ liệu cho modal
         formState: { errors },
     } = useForm<BookingFormData>({
         defaultValues: {
@@ -43,7 +51,7 @@ export default function TourBookingSection({ tour }: Props) {
 
     const adults = watch("adults");
     const children = watch("children");
-    const totalPrice = watch("totalPrice"); // (5. THÊM) Theo dõi totalPrice
+    const totalPrice = watch("totalPrice");
 
     useEffect(() => {
         const adultPrice = tour.finalPriceAdult || 0;
@@ -52,30 +60,74 @@ export default function TourBookingSection({ tour }: Props) {
         setValue("totalPrice", total);
     }, [adults, children, tour.finalPriceAdult, tour.finalPriceChild, setValue]);
 
-    // (6. SỬA) Xóa hàm onSubmit cũ
-
-    // (7. THÊM) Hàm mở modal
     const handleOpenBookingModal = () => {
-        // Kiểm tra lỗi trước khi mở
-        // (Đây là một cách đơn giản, bạn có thể triggerValidate nếu muốn)
         if (errors.adults || errors.children) {
             return;
         }
         setIsModalOpen(true);
     };
 
+    // (5) Định nghĩa Mutation Thêm yêu thích
+    const addFavoriteMutation = useMutation({
+        mutationFn: favoriteApi.addFavorite,
+    });
+
+    // (6) Định nghĩa Mutation Xóa yêu thích
+    const removeFavoriteMutation = useMutation({
+        mutationFn: favoriteApi.removeFavorite,
+    });
+
+    // (7) Hàm xử lý khi nhấn nút Yêu thích
     const handleFavorite = () => {
-        console.log("Tour added to favorites:", tour.tourID);
+        if (!isAuthenticated) {
+            toast.info("Bạn cần đăng nhập để thực hiện chức năng này");
+            return;
+        }
+
+        if (isLiked) {
+            // --- BỎ LIKE ---
+            removeFavoriteMutation.mutate(tour.tourID, {
+                onSuccess: () => {
+                    removeFavoriteId(tour.tourID);
+                    toast.success("Đã xóa khỏi danh sách yêu thích!");
+                    queryClient.invalidateQueries({ queryKey: ["favoriteIds"] });
+                },
+                onError: () => {
+                    toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+                },
+            });
+        } else {
+            // --- THÊM LIKE ---
+            addFavoriteMutation.mutate(
+                { tourId: tour.tourID },
+                {
+                    onSuccess: () => {
+                        addFavoriteId(tour.tourID);
+                        toast.success("Đã thêm tour vào danh sách yêu thích!");
+                        queryClient.invalidateQueries({ queryKey: ["favoriteIds"] });
+                    },
+                    onError: (error: Error | AxiosError) => {
+                        // Fix type error
+                        const axiosError = error as AxiosError<{ message: string }>;
+                        if (axiosError.response?.status === 409) {
+                            addFavoriteId(tour.tourID);
+                            toast.info("Bạn đã yêu thích tour này rồi.");
+                        } else {
+                            toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
+                        }
+                    },
+                }
+            );
+        }
     };
 
     const maxParticipants = tour.maxParticipants || 20;
+    const isProcessing = addFavoriteMutation.isPending || removeFavoriteMutation.isPending;
 
     return (
-        // (8. SỬA) Bỏ thẻ <form> và onSubmit
         <div className="bg-white p-6 rounded-lg shadow-xl sticky top-24">
             <h2 className="text-2xl font-semibold mb-5 text-gray-800">Đặt tour ngay</h2>
 
-            {/* ... (Tất cả các phần input, giá tiền, tổng cộng... giữ nguyên) ... */}
             <div className="mb-4 space-y-2">
                 <div className="flex justify-between items-center">
                     <span className="text-gray-600 flex items-center">
@@ -107,7 +159,7 @@ export default function TourBookingSection({ tour }: Props) {
 
             <hr className="my-4" />
 
-            {/* Chọn số lượng khách (Giữ nguyên) */}
+            {/* Chọn số lượng khách */}
             <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label
@@ -196,29 +248,37 @@ export default function TourBookingSection({ tour }: Props) {
             </div>
 
             <div className="space-y-3">
-                {/* (9. SỬA) Nút Đặt Tour giờ sẽ mở Modal */}
                 <Button
-                    type="button" // Sửa thành type="button"
+                    type="button"
                     className="w-full text-lg font-semibold py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition duration-300 ease-in-out"
                     disabled={!!errors.adults || !!errors.children}
-                    onClick={handleOpenBookingModal} // Thêm onClick
+                    onClick={handleOpenBookingModal}
                 >
                     Đặt Tour
                 </Button>
 
-                {/* Nút Yêu thích (Giữ nguyên) */}
+                {/* (8) Cập nhật nút Yêu thích */}
                 <Button
                     type="button"
                     variant="outline"
-                    className="w-full text-lg py-3"
+                    className={`w-full text-lg py-3 transition-colors duration-300 ${
+                        isLiked
+                            ? "text-red-500 border-red-200 hover:bg-red-50"
+                            : "text-gray-600 border-gray-300 hover:bg-gray-50"
+                    }`}
                     onClick={handleFavorite}
+                    disabled={isProcessing}
                 >
-                    <Heart size={20} className="mr-2" />
-                    Yêu Thích
+                    <Heart
+                        size={20}
+                        className={`mr-2 transition-colors duration-300 ${
+                            isLiked ? "fill-current text-red-500" : ""
+                        }`}
+                    />
+                    {isLiked ? "Đã Yêu Thích" : "Yêu Thích"}
                 </Button>
             </div>
 
-            {/* (10. THÊM) Render Modal (nó sẽ ở trạng thái ẩn cho đến khi isOpen={true}) */}
             <BookingModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
