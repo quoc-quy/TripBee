@@ -104,15 +104,15 @@ const ManageDestinationScreen: React.FC = () => {
 
   // Thao tác
   const handleDetail = (id: string) => {
-    navigate(`/admin/destinations/detail/${id}`); 
+    navigate(`/admin/manage-destination/detail/${id}`); 
   };
 
   const handleEdit = (id: string) => {
-    navigate(`/admin/destinations/${id}/edit`); 
+    navigate(`/admin/manage-destination/${id}/edit`); 
   };
 
     const handleCreate = () => {
-    navigate("/admin/destinations/new"); 
+    navigate("/admin/manage-destination/new"); 
   };
 
   return (

@@ -107,3 +107,13 @@ export interface SimpleTour {
   tourId: string;
   title: string;
 }
+
+// admin/types/tourAdmin.ts
+export type SimpleTour2 = {
+  tourId: string;
+  code?: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  status: string; 
+};

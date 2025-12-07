@@ -144,7 +144,7 @@ const CanceledBookingsScreen: React.FC = () => {
             ) : bookings.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-gray-500">
-                  Không có booking nào ở trạng thái ĐÃ HỦY.
+                  Không có booking nào đang chờ hủy.
                 </td>
               </tr>
             ) : (

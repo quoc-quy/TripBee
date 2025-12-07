@@ -1,14 +1,14 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, FileDown } from "lucide-react";
+import { RefreshCw, FileDown } from "lucide-react";
 import Select from "react-select";
 
 import { tourAdminApi } from "../../apis/tourAdmin.api";
 import { bookingAdminApi } from "../../apis/bookingAdmin.api";
 
 import type { BookingStatus } from "@/types/booking.type";
-import type { SimpleTour, TourParticipants } from "@/admin/types/tourAdmin";
+import type { SimpleTour2, TourParticipants } from "@/admin/types/tourAdmin";
 
 const statusLabelMap: Record<BookingStatus, string> = {
   PROCESSING: "Đang xử lý",
@@ -28,36 +28,76 @@ const participantTypeLabelMap: Record<string, string> = {
   CHILD: "Trẻ em",
 };
 
+const tourStatusLabelMap: Record<string, string> = {
+  ACTIVE: "Đang mở",
+  PAUSE: "Tạm dừng",
+  SOLD_OUT: "Hết chỗ",
+  COMPLETED: "Hoàn thành",
+  CANCELED: "Đã hủy",
+};
+
 const formatDateTime = (value: string) =>
   new Date(value).toLocaleString("vi-VN");
 
+const formatDate = (value?: string | null) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("vi-VN");
+};
+
 const TourParticipantsScreen: React.FC = () => {
   const navigate = useNavigate();
+
+  const [selectedTitle, setSelectedTitle] = useState<string>("");
   const [selectedTourId, setSelectedTourId] = useState<string>("");
 
-  // 1. Lấy danh sách tour đang mở cho combobox
-  const { data: toursRes, isLoading: loadingTours, refetch: refetchTours } =
-    useQuery({
-      queryKey: ["admin-open-tours-simple"],
-      queryFn: async () => {
-        const res = await tourAdminApi.getOpenToursSimple();
-        return res.data as SimpleTour[];
-      },
+  // 1. Lấy toàn bộ tour (không bị hủy) để chọn (tìm trong combobox)
+  const {
+    data: toursRes,
+    isLoading: loadingTours,
+    refetch: refetchTours,
+  } = useQuery({
+    queryKey: ["admin-participant-tours"],
+    queryFn: async () => {
+      // backend filter status != CANCELED
+      const res = await tourAdminApi.searchToursForParticipants(undefined);
+      return res.data as SimpleTour2[];
+    },
+  });
+
+  const tours: SimpleTour2[] = toursRes || [];
+
+  // Group theo title
+  const groupedTours = useMemo(() => {
+    const map = new Map<string, SimpleTour2[]>();
+    tours.forEach((t) => {
+      const list = map.get(t.title) ?? [];
+      list.push(t);
+      map.set(t.title, list);
     });
 
-  const tours = toursRes || [];
+    return Array.from(map.entries()).map(([title, items]) => ({
+      title,
+      tours: items,
+    }));
+  }, [tours]);
 
-  // Map tour -> option cho react-select
-  const tourOptions = useMemo(
+  // Options cho react-select (chỉ hiển thị tên tour)
+  const titleOptions = useMemo(
     () =>
-      tours.map((t) => ({
-        value: t.tourId,
-        label: t.title,
+      groupedTours.map((g) => ({
+        value: g.title,
+        label: g.title,
       })),
-    [tours]
+    [groupedTours]
   );
 
-  // 2. Lấy danh sách participant theo tour
+  // Group đang được chọn (theo title)
+  const selectedGroup = useMemo(
+    () => groupedTours.find((g) => g.title === selectedTitle) ?? null,
+    [groupedTours, selectedTitle]
+  );
+
+  // 2. Lấy danh sách participant theo tourId đã chọn
   const {
     data: tourParticipants,
     isLoading: loadingParticipants,
@@ -81,34 +121,51 @@ const TourParticipantsScreen: React.FC = () => {
   };
 
   const handleExport = async () => {
-  if (!selectedTourId) {
-    alert("Vui lòng chọn tour trước khi xuất file.");
-    return;
-  }
+    if (!selectedTourId) {
+      alert("Vui lòng chọn tour trước khi xuất file.");
+      return;
+    }
 
-  try {
-    const res = await bookingAdminApi.exportParticipantsByTour(selectedTourId);
+    try {
+      const res =
+        await bookingAdminApi.exportParticipantsByTour(selectedTourId);
 
-    const blob = new Blob([res.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
 
-    const fileName =
-      "danh-sach-khach-" +
-      (tourParticipants?.tourName?.replace(/[\/\\:*?"<>|]/g, "_") || "tour") +
-      ".pdf";
+      const fileName =
+        "danh-sach-khach-" +
+        (tourParticipants?.tourName?.replace(/[\/\\:*?"<>|]/g, "_") ||
+          "tour") +
+        ".pdf";
 
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error(err);
-    alert("Xuất file PDF thất bại.");
-  }
-};
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Xuất file PDF thất bại.");
+    }
+  };
+
+  const handleSelectTitle = (opt: { value: string; label: string } | null) => {
+    const value = opt?.value ?? "";
+    setSelectedTitle(value);
+    setSelectedTourId("");
+
+    if (!value) return;
+    const group = groupedTours.find((g) => g.title === value);
+    if (!group) return;
+
+    // Nếu chỉ có 1 tour mang tên đó → auto chọn luôn tourId
+    if (group.tours.length === 1) {
+      setSelectedTourId(group.tours[0].tourId);
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -120,7 +177,8 @@ const TourParticipantsScreen: React.FC = () => {
               Xem khách theo tour
             </h1>
             <p className="text-sm text-gray-500">
-              Chọn tour để xem danh sách toàn bộ khách tham gia (Participant)
+              Chọn tên tour trong combobox. Nếu tên tour trùng cho nhiều
+              chuyến khác nhau, hệ thống sẽ yêu cầu chọn chính xác bằng radio.
             </p>
           </div>
         </div>
@@ -144,7 +202,7 @@ const TourParticipantsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Combobox chọn tour (searchable ngay trong khung) */}
+      {/* Combobox chọn tên tour (react-select, searchable) */}
       <div className="bg-white rounded-2xl shadow-md p-5 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Chọn tour
@@ -153,17 +211,62 @@ const TourParticipantsScreen: React.FC = () => {
         <Select
           isClearable
           isSearchable
-          options={tourOptions}
+          options={titleOptions}
           placeholder={
             loadingTours ? "Đang tải danh sách tour..." : "— Chọn tour —"
           }
           value={
-            tourOptions.find((opt) => opt.value === selectedTourId) || null
+            titleOptions.find((opt) => opt.value === selectedTitle) || null
           }
-          onChange={(opt) => setSelectedTourId(opt?.value || "")}
+          onChange={handleSelectTitle}
           classNamePrefix="react-select"
           className="min-w-[260px] text-sm"
         />
+
+        {/* Nếu có ≥ 2 tour cùng tên → chọn bằng radio */}
+        {selectedGroup && selectedGroup.tours.length > 1 && (
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Hãy chọn đúng tour:
+            </p>
+            <div className="space-y-2 max-h-56 overflow-y-auto">
+              {selectedGroup.tours.map((t) => (
+                <label
+                  key={t.tourId}
+                  className="flex items-start gap-3 px-3 py-2 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="selectedTour"
+                    className="mt-1"
+                    checked={selectedTourId === t.tourId}
+                    onChange={() => setSelectedTourId(t.tourId)}
+                  />
+                  <div className="flex flex-col">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-gray-900 text-sm">
+                        {t.title}
+                      </span>
+                      {t.code && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                          Mã tour: {t.code}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-3">
+                      <span>Khởi hành: {formatDate(t.startDate)}</span>
+                      <span>Kết thúc: {formatDate(t.endDate)}</span>
+                      <span>
+                        Trạng thái:{" "}
+                        <b>{tourStatusLabelMap[t.status] || t.status}</b>
+                      </span>
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bảng danh sách participant */}
@@ -174,7 +277,8 @@ const TourParticipantsScreen: React.FC = () => {
           </div>
         ) : !selectedTourId ? (
           <div className="p-6 text-center text-gray-500 text-sm">
-            Vui lòng chọn một tour để xem danh sách khách.
+            Vui lòng chọn tour (tên + radio nếu có nhiều chuyến) để xem danh
+            sách khách.
           </div>
         ) : tourParticipants && tourParticipants.participants.length === 0 ? (
           <div className="p-6 text-center text-gray-500 text-sm">
@@ -216,34 +320,27 @@ const TourParticipantsScreen: React.FC = () => {
                         {p.fullName}
                       </div>
                     </td>
-
                     <td className="px-5 py-3 text-sm">
-                      <div>{p.phone || "-"}</div>
+                      {p.phone || "-"}
                     </td>
-
                     <td className="px-5 py-3 text-sm">
                       {p.identification || "-"}
                     </td>
-
                     <td className="px-5 py-3 text-sm">
                       {p.gender
                         ? genderLabelMap[p.gender] || p.gender
                         : "-"}
                     </td>
-
                     <td className="px-5 py-3 text-sm">
                       {p.participantType
                         ? participantTypeLabelMap[p.participantType] ||
                           p.participantType
                         : "-"}
                     </td>
-
                     <td className="px-5 py-3 text-sm">{p.bookingId}</td>
-
                     <td className="px-5 py-3 text-sm">
                       {formatDateTime(p.bookingDate)}
                     </td>
-
                     <td className="px-5 py-3 text-sm">
                       {statusLabelMap[p.bookingStatus]}
                     </td>
