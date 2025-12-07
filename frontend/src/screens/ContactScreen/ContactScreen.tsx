@@ -6,6 +6,8 @@ import {
   FaClock,
   FaPaperPlane,
 } from "react-icons/fa";
+import { toast } from "react-toastify"; // Import toast để thông báo
+import { contactApi, type ContactMessagePayload } from "../../apis/contact.api"; // Import API mới
 
 // Dữ liệu mẫu cho Văn phòng
 const officeLocations = [
@@ -63,7 +65,7 @@ const faqs = [
   },
 ];
 
-// Component hiển thị thông tin chung
+// Component hiển thị thông tin chung (GIỮ NGUYÊN)
 function GeneralContactInfo() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center text-gray-700 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,7 +93,7 @@ function GeneralContactInfo() {
   );
 }
 
-// Component cho từng card thông tin
+// Component cho từng card thông tin (GIỮ NGUYÊN)
 function ContactInfoCard({
   icon: Icon,
   title,
@@ -110,23 +112,84 @@ function ContactInfoCard({
   );
 }
 
-// Component cho Form và Văn phòng
+// Component cho Form và Văn phòng (CẬP NHẬT LOGIC XỬ LÝ FORM)
 function ContactFormAndOffices() {
-  // Tạm thời dùng state/handle submit giả định
+  // Dùng state để quản lý form data
+  const [formData, setFormData] = React.useState<
+    Omit<ContactMessagePayload, "subject">
+  >({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+  const [subject, setSubject] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // URL Google Maps nhúng
   const mapEmbedSrc =
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4679.932060222481!2d106.69700687572787!3d10.772434959265976!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f3f56a3de55%3A0x7c6107f1253d69c9!2zMTIzIEzDqiBM4bujaSwgUGjGsOG7nW5nIELhur9uIFRow6BuaCwgUXXhuq1uIDEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaCwgVmnhu4d0IE5hbQ!5e1!3m2!1svi!2s!4v1762439308541!5m2!1svi!2s";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Hàm handleChange chung để bind dữ liệu
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { id, value } = e.target;
+    // Kiểm tra nếu là select box chủ đề
+    if (id === "tourType") {
+      setSubject(value);
+    } else {
+      // Binding cho các input khác
+      setFormData((prev) => ({ ...prev, [id]: value }));
+    }
+  };
+
+  // Hàm handleSubmit mới để gọi API
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Validation cơ bản
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.message ||
+      !subject
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc (*).");
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
+
+    try {
+      const payload: ContactMessagePayload = {
+        ...formData,
+        subject: subject, // Thêm chủ đề vào payload
+      };
+
+      // 2. Gọi API submit
+      await contactApi.submitMessage(payload);
+
+      // 3. Xử lý thành công
+      toast.success(
+        "Tin nhắn của bạn đã được gửi thành công! Chúng tôi sẽ phản hồi sớm nhất."
+      );
+
+      // 4. Reset form
+      setFormData({ name: "", email: "", phone: "", message: "" });
+      setSubject("");
+    } catch (error: any) {
+      // 5. Xử lý lỗi (lấy message từ API nếu có)
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Gửi tin nhắn thất bại. Vui lòng thử lại.";
+      toast.error(errorMessage);
+    } finally {
       setIsSubmitting(false);
-      alert("Tin nhắn của bạn đã được gửi thành công!");
-      // Thêm logic reset form thực tế
-    }, 1500);
+    }
   };
 
   return (
@@ -150,6 +213,8 @@ function ContactFormAndOffices() {
                 type="text"
                 id="name"
                 required
+                value={formData.name} // <--- BIND STATE
+                onChange={handleChange} // <--- BIND HANDLER
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -164,6 +229,8 @@ function ContactFormAndOffices() {
                 type="email"
                 id="email"
                 required
+                value={formData.email} // <--- BIND STATE
+                onChange={handleChange} // <--- BIND HANDLER
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -180,6 +247,8 @@ function ContactFormAndOffices() {
                 type="tel"
                 id="phone"
                 required
+                value={formData.phone} // <--- BIND STATE
+                onChange={handleChange} // <--- BIND HANDLER
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -191,15 +260,17 @@ function ContactFormAndOffices() {
                 Chọn chủ đề *
               </label>
               <select
-                id="tourType"
+                id="tourType" // Dùng id này để phân biệt trong handleChange
                 required
+                value={subject} // <--- BIND STATE
+                onChange={handleChange} // <--- BIND HANDLER
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
                 <option value="">Chọn chủ đề</option>
-                <option value="booking">Đặt tour</option>
-                <option value="cancellation">Hủy/Đổi tour</option>
-                <option value="feedback">Góp ý/Khiếu nại</option>
-                <option value="other">Khác</option>
+                <option value="Đăt tour">Đặt tour</option>
+                <option value="Hủy/Đổi tour">Hủy/Đổi tour</option>
+                <option value="Góp ý/Khiếu nại">Góp ý/Khiếu nại</option>
+                <option value="Khác">Khác</option>
               </select>
             </div>
           </div>
@@ -214,6 +285,8 @@ function ContactFormAndOffices() {
               id="message"
               rows={5}
               required
+              value={formData.message} // <--- BIND STATE
+              onChange={handleChange} // <--- BIND HANDLER
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             ></textarea>
           </div>
@@ -228,7 +301,7 @@ function ContactFormAndOffices() {
         </form>
       </div>
 
-      {/* Cột phải: Văn phòng & Bản đồ */}
+      {/* Cột phải: Văn phòng & Bản đồ (GIỮ NGUYÊN) */}
       <div className="space-y-6">
         {/* Bản đồ (Sử dụng iframe) */}
         <div className="bg-white p-4 rounded-xl shadow-lg">
@@ -250,7 +323,7 @@ function ContactFormAndOffices() {
           </div>
         </div>
 
-        {/* Các Văn phòng Khác */}
+        {/* Các Văn phòng Khác (GIỮ NGUYÊN) */}
         <div className="bg-white p-8 rounded-xl shadow-lg">
           <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">
             Các Văn phòng Khác
@@ -280,7 +353,7 @@ function ContactFormAndOffices() {
   );
 }
 
-// Component cho Câu hỏi thường gặp
+// Component cho Câu hỏi thường gặp (GIỮ NGUYÊN)
 function FAQSection() {
   return (
     <div className="py-16 bg-gray-50">
