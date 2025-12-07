@@ -86,4 +86,11 @@ public class BookingController {
         List<BookingHistoryResponse> history = bookingService.getUserBookingHistory(currentUser);
         return ResponseEntity.ok(history);
     }
+
+    @PutMapping("/{id}/cancel-request")
+    public ResponseEntity<?> requestCancel(@PathVariable String id) {
+        bookingService.requestCancelBooking(id);
+        return ResponseEntity.ok("Đã gửi yêu cầu hủy thành công");
+    }
+
 }

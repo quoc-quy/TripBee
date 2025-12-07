@@ -105,4 +105,10 @@ public class BookingAdminController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}/approve-cancel")
+    public ResponseEntity<?> approveCancel(@PathVariable Long id) {
+        bookingAdminService.approveCancel(id);
+        return ResponseEntity.ok("Đã duyệt hủy tour");
+    }
+
 }

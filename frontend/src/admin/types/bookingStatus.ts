@@ -1,1 +1,1 @@
-export type BookingStatus = "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELED";
+export type BookingStatus = "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELED" | "CANCELLATION_REQUESTED";
