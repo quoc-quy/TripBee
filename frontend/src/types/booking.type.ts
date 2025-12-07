@@ -40,7 +40,7 @@ export interface BookingFormData {
 }
 
 // Các type khác giữ nguyên
-export type BookingStatus = "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELED";
+export type BookingStatus = "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELED" | "CANCELLATION_REQUESTED";
 
 export interface BookingDetail {
     bookingID: string;

@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { bookingApi } from "../../../../apis/booking.api";
 import { formatCurrency } from "../../../../utils/utils";
 import { FaCalendarAlt, FaUsers } from "react-icons/fa";
-import { Link } from "react-router-dom"; // Thêm Link
-import { ReviewButton } from "../../../../components/ReviewButton/ReviewButton"; // Import component đã tách
+import { Link } from "react-router-dom";
+import { ReviewButton } from "../../../../components/ReviewButton/ReviewButton";
+import { Button } from "../../../../components/ui/button";
 
 const StatusBadge = ({ status }: { status: string }) => {
   let classes = "";
@@ -26,6 +28,10 @@ const StatusBadge = ({ status }: { status: string }) => {
       classes = "bg-red-100 text-red-700";
       text = "Đã hủy";
       break;
+    case "CANCELLATION_REQUESTED":
+      classes = "bg-orange-100 text-orange-700";
+      text = "Chờ duyệt hủy";
+      break;
     default:
       classes = "bg-gray-100 text-gray-500";
       text = "Không rõ";
@@ -39,10 +45,13 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 export default function HistoryTour() {
+  const [confirmBookingId, setConfirmBookingId] = useState<string | null>(null);
+
   const {
     data: historyData,
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ["bookingHistory"],
     queryFn: bookingApi.getBookingHistory,
@@ -53,7 +62,6 @@ export default function HistoryTour() {
   if (isLoading) {
     return (
       <div className="text-center p-8">
-        <div className="animate-spin inline-block w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full mr-3"></div>
         <span className="text-gray-600">Đang tải lịch sử đặt tour...</span>
       </div>
     );
@@ -61,45 +69,45 @@ export default function HistoryTour() {
 
   if (isError) {
     return (
-      <div className="text-red-500 text-center p-8 border border-red-200 bg-red-50 rounded-lg shadow-md">
-        Lỗi khi tải lịch sử đặt tour.
+      <div className="text-red-500 text-center p-8">
+        Lỗi khi tải lịch sử đặt tour
       </div>
     );
   }
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-lg">
-      <h3 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
+      <h3 className="text-2xl font-bold mb-6 border-b pb-3">
         Lịch sử đặt Tour ({bookings.length})
       </h3>
 
       {bookings.length === 0 ? (
-        <div className="text-center p-8 text-gray-500 border border-gray-200 bg-gray-50 rounded-lg">
-          <FaCalendarAlt size={32} className="mx-auto mb-4 text-gray-400" />
-          <p className="font-semibold">Bạn chưa có lịch sử đặt tour nào.</p>
+        <div className="text-center p-8 text-gray-500">
+          <FaCalendarAlt size={32} className="mx-auto mb-4" />
+          Bạn chưa có lịch sử đặt tour nào
         </div>
       ) : (
         <div className="space-y-6">
           {bookings.map((booking) => (
             <div
               key={booking.bookingID}
-              className="border border-gray-200 rounded-xl overflow-hidden shadow-sm transition-shadow hover:shadow-md md:flex"
+              className="border rounded-xl overflow-hidden md:flex"
             >
-              <div className="md:w-1/4 h-48 md:h-auto overflow-hidden">
+              <div className="md:w-1/4 h-48">
                 <img
                   src={booking.tourImageURL}
                   alt={booking.tourTitle}
-                  onError={(e) => {
-                    e.currentTarget.src =
-                      "https://placehold.co/400x300/E5E7EB/6B7280?text=Tour";
-                  }}
+                  onError={(e) =>
+                    (e.currentTarget.src =
+                      "https://placehold.co/400x300?text=Tour")
+                  }
                   className="w-full h-full object-cover"
                 />
               </div>
 
-              <div className="p-4 md:p-6 md:w-3/4 flex flex-col justify-between">
+              <div className="p-4 md:w-3/4 flex flex-col justify-between">
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">
+                  <h4 className="text-xl font-bold mb-2">
                     <Link
                       to={`/tours/${booking.tourID}`}
                       className="hover:text-blue-600"
@@ -108,35 +116,44 @@ export default function HistoryTour() {
                     </Link>
                   </h4>
 
-                  <div className="flex flex-wrap items-center text-sm text-gray-600 space-x-4 mb-3">
-                    <div className="flex items-center space-x-1">
-                      <FaCalendarAlt className="text-blue-500" />
-                      <span>Ngày đặt: {booking.bookingDate}</span>
+                  <div className="flex text-sm text-gray-600 gap-4">
+                    <div className="flex items-center gap-1">
+                      <FaCalendarAlt />
+                      {booking.bookingDate}
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <FaUsers className="text-green-500" />
-                      <span>
-                        Khách: {booking.numAdults} Lớn, {booking.numChildren} Bé
-                      </span>
+                    <div className="flex items-center gap-1">
+                      <FaUsers />
+                      {booking.numAdults} Lớn, {booking.numChildren} Bé
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-end border-t pt-3 mt-3">
-                  <div className="flex flex-col">
-                    <span className="text-sm text-gray-500 mb-1">
-                      Tổng tiền:
-                    </span>
-                    <span className="text-2xl font-bold text-red-600">
+                <div className="flex justify-between items-center border-t pt-3 mt-3">
+                  <div>
+                    <div className="text-sm text-gray-500">Tổng tiền</div>
+                    <div className="text-xl font-bold text-red-600">
                       {formatCurrency(booking.finalAmount)}
-                    </span>
-                    <span className="text-xs text-gray-400 mt-1">
-                      Mã Booking: {booking.bookingID}
-                    </span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {booking.bookingID}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-4">
+
+                  <div className="flex items-center gap-3">
                     <StatusBadge status={booking.status} />
-                    {/* Sử dụng ReviewButton đã tách */}
+
+                    {booking.status === "PROCESSING" && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() =>
+                          setConfirmBookingId(booking.bookingID)
+                        }
+                      >
+                        Hủy Tour
+                      </Button>
+                    )}
+
                     <ReviewButton
                       tourId={booking.tourID}
                       tourTitle={booking.tourTitle}
@@ -147,6 +164,41 @@ export default function HistoryTour() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* MODAL XÁC NHẬN HỦY */}
+      {confirmBookingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl w-[360px] p-6 shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">
+              Xác nhận hủy tour
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Bạn có chắc muốn yêu cầu hủy tour này không
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setConfirmBookingId(null)}
+              >
+                Không
+              </Button>
+
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  await bookingApi.requestCancelBooking(confirmBookingId);
+                  setConfirmBookingId(null);
+                  refetch();
+                }}
+              >
+                Đồng ý hủy
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

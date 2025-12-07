@@ -2,6 +2,7 @@ package com.tripbee.backend.service;
 
 import com.tripbee.backend.dto.BookingHistoryResponse;
 import com.tripbee.backend.dto.BookingRequest;
+import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.*;
 import com.tripbee.backend.service.EmailService.PaymentSuccessEmailData;
 import com.tripbee.backend.model.enums.BookingStatus;
@@ -190,5 +191,19 @@ public class BookingService {
         return bookings.stream()
                 .map(BookingHistoryResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void requestCancelBooking(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+
+        // Kiểm tra logic: Chỉ cho hủy nếu tour chưa diễn ra hoặc logic nghiệp vụ của bạn
+        if (booking.getStatus() == BookingStatus.PROCESSING || booking.getStatus() == BookingStatus.CONFIRMED) {
+            booking.setStatus(BookingStatus.CANCELLATION_REQUESTED);
+            bookingRepository.save(booking);
+        } else {
+            throw new IllegalStateException("Không thể yêu cầu hủy tour này");
+        }
     }
 }

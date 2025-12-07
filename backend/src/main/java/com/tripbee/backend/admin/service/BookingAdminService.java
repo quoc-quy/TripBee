@@ -9,6 +9,7 @@ import com.tripbee.backend.admin.dto.response.booking.BookingAdminResponse;
 import com.tripbee.backend.admin.dto.response.booking.BookingDetailResponse;
 import com.tripbee.backend.admin.dto.response.booking.BookingStatsResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourParticipantsResponse;
+import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.*;
 import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.PaymentStatus;
@@ -464,6 +465,17 @@ public class BookingAdminService {
                             .build();
 
             emailService.sendBookingCanceledEmail(data);
+        }
+    }
+    // Thêm method duyệt hủy
+    public void approveCancel(Long bookingId) {
+        Booking booking = bookingRepository.findById(String.valueOf(bookingId))
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+
+        if (booking.getStatus() == BookingStatus.CANCELLATION_REQUESTED) {
+            booking.setStatus(BookingStatus.CANCELED);
+            // TODO: Thêm logic hoàn tiền (Refund) ở đây nếu cần
+            bookingRepository.save(booking);
         }
     }
 

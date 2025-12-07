@@ -12,8 +12,9 @@ export const bookingAdminApi = {
   getAdminBookings: (params: BookingAdminListParams) =>
     http.get<PageResponse<BookingAdmin>>("/admin/bookings", { params }),
 
-  getBookingStats: (params: Pick<BookingAdminListParams, "fromDate" | "toDate">) =>
-    http.get<BookingStatsAdmin>("/admin/bookings/stats", { params }),
+  getBookingStats: (
+    params: Pick<BookingAdminListParams, "fromDate" | "toDate">
+  ) => http.get<BookingStatsAdmin>("/admin/bookings/stats", { params }),
 
   exportBookings: (params: BookingAdminListParams) =>
     http.get("/admin/bookings/export", {
@@ -21,8 +22,7 @@ export const bookingAdminApi = {
       responseType: "blob",
     }),
 
-  processCancel: () =>
-    http.post<number>("/admin/bookings/cancel/process"),
+  processCancel: () => http.post<number>("/admin/bookings/cancel/process"),
 
   getBookingDetail: (id: string) =>
     http.get<BookingDetailAdmin>(`/admin/bookings/${id}`),
@@ -37,12 +37,15 @@ export const bookingAdminApi = {
       responseType: "blob",
     }),
 
-     // Lấy danh sách booking đã hủy
+  // Lấy danh sách booking đã hủy
   getCanceledBookings: (params: { page: number; size: number }) =>
     http.get("/admin/bookings/canceled", { params }),
 
-  // duyệt hủy 
+  // duyệt hủy
   approveCancel: (id: string) =>
     http.post<void>(`/admin/bookings/${id}/cancel`),
-
+  approveCancelBooking: (id: number) => {
+    // Body để rỗng {}, vì backend chỉ cần ID trên URL
+    return http.put<any>(`admin/bookings/${id}/approve-cancel`, {});
+  },
 };
