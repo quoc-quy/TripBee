@@ -1,30 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { ArrowLeft, Eye, RefreshCw, Trash2 } from "lucide-react";
-
 import type { BookingAdmin } from "../../types/bookingAdmin";
-import type { BookingStatus } from "@/types/booking.type";
 import type { PaymentStatus } from "@/admin/types/paymentStatus";
 import { bookingAdminApi } from "../../apis/bookingAdmin.api";
+import { RefreshCw } from "lucide-react";
 
 // helper
 const formatCurrency = (value: number) =>
   value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-
-const statusLabelMap: Record<BookingStatus, string> = {
-  PROCESSING: "Đang xử lý",
-  CONFIRMED: "Đã xác nhận",
-  COMPLETED: "Hoàn thành",
-  CANCELED: "Đã hủy",
-};
-
-const statusBadgeClassMap: Record<BookingStatus, string> = {
-  PROCESSING: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  CONFIRMED: "bg-green-50 text-green-700 border border-green-200",
-  COMPLETED: "bg-blue-50 text-blue-700 border border-blue-200",
-  CANCELED: "bg-red-50 text-red-600 border border-red-200",
-};
 
 const paymentLabelMap: Record<PaymentStatus, string> = {
   PENDING: "Chờ thanh toán",
@@ -55,10 +39,6 @@ const CanceledBookingsScreen: React.FC = () => {
   const bookings: BookingAdmin[] = data?.content || [];
   const totalPages = data?.totalPages || 0;
   const currentPage = data?.number ?? 0;
-
-  const handleBack = () => {
-    navigate("/admin/manage-booking");
-  };
 
   const handleRefresh = () => {
     refetch();
