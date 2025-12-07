@@ -20,6 +20,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.core.io.ClassPathResource;
+
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.time.*;
@@ -39,7 +40,9 @@ public class BookingAdminService {
         this.emailService = emailService;
     }
 
-    /** xây khoảng thời gian: nếu null thì lấy tháng hiện tại */
+    /**
+     * xây khoảng thời gian: nếu null thì lấy tháng hiện tại
+     */
     private LocalDateTime[] buildRange(LocalDate fromDate, LocalDate toDate) {
         LocalDate today = LocalDate.now();
         LocalDate firstOfMonth = today.withDayOfMonth(1);
@@ -125,7 +128,9 @@ public class BookingAdminService {
         return new BookingStatsResponse(total, processing, confirmed, completed, canceled);
     }
 
-    /** ấy thông tin chi tiết */
+    /**
+     * ấy thông tin chi tiết
+     */
     @Transactional
     public BookingDetailResponse getBookingDetail(String bookingID) {
         Booking booking = bookingRepository.findById(bookingID)
@@ -250,6 +255,8 @@ public class BookingAdminService {
 
         Tour tour = bookings.get(0).getTour();
         res.setTourName(tour.getTitle());
+        res.setStartDate(tour.getStartDate());
+        res.setEndDate(tour.getEndDate());
 
         List<TourParticipantsResponse.ParticipantInfo> participantInfos =
                 bookings.stream()
@@ -278,10 +285,10 @@ public class BookingAdminService {
 
     //    tạo file
     public byte[] exportParticipantsByTour(String tourId) throws Exception {
-      TourParticipantsResponse dto = getParticipantsByTour(tourId);
+        TourParticipantsResponse dto = getParticipantsByTour(tourId);
         if (dto == null) {
             throw new IllegalArgumentException("Không tìm thấy tour hoặc không có dữ liệu.");
-      }
+        }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         Document document = new Document(PageSize.A4, 36, 36, 36, 36);
@@ -293,43 +300,67 @@ public class BookingAdminService {
                 .getFile()
                 .getAbsolutePath();
 
-         BaseFont bf = BaseFont.createFont(
-                 fontPath,
-                 BaseFont.IDENTITY_H,
-                 BaseFont.EMBEDDED
-         );
+        BaseFont bf = BaseFont.createFont(
+                fontPath,
+                BaseFont.IDENTITY_H,
+                BaseFont.EMBEDDED
+        );
         Font titleFont = new Font(bf, 16, Font.BOLD);
-      Font normalFont = new Font(bf, 11, Font.NORMAL);
-      Font headerFont = new Font(bf, 11, Font.BOLD);
+        Font normalFont = new Font(bf, 11, Font.NORMAL);
+        Font headerFont = new Font(bf, 11, Font.BOLD);
 
-      // Tiêu đề
-      Paragraph title = new Paragraph("DANH SÁCH KHÁCH THAM GIA TOUR", titleFont);
-      title.setAlignment(Element.ALIGN_CENTER);
-      title.setSpacingAfter(12f);
-      document.add(title);
+        // ====== TIÊU ĐỀ ======
+        Paragraph title = new Paragraph("DANH SÁCH KHÁCH THAM GIA TOUR", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(12f);
+        document.add(title);
 
-    // Thông tin tour
-      Paragraph tourInfo = new Paragraph(
-              "Tour: " + (dto.getTourName() != null ? dto.getTourName() : dto.getTourId()),
-              normalFont
-      );
-       tourInfo.setSpacingAfter(4f);
-      document.add(tourInfo);
+        // Format ngày
+        java.time.format.DateTimeFormatter df =
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-     Paragraph totalInfo = new Paragraph(
-             "Tổng số khách tham gia: " + dto.getParticipants().size(),
-             normalFont
-     );
-     totalInfo.setSpacingAfter(10f);
-     document.add(totalInfo);
+        String startStr = dto.getStartDate() != null ? dto.getStartDate().format(df) : "-";
+        String endStr   = dto.getEndDate()   != null ? dto.getEndDate().format(df)   : "-";
 
-    // Bảng danh sách khách
+        // ====== THÔNG TIN TOUR ======
+        Paragraph tourLine1 = new Paragraph(
+                "Tour: " + (dto.getTourName() != null ? dto.getTourName() : dto.getTourId()),
+                normalFont
+        );
+        tourLine1.setSpacingAfter(3f);
+        document.add(tourLine1);
+
+        if (dto.getDestinationName() != null && !dto.getDestinationName().isBlank()) {
+            Paragraph dest = new Paragraph(
+                    "Điểm đến: " + dto.getDestinationName(),
+                    normalFont
+            );
+            dest.setSpacingAfter(3f);
+            document.add(dest);
+        }
+
+        Paragraph timeInfo = new Paragraph(
+                "Khởi hành: " + startStr + "    ·    Kết thúc: " + endStr,
+                normalFont
+        );
+        timeInfo.setSpacingAfter(3f);
+        document.add(timeInfo);
+
+        // Tổng số khách
+        Paragraph totalInfo = new Paragraph(
+                "Tổng số khách tham gia: " + dto.getParticipants().size(),
+                normalFont
+        );
+        totalInfo.setSpacingAfter(10f);
+        document.add(totalInfo);
+
+        // Bảng danh sách khách
         PdfPTable table = new PdfPTable(5); // 5 cột
         table.setWidthPercentage(100);
         table.setWidths(new float[]{3f, 3f, 3f, 2f, 2f}); // 5 số tương ứng 5 cột
         table.setHeaderRows(1);
 
-// helper header cell
+        // helper header cell
         PdfPCell headerCell;
 
         String[] headers = new String[]{
@@ -348,30 +379,30 @@ public class BookingAdminService {
             table.addCell(headerCell);
         }
 
-    for (TourParticipantsResponse.ParticipantInfo p : dto.getParticipants()) {
-        table.addCell(new Phrase(
-                nvl(p.getFullName()), normalFont
-        ));
-        table.addCell(new Phrase(
-                nvl(p.getPhone()), normalFont
-        ));
-        table.addCell(new Phrase(
-                nvl(p.getIdentification()), normalFont
-        ));
-        table.addCell(new Phrase(
-                mapGender(p.getGender()), normalFont
-        ));
-        table.addCell(new Phrase(
-                mapParticipantType(p.getParticipantType()), normalFont
-        ));
+        for (TourParticipantsResponse.ParticipantInfo p : dto.getParticipants()) {
+            table.addCell(new Phrase(
+                    nvl(p.getFullName()), normalFont
+            ));
+            table.addCell(new Phrase(
+                    nvl(p.getPhone()), normalFont
+            ));
+            table.addCell(new Phrase(
+                    nvl(p.getIdentification()), normalFont
+            ));
+            table.addCell(new Phrase(
+                    mapGender(p.getGender()), normalFont
+            ));
+            table.addCell(new Phrase(
+                    mapParticipantType(p.getParticipantType()), normalFont
+            ));
 
+        }
+
+        document.add(table);
+        document.close();
+
+        return baos.toByteArray();
     }
-
-    document.add(table);
-    document.close();
-
-    return baos.toByteArray();
-}
 
     private String nvl(String s) {
         return s == null ? "" : s;
@@ -435,7 +466,6 @@ public class BookingAdminService {
             emailService.sendBookingCanceledEmail(data);
         }
     }
-
 
 
 }

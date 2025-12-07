@@ -6,12 +6,10 @@ import { Edit2, Eye, Trash2 } from "lucide-react";
 import { omitBy, isUndefined } from "lodash";
 import { tourTypeApi } from "../../../apis/tourType.api";
 import type { TourListAdminParams } from "../../../types/tour";
+import type { TourType } from "@/types/tourType.type";
 
-// Nếu chưa có type TourType riêng thì dùng tạm:
-type TourType = {
-  tourTypeID: string;
-  nameType: string;
-};
+
+
 
 // ==== Kiểu dữ liệu cho query param ====
 type ParsedTourParams = {
@@ -340,3 +338,5 @@ export default function ManageTourScreen() {
     </div>
   );
 }
+
+

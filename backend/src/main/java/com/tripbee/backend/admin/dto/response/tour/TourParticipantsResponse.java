@@ -1,39 +1,25 @@
 package com.tripbee.backend.admin.dto.response.tour;
 
 import com.tripbee.backend.model.enums.BookingStatus;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Setter
+@Getter
 public class TourParticipantsResponse {
 
     private String tourId;
     private String tourName;
+    private String destinationName;    // tên điểm đến (nếu có)
+    private LocalDate startDate;   // ngày khởi hành
+    private LocalDate endDate;     // ngày kết thúc
+
+
     private List<ParticipantInfo> participants;
-
-    public String getTourId() {
-        return tourId;
-    }
-
-    public void setTourId(String tourId) {
-        this.tourId = tourId;
-    }
-
-    public String getTourName() {
-        return tourName;
-    }
-
-    public void setTourName(String tourName) {
-        this.tourName = tourName;
-    }
-
-    public List<ParticipantInfo> getParticipants() {
-        return participants;
-    }
-
-    public void setParticipants(List<ParticipantInfo> participants) {
-        this.participants = participants;
-    }
 
     // từng khách tham gia tour
     public static class ParticipantInfo {

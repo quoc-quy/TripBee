@@ -27,4 +27,13 @@ export const tourAdminApi = {
 
   getOpenToursSimple: () =>
     http.get<SimpleTour[]>("/admin/tours/open-simple"),
+
+  getCompletedToursSimple: () =>
+  http.get<SimpleTour[]>("/admin/tours/completed-simple"),
+
+  searchToursForParticipants: (keyword?: string) =>
+    http.get<SimpleTour[]>("/admin/tours/participants-search", {
+      params: { keyword },
+    }),
+
 };

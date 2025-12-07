@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
@@ -7,9 +7,10 @@ import { destinationAdminApi } from "../../apis/destinationAdmin.api";
 import { promotionAdminApi } from "@/admin/apis/promotionAdmin.api";
 import { tourAdminApi } from "../../apis/tourAdmin.api";
 
-import type { TourDetailAdmin } from "../../types/tourAdmin";
 import type { PromotionSimple } from "@/admin/types/promotionAdmin";
 import type { ItineraryAdmin } from "@/admin/types/itineraryAdmin";
+import type { SimpleTour, TourDetailAdmin } from "@/admin/types/tourAdmin";
+import Select from "react-select";
 
 // ==== Types local ====
 
@@ -78,35 +79,13 @@ export default function FormTourScreen() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+
   const [selectedPromotions, setSelectedPromotions] = useState<PromotionSimple[]>([]);
   const [itineraries, setItineraries] = useState<ItineraryAdmin[]>([]);
-
-
-  const {
-    data: tourTypes = [],
-    isLoading: loadingTypes,
-  } = useQuery<TourType[]>({
-    queryKey: ["tourTypes"],
-    queryFn: () => tourTypeApi.getTourTypes().then((res) => res.data),
-  });
-
-  const {
-    data: tourDetail,
-    isLoading: loadingTour,
-  } = useQuery<TourDetailAdmin>({
-    queryKey: ["tour-detail", id],
-    queryFn: () =>
-      tourAdminApi.getTourById(id as string).then((res) => res.data),
-    enabled: isEdit && !!id,
-  });
-
-  // khuyến mãi
-  const { data: promotions = [], isLoading: loadingPromotions } =
-    useQuery<PromotionSimple[]>({
-      queryKey: ["admin-promotions-simple"],
-      queryFn: () =>
-        promotionAdminApi.getSimplePromotions().then((res) => res.data),
-    });
+  const [selectedDestinations, setSelectedDestinations] = useState<DestinationAdmin[]>([]);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedReopenTourId, setSelectedReopenTourId] = useState<string | null>(null);
 
 
   const [form, setForm] = useState<TourForm>({
@@ -127,12 +106,39 @@ export default function FormTourScreen() {
     destinationId: "",
   });
 
-  const [selectedDestinations, setSelectedDestinations] = useState<
-    DestinationAdmin[]
-  >([]);
+  // ==== Query loại tour ====
+  const {
+    data: tourTypes = [],
+    isLoading: loadingTypes,
+  } = useQuery<TourType[]>({
+    queryKey: ["tourTypes"],
+    queryFn: () => tourTypeApi.getTourTypes().then((res) => res.data),
+  });
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  // ==== Query chi tiết tour khi edit ====
+  const {
+    data: tourDetail,
+    isLoading: loadingTour,
+  } = useQuery<TourDetailAdmin>({
+    queryKey: ["tour-detail", id],
+    queryFn: () => {
+      if (!id) throw new Error("missing id");
+      return tourAdminApi.getTourById(id as string).then((res) => res.data);
+    },
+    enabled: isEdit && !!id,
+  });
 
+  // ==== Query khuyến mãi ====
+  const {
+    data: promotions = [],
+    isLoading: loadingPromotions,
+  } = useQuery<PromotionSimple[]>({
+    queryKey: ["admin-promotions-simple"],
+    queryFn: () =>
+      promotionAdminApi.getSimplePromotions().then((res) => res.data),
+  });
+
+  // ==== Query điểm đến theo region ====
   const {
     data: destinations = [],
     isLoading: loadingDestinations,
@@ -146,41 +152,49 @@ export default function FormTourScreen() {
     enabled: !!form.region,
   });
 
-  // hình ảnh
-  const [uploadingImage, setUploadingImage] = useState(false);
+  // ==== Query danh sách tour COMPLETED để "mở lại" (chỉ dùng khi tạo mới) ====
+  const {
+    data: completedTours = [],
+    isLoading: loadingCompletedTours,
+  } = useQuery<SimpleTour[]>({
+    queryKey: ["admin-tours-completed-simple"],
+    queryFn: () =>
+      tourAdminApi.getCompletedToursSimple().then((res) => res.data),
+    enabled: !isEdit,
+  });
 
-  const handleImageFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // options cho react-select
+  const reopenTourOptions = useMemo(
+    () =>
+      completedTours.map((t) => ({
+        value: t.tourId ?? t.tourId,
+        label: `${t.title}`,
+      })),
+    [completedTours]
+  );
+
+  const handleReopenTour = async (tourId: string | null) => {
+    if (!tourId) return;
 
     try {
-      setUploadingImage(true);
-      setErrors((prev) => ({ ...prev, imageURL: undefined, form: undefined }));
-
-      const res = await tourAdminApi.uploadTourImage(file);
-      const url = res.data.url;
-
-      setForm((prev) => ({
-        ...prev,
-        imageURL: url,
-      }));
-    } catch (error: any) {
-      console.log(error?.response || error);
+      const res = await tourAdminApi.getTourById(tourId);
+      const detail = res.data;
+      // fill form bằng dữ liệu tour đã hoàn thành, ép trạng thái về ACTIVE
+      fillFromTourDetail(detail, { forceActive: true });
+    } catch (error) {
+      console.log(error);
       setErrors((prev) => ({
         ...prev,
-        imageURL: "Upload ảnh thất bại. Vui lòng thử lại.",
+        form: "Không tải được dữ liệu tour để mở lại.",
       }));
-    } finally {
-      setUploadingImage(false);
     }
   };
 
-  useEffect(() => {
-    if (!tourDetail) return;
 
-    const tourDestinations = tourDetail.tourDestinations || [];
+
+  // ==== helper fill form từ TourDetail ====
+  const fillFromTourDetail = (detail: TourDetailAdmin, opts?: { forceActive?: boolean }) => {
+    const tourDestinations = detail.tourDestinations || [];
     const firstDes = tourDestinations[0]?.destination;
 
     const mappedDestinations: DestinationAdmin[] = tourDestinations
@@ -195,53 +209,47 @@ export default function FormTourScreen() {
       }));
 
     setForm({
-      title: tourDetail.title ?? "",
-      startDate: tourDetail.startDate ?? "",
-      endDate: tourDetail.endDate ?? "",
+      title: detail.title ?? "",
+      startDate: detail.startDate ?? "",
+      endDate: detail.endDate ?? "",
       priceAdult:
-        typeof tourDetail.priceAdult === "number"
-          ? tourDetail.priceAdult
-          : "",
+        typeof detail.priceAdult === "number" ? detail.priceAdult : "",
       priceChild:
-        typeof tourDetail.priceChild === "number"
-          ? tourDetail.priceChild
-          : "",
+        typeof detail.priceChild === "number" ? detail.priceChild : "",
       minGuests:
-        typeof tourDetail.minParticipants === "number"
-          ? tourDetail.minParticipants
+        typeof detail.minParticipants === "number"
+          ? detail.minParticipants
           : "",
       maxGuests:
-        typeof tourDetail.maxParticipants === "number"
-          ? tourDetail.maxParticipants
+        typeof detail.maxParticipants === "number"
+          ? detail.maxParticipants
           : "",
-      imageURL: tourDetail.imageURL ?? "",
+      imageURL: detail.imageURL ?? "",
       durationDays:
-        typeof tourDetail.durationDays === "number"
-          ? tourDetail.durationDays
-          : "",
+        typeof detail.durationDays === "number" ? detail.durationDays : "",
       durationNights:
-        typeof tourDetail.durationNights === "number"
-          ? tourDetail.durationNights
+        typeof detail.durationNights === "number"
+          ? detail.durationNights
           : "",
-      description: tourDetail.description ?? "",
-      tourTypeId: tourDetail.tourType?.id ?? "",
-      status: tourDetail.status?.toUpperCase() ?? "ACTIVE",
+      description: detail.description ?? "",
+      tourTypeId: detail.tourType?.id ?? "",
+      status: opts?.forceActive
+        ? "ACTIVE"
+        : detail.status?.toUpperCase() ?? "ACTIVE",
       region: firstDes?.region ?? "",
       destinationId: "",
     });
 
-    // Khuyến mãi đã gán cho tour
     const promoList: PromotionSimple[] =
-      tourDetail.promotions?.map((p) => ({
+      detail.promotions?.map((p) => ({
         promotionID: p.promotionID,
         title: p.title,
       })) ?? [];
 
     setSelectedPromotions(promoList);
 
-    // Lịch trình đã có
     const itList: ItineraryAdmin[] =
-      tourDetail.itineraries?.map((it) => ({
+      detail.itineraries?.map((it) => ({
         itineraryID: it.itineraryID,
         dayNumber: it.dayNumber,
         title: it.title,
@@ -249,10 +257,17 @@ export default function FormTourScreen() {
       })) ?? [];
 
     setItineraries(itList.length > 0 ? itList : []);
-
     setSelectedDestinations(mappedDestinations);
     setErrors({});
+  };
+
+  // Khi đang edit → tourDetail thay đổi thì fill form
+  useEffect(() => {
+    if (!tourDetail) return;
+    fillFromTourDetail(tourDetail);
   }, [tourDetail]);
+
+  // ==== Handlers ====
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -376,17 +391,16 @@ export default function FormTourScreen() {
     ]);
   };
 
-  const handleItineraryChange = (
-    index: number,
-    field: "title" | "description"
-  ) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setItineraries((prev) =>
-      prev.map((it, i) =>
-        i === index ? { ...it, [field]: value } : it
-      )
-    );
-  };
+  const handleItineraryChange =
+    (index: number, field: "title" | "description") =>
+      (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        setItineraries((prev) =>
+          prev.map((it, i) =>
+            i === index ? { ...it, [field]: value } : it
+          )
+        );
+      };
 
   const handleRemoveItineraryRow = (index: number) => {
     setItineraries((prev) =>
@@ -396,7 +410,102 @@ export default function FormTourScreen() {
     );
   };
 
+  const handleRemoveImage = () => {
+    setForm((prev) => ({
+      ...prev,
+      imageURL: "",
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      imageURL: undefined,
+      form: undefined,
+    }));
+  };
 
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      setErrors((prev) => ({ ...prev, imageURL: undefined, form: undefined }));
+
+      const res = await tourAdminApi.uploadTourImage(file);
+      const url = res.data.url;
+
+      setForm((prev) => ({
+        ...prev,
+        imageURL: url,
+      }));
+    } catch (error: any) {
+      console.log(error?.response || error);
+      setErrors((prev) => ({
+        ...prev,
+        imageURL: "Upload ảnh thất bại. Vui lòng thử lại.",
+      }));
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+
+  // ==== Validate & Submit ====
+
+  // const validate = (): FormErrors => {
+  //   const newErrors: FormErrors = {};
+
+  //   if (!form.title.trim()) newErrors.title = "Không được để trống";
+  //   if (!form.description.trim())
+  //     newErrors.description = "Không được để trống";
+
+  //   if (!form.tourTypeId) newErrors.tourTypeId = "Chọn loại tour";
+  //   if (!form.region) newErrors.region = "Chọn miền";
+
+  //   if (selectedDestinations.length === 0) {
+  //     newErrors.destinationId = "Chọn ít nhất một điểm đến";
+  //   }
+
+  //   if (itineraries.length === 0) {
+  //     newErrors.itineraries = "Cần thêm ít nhất một ngày lịch trình.";
+  //   }
+
+  //   const checkPositive = (
+  //     value: number | "",
+  //     field: keyof TourForm,
+  //     label: string
+  //   ) => {
+  //     if (value === "" || Number(value) <= 0) {
+  //       newErrors[field] = `${label} phải > 0`;
+  //     }
+  //   };
+
+  //   checkPositive(form.priceAdult, "priceAdult", "Giá người lớn");
+  //   checkPositive(form.priceChild, "priceChild", "Giá trẻ em");
+  //   checkPositive(form.minGuests, "minGuests", "Số lượng tối thiểu");
+  //   checkPositive(form.maxGuests, "maxGuests", "Số lượng tối đa");
+  //   checkPositive(form.durationDays, "durationDays", "Số ngày");
+  //   checkPositive(form.durationNights, "durationNights", "Số đêm");
+
+  //   if (!form.startDate) newErrors.startDate = "Chọn ngày khởi hành";
+
+  //   if (!form.endDate) {
+  //     newErrors.endDate = "Chọn ngày kết thúc";
+  //   } else if (form.startDate) {
+  //     const start = new Date(form.startDate);
+  //     const end = new Date(form.endDate);
+  //     if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end <= start) {
+  //       newErrors.endDate = "Ngày kết thúc phải sau ngày khởi hành";
+  //     }
+  //   }
+
+  //   if (!form.imageURL.trim()) {
+  //     newErrors.imageURL = "Không được để trống";
+  //   }
+
+  //   return newErrors;
+  // };
 
   const validate = (): FormErrors => {
     const newErrors: FormErrors = {};
@@ -426,20 +535,46 @@ export default function FormTourScreen() {
       }
     };
 
+    // > 0
     checkPositive(form.priceAdult, "priceAdult", "Giá người lớn");
     checkPositive(form.priceChild, "priceChild", "Giá trẻ em");
     checkPositive(form.minGuests, "minGuests", "Số lượng tối thiểu");
     checkPositive(form.maxGuests, "maxGuests", "Số lượng tối đa");
     checkPositive(form.durationDays, "durationDays", "Số ngày");
-    checkPositive(form.durationNights, "durationNights", "Số đêm");
 
-    if (!form.startDate) newErrors.startDate = "Chọn ngày khởi hành";
+    // >= 0 cho số đêm
+    if (form.durationNights === "" || Number(form.durationNights) < 0) {
+      newErrors.durationNights = "Số đêm phải ≥ 0";
+    }
+
+    // ====== CHECK NGÀY KHỞI HÀNH & KẾT THÚC ======
+    if (!form.startDate) {
+      newErrors.startDate = "Chọn ngày khởi hành";
+    } else {
+      const start = new Date(form.startDate);
+
+      if (isNaN(start.getTime())) {
+        newErrors.startDate = "Ngày khởi hành không hợp lệ";
+      } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const minStart = new Date(today);
+        minStart.setMonth(minStart.getMonth() + 1); // ít nhất 1 tháng sau
+
+        if (start < minStart) {
+          newErrors.startDate =
+            "Ngày khởi hành phải sau ngày hiện tại ít nhất 1 tháng";
+        }
+      }
+    }
 
     if (!form.endDate) {
       newErrors.endDate = "Chọn ngày kết thúc";
     } else if (form.startDate) {
       const start = new Date(form.startDate);
       const end = new Date(form.endDate);
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end <= start) {
         newErrors.endDate = "Ngày kết thúc phải sau ngày khởi hành";
       }
@@ -451,6 +586,7 @@ export default function FormTourScreen() {
 
     return newErrors;
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -476,8 +612,6 @@ export default function FormTourScreen() {
       status: form.status,
       tourTypeId: form.tourTypeId,
       destinationIds: selectedDestinations.map((d) => d.destinationID),
-
-      // NEW
       promotionIds: selectedPromotions.map((p) => p.promotionID),
       itineraries: itineraries.map((it, index) => ({
         dayNumber: index + 1,
@@ -503,6 +637,8 @@ export default function FormTourScreen() {
       }));
     }
   };
+
+  // ==== Render ====
 
   if (isEdit && loadingTour) {
     return (
@@ -530,6 +666,78 @@ export default function FormTourScreen() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Mở lại tour đã hoàn thành (chỉ khi tạo mới) */}
+        {/* {!isEdit && (
+          <section className="bg-white rounded-2xl shadow-sm p-6 space-y-3 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Mở lại tour đã hoàn thành
+            </h2>
+
+            <div className="mt-2">
+              <select
+                className={inputBase}
+                onChange={handleReopenTourChange}
+                disabled={loadingCompletedTours || completedTours.length === 0}
+                defaultValue=""
+              >
+                <option value="">
+                  {loadingCompletedTours
+                    ? "Đang tải danh sách tour hoàn thành..."
+                    : completedTours.length === 0
+                    ? "Chưa có tour nào ở trạng thái Hoàn thành"
+                    : "Chọn tour để dùng lại thông tin"}
+                </option>
+                {completedTours.map((t) => (
+                  <option key={t.tourId} value={t.tourId}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </section>
+        )} */}
+        {/* Mở lại tour đã hoàn thành (chỉ khi tạo mới) */}
+        {!isEdit && (
+          <section className="bg-white rounded-2xl shadow-sm p-6 space-y-3 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Mở lại tour đã hoàn thành
+            </h2>
+            <div className="mt-3 space-y-2">
+
+              <Select
+                isClearable
+                isSearchable
+                options={reopenTourOptions}
+                placeholder={
+                  loadingCompletedTours
+                    ? "Đang tải danh sách tour hoàn thành..."
+                    : reopenTourOptions.length === 0
+                      ? "Chưa có tour nào ở trạng thái Hoàn thành"
+                      : "— Chọn tour để dùng lại —"
+                }
+                value={
+                  reopenTourOptions.find((opt) => opt.value === selectedReopenTourId) ||
+                  null
+                }
+                onChange={(opt: any) => {
+                  const value = opt?.value ?? null;
+                  setSelectedReopenTourId(value);
+                  if (value) {
+                    handleReopenTour(value);
+                  }
+                }}
+                classNamePrefix="react-select"
+                className="min-w-[280px] text-sm"
+                isDisabled={loadingCompletedTours || reopenTourOptions.length === 0}
+              />
+
+
+            </div>
+          </section>
+        )}
+
+
+
         {/* Thông tin cơ bản */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -865,7 +1073,7 @@ export default function FormTourScreen() {
           </div>
         </section>
 
-        {/* khuyến mãi */}
+        {/* Khuyến mãi */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
             Khuyến mãi áp dụng
@@ -914,7 +1122,7 @@ export default function FormTourScreen() {
           </div>
         </section>
 
-        {/* lịch trình */}
+        {/* Lịch trình chi tiết */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800">
@@ -989,8 +1197,7 @@ export default function FormTourScreen() {
           )}
         </section>
 
-
-        {/* Mô tả */}
+        {/* Mô tả tour */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-3 border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
             Mô tả tour
@@ -1008,7 +1215,6 @@ export default function FormTourScreen() {
             className={inputBase + " min-h-[160px] resize-y"}
           />
         </section>
-
 
         {/* Hình ảnh & trạng thái */}
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4 border border-gray-100">
@@ -1054,12 +1260,12 @@ export default function FormTourScreen() {
                 </p>
               )}
 
-              {form.imageURL && !uploadingImage && !errors.imageURL && (
+              {form.imageURL && !uploadingImage && (
                 <div className="mt-1">
                   <p className="text-xs text-gray-500 mb-1">
                     Xem trước ảnh bìa
                   </p>
-                  <div className="w-full h-44 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                  <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 group">
                     <img
                       src={form.imageURL}
                       alt="Preview"
@@ -1068,6 +1274,13 @@ export default function FormTourScreen() {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 text-[10px] px-2 py-1 rounded-full bg-white/90 text-red-500 border border-red-200 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      Xóa
+                    </button>
                   </div>
                 </div>
               )}
@@ -1092,10 +1305,6 @@ export default function FormTourScreen() {
             </div>
           </div>
         </section>
-
-
-
-
 
         {/* Actions */}
         <div className="flex justify-end gap-3">

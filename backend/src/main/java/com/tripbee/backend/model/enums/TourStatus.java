@@ -4,5 +4,6 @@ public enum TourStatus {
     SOLD_OUT,
     PAUSE,
     ACTIVE,
-    COMPLETED
+    COMPLETED,
+    CANCELED
 }

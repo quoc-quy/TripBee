@@ -7,7 +7,10 @@ const getMenuFromPath = (path: string): string => {
   if (path.startsWith("/admin/manage-tour") || path.startsWith("/admin/tours"))
     return "tour";
   if (path.startsWith("/admin/promotions")) return "promotion";
-  if (path.startsWith("/admin/manage-destination")) return "destination";
+  if (
+    path.startsWith("/admin/manage-destination") ||
+    path.startsWith("/admin/destinations")
+  ) return "destination";
   if (path.startsWith("/admin/reviews")) return "review";
   if (path.startsWith("/admin/users")) return "user";
   if (path.startsWith("/admin/tour-types")) return "tour-type";

@@ -146,15 +146,15 @@ const ManageBookingScreen: React.FC = () => {
   };
 
   const handleGetCustomerByTour = async () => {
-   navigate("/admin/tour-participants");
+   navigate("/admin/manage-booking/tour-participants");
   };
 
   const handleProcessCancel = async () => {
-    navigate("/admin/bookings/canceled");
+    navigate("/admin/manage-booking/canceled");
   };
 
    const handleViewBooking = (id: string) => {
-    navigate(`/admin/bookings/detail/${id}`);
+    navigate(`/admin/manage-booking/detail/${id}`);
   };
 
 
@@ -317,7 +317,6 @@ const ManageBookingScreen: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-200 text-gray-600 text-xs uppercase border-b border-gray-200">
             <tr>
-              <th className="px-5 py-3 font-semibold text-black">Booking</th>
               <th className="px-5 py-3 font-semibold text-black">Khách hàng</th>
               <th className="px-5 py-3 font-semibold text-black">Tour</th>
               <th className="px-5 py-3 font-semibold text-black">
@@ -354,17 +353,6 @@ const ManageBookingScreen: React.FC = () => {
                   key={b.bookingID}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-all"
                 >
-                  <td className="px-5 py-4 align-top">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 text-sm">
-                        {b.bookingID}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(b.bookingDate).toLocaleDateString("vi-VN")}
-                      </span>
-                    </div>
-                  </td>
-
                   <td className="px-5 py-4 align-top">
                     <div className="flex flex-col">
                       <span className="font-semibold text-gray-900 text-sm">
