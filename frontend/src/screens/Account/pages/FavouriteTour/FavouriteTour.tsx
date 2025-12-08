@@ -70,16 +70,24 @@ export default function FavouriteTour() {
         details.departurePlace ||
         "Chưa xác định";
 
+      const originalPrice = details.priceAdult ?? 0;
+      const finalPrice = details.finalPriceAdult ?? 0;
+
+      const discountPercentage =
+        originalPrice > 0 && finalPrice < originalPrice
+          ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
+          : 0;
+
       return {
         ...details,
-        finalPrice: details.finalPriceAdult ?? 0,
-        priceAdult: details.priceAdult ?? 0,
+        finalPrice: finalPrice,
+        priceAdult: originalPrice,
         averageRating: details.averageRating ?? 0,
         reviewCount: details.reviewCount ?? 0,
         destinationName: destinationName,
         tourTypeName: details.tourType?.nameType || "Khác",
-        discountPercentage: 0,
-        originalPrice: details.priceAdult ?? 0,
+        discountPercentage: discountPercentage,
+        originalPrice: originalPrice,
       } as Tour;
     })
     .filter((tour) => !!tour);
