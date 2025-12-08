@@ -1,13 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="./public/Logo-TripBee.png" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>TripBee</title>
-    </head>
-    <body>
-        <div id="root"></div>
-        <script type="module" src="/src/main.tsx"></script>
-    </body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./public/Logo-TripBee.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TripBee</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Start of ChatBot (www.chatbot.com) code -->
+    <script>
+      window.__ow = window.__ow || {};
+      window.__ow.organizationId = "688a726c-5d12-42a6-bab9-f003480b4475";
+      window.__ow.template_id = "f71f88aa-ca18-4382-8626-a4db7d40c8bb";
+      window.__ow.integration_name = "manual_settings";
+      window.__ow.product_name = "chatbot";
+      (function (n, t, c) {
+        function i(n) {
+          return e._h ? e._h.apply(null, n) : e._q.push(n);
+        }
+        var e = {
+          _q: [],
+          _h: null,
+          _v: "2.0",
+          on: function () {
+            i(["on", c.call(arguments)]);
+          },
+          once: function () {
+            i(["once", c.call(arguments)]);
+          },
+          off: function () {
+            i(["off", c.call(arguments)]);
+          },
+          get: function () {
+            if (!e._h)
+              throw new Error(
+                "[OpenWidget] You can't use getters before load."
+              );
+            return i(["get", c.call(arguments)]);
+          },
+          call: function () {
+            i(["call", c.call(arguments)]);
+          },
+          init: function () {
+            var n = t.createElement("script");
+            (n.async = !0),
+              (n.type = "text/javascript"),
+              (n.src = "https://cdn.openwidget.com/openwidget.js"),
+              t.head.appendChild(n);
+          },
+        };
+        !n.__ow.asyncInit && e.init(), (n.OpenWidget = n.OpenWidget || e);
+      })(window, document, [].slice);
+    </script>
+    <noscript
+      >You need to
+      <a
+        href="https://www.chatbot.com/help/chat-widget/enable-javascript-in-your-browser/"
+        rel="noopener nofollow"
+        >enable JavaScript</a
+      >
+      in order to use the AI chatbot tool powered by
+      <a href="https://www.chatbot.com/" rel="noopener nofollow" target="_blank"
+        >ChatBot</a
+      ></noscript
+    >
+    <!-- End of ChatBot code -->
+  </body>
 </html>
