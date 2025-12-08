@@ -8,6 +8,7 @@ import com.tripbee.backend.service.EmailService.PaymentSuccessEmailData;
 import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.PaymentStatus;
 import com.tripbee.backend.repository.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -204,6 +205,21 @@ public class BookingService {
             bookingRepository.save(booking);
         } else {
             throw new IllegalStateException("Không thể yêu cầu hủy tour này");
+        }
+    }
+
+    @Scheduled(fixedRate = 60000) // Chạy mỗi 60 giây (1 phút)
+    @Transactional // Đảm bảo tính toàn vẹn dữ liệu khi xóa
+    public void deleteExpiredBookings() {
+        // Mốc thời gian là 3 phút trước so với hiện tại
+        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(3);
+
+        // Tìm các booking trạng thái PENDING (chưa thanh toán) và được tạo trước mốc 3 phút
+        List<Booking> expiredBookings = bookingRepository.findByStatusAndBookingDateBefore(BookingStatus.PROCESSING, cutoffTime);
+
+        if (!expiredBookings.isEmpty()) {
+            bookingRepository.deleteAll(expiredBookings);
+            System.out.println("Đã xóa " + expiredBookings.size() + " booking hết hạn thanh toán.");
         }
     }
 }
