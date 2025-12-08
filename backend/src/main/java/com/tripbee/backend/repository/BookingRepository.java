@@ -16,6 +16,8 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, String>, JpaSpecificationExecutor<Booking> {
 
+    List<Booking> findByStatusAndBookingDateBefore(BookingStatus status, LocalDateTime dateTime);
+
     List<Booking> findByUser_UserID(String userId);
 
     long countByUser_UserID(String userId);
