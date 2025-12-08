@@ -190,7 +190,7 @@ const CanceledBookingsScreen: React.FC = () => {
                         {/* Nút xem chi tiết */}
                       <button
                         type="button"
-                        onClick={() => navigate(`/admin/bookings/detail/${b.bookingID}`)}
+                        onClick={() => navigate(`/admin/manage-booking/detail/${b.bookingID}`)}
                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-500 text-blue-600 bg-white text-xs font-medium hover:bg-blue-50" >
                         Chi tiết đơn
                       </button>

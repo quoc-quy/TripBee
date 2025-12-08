@@ -46,6 +46,6 @@ export const bookingAdminApi = {
     http.post<void>(`/admin/bookings/${id}/cancel`),
   approveCancelBooking: (id: number) => {
     // Body để rỗng {}, vì backend chỉ cần ID trên URL
-    return http.put<any>(`admin/bookings/${id}/approve-cancel`, {});
+    return http.put<any>(`admin/bookings/${id}/cancel`, {});
   },
 };
