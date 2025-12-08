@@ -2,50 +2,62 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { bookingApi } from "../../apis/booking.api";
 import { formatCurrency } from "../../utils/utils";
-import { ArrowLeft, CheckCircle, Copy, CreditCard, Loader2, Home } from "lucide-react";
+import { ArrowLeft, CheckCircle, Copy, CreditCard, Loader2, Home, ClockAlert } from "lucide-react";
 import Button from "../../components/Button";
-import { useEffect } from "react";
-import { toast } from "react-toastify"; // Nếu dự án có react-toastify
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export default function PaymentScreen() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [isExpired, setIsExpired] = useState(false);
 
     // 1. Lấy thông tin Booking & TỰ ĐỘNG CẬP NHẬT (Polling)
     const { data: bookingData, isLoading } = useQuery({
         queryKey: ["booking", id],
         queryFn: () => bookingApi.getBookingById(id as string),
-        enabled: !!id,
-        // [QUAN TRỌNG] Logic Polling: Tự động gọi lại API mỗi 3 giây
+        enabled: !!id && !isExpired, // Ngừng polling nếu đã hết hạn
         refetchInterval: (query) => {
             const status = query.state.data?.data?.status;
-            // Nếu đã thanh toán xong (CONFIRMED) thì dừng polling
-            if (status === "CONFIRMED" || status === "CANCELLED") return false;
-            return 3000; // 3000ms = 3 giây
+            // Nếu CONFIRMED, CANCELLED hoặc đã hết hạn thì dừng
+            if (status === "CONFIRMED" || status === "CANCELLED" || isExpired) return false;
+            return 3000;
         },
     });
 
     const booking = bookingData?.data;
 
-    // Hiển thị thông báo khi thanh toán thành công
+    // 2. Logic ĐẾM NGƯỢC 3 PHÚT
     useEffect(() => {
-        if (booking?.status === "CONFIRMED") {
-            // Bạn có thể dùng toast hoặc alert tùy dự án
-            // toast.success("Thanh toán thành công!");
-        }
-    }, [booking?.status]);
+        if (!booking || booking.status === "CONFIRMED") return;
 
-    // 2. Cấu hình mã QR (VietQR / SePay)
-    const MY_BANK_ID = "MB"; // [TODO] Thay bằng ngân hàng của bạn (VD: MB, VCB)
-    const MY_ACCOUNT_NO = "05139667799"; // [TODO] Thay bằng số tài khoản thật
-    const TEMPLATE = "compact2";
+        // Tính thời gian hết hạn: Thời gian tạo + 3 phút
+        const bookingTime = new Date(booking.bookingDate).getTime(); // Đảm bảo bookingDate là chuỗi ISO chuẩn
+        const expireTime = bookingTime + 3 * 60 * 1000; // 3 phút = 180000ms
 
-    // Nội dung chuyển khoản = Booking ID (để Backend Webhook nhận diện)
-    const transferContent = booking?.bookingID;
-    const amount = booking?.finalAmount;
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = Math.floor((expireTime - now) / 1000);
 
-    // Link tạo QR động
-    const qrUrl = `https://img.vietqr.io/image/${MY_BANK_ID}-${MY_ACCOUNT_NO}-${TEMPLATE}.png?amount=${amount}&addInfo=${transferContent}&accountName=TRIPBEE`;
+            if (distance <= 0) {
+                setTimeLeft(0);
+                setIsExpired(true);
+                clearInterval(interval);
+            } else {
+                setTimeLeft(distance);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [booking]);
+
+    // Format giây thành mm:ss
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    };
 
     if (isLoading)
         return (
@@ -53,12 +65,32 @@ export default function PaymentScreen() {
                 <Loader2 className="animate-spin text-blue-600" size={40} />
             </div>
         );
-    if (!booking)
-        return (
-            <div className="text-center pt-20 text-lg text-gray-500">Không tìm thấy đơn hàng.</div>
-        );
 
-    // GIAO DIỆN KHI THANH TOÁN THÀNH CÔNG
+    // TRƯỜNG HỢP: Không tìm thấy hoặc Hết hạn
+    if (!booking || isExpired || booking.status === "CANCELLED") {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ClockAlert className="text-red-600 w-12 h-12" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Đơn hàng hết hạn!</h2>
+                    <p className="text-gray-600 mb-6">
+                        Thời gian thanh toán (3 phút) đã kết thúc. Đơn hàng <b>{id}</b> đã bị hủy tự
+                        động.
+                    </p>
+                    <Button
+                        onClick={() => navigate("/")}
+                        className="w-full bg-gray-600 hover:bg-gray-700"
+                    >
+                        <Home className="mr-2" size={18} /> Về trang chủ
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    // TRƯỜNG HỢP: Thanh toán thành công
     if (booking.status === "CONFIRMED") {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -81,7 +113,14 @@ export default function PaymentScreen() {
         );
     }
 
-    // GIAO DIỆN THANH TOÁN (QR CODE)
+    // Cấu hình QR
+    const MY_BANK_ID = "MB";
+    const MY_ACCOUNT_NO = "05139667799";
+    const TEMPLATE = "compact2";
+    const transferContent = booking.bookingID;
+    const amount = booking.finalAmount;
+    const qrUrl = `https://img.vietqr.io/image/${MY_BANK_ID}-${MY_ACCOUNT_NO}-${TEMPLATE}.png?amount=${amount}&addInfo=${transferContent}&accountName=TRIPBEE`;
+
     return (
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="container mx-auto px-4 max-w-5xl">
@@ -100,10 +139,16 @@ export default function PaymentScreen() {
                                 <CreditCard className="text-blue-600 mr-2" />
                                 Thông tin thanh toán
                             </h2>
-                            <p className="text-gray-600 mb-4">
-                                Vui lòng thanh toán để hoàn tất thủ tục đặt tour. Đơn hàng sẽ tự
-                                động xác nhận sau khi thanh toán.
-                            </p>
+
+                            {/* ĐỒNG HỒ ĐẾM NGƯỢC */}
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-center animate-pulse">
+                                <p className="text-red-700 font-medium mb-1">
+                                    Vui lòng thanh toán trong vòng
+                                </p>
+                                <div className="text-4xl font-bold text-red-600">
+                                    {formatTime(timeLeft)}
+                                </div>
+                            </div>
 
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
                                 <div className="flex justify-between mb-2">
@@ -114,7 +159,7 @@ export default function PaymentScreen() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Trạng thái:</span>
-                                    <span className="font-medium text-orange-600 bg-orange-100 px-2 py-0.5 rounded text-sm animate-pulse">
+                                    <span className="font-medium text-orange-600 bg-orange-100 px-2 py-0.5 rounded text-sm">
                                         Đang chờ thanh toán...
                                     </span>
                                 </div>
@@ -160,13 +205,7 @@ export default function PaymentScreen() {
                                     Quét mã QR để thanh toán
                                 </h3>
                             </div>
-
                             <div className="p-6 flex flex-col items-center">
-                                <p className="text-gray-500 text-sm mb-4 text-center">
-                                    Sử dụng App ngân hàng (Mobile Banking)
-                                </p>
-
-                                {/* Mã QR */}
                                 <div className="bg-white p-2 border rounded-lg shadow-inner mb-4">
                                     <img
                                         src={qrUrl}
@@ -174,19 +213,13 @@ export default function PaymentScreen() {
                                         className="w-full h-auto max-w-[250px] object-contain"
                                     />
                                 </div>
-
                                 <div className="text-center mb-6">
                                     <p className="text-gray-500 text-sm">Số tiền thanh toán</p>
                                     <p className="text-3xl font-bold text-blue-700">
                                         {formatCurrency(booking.finalAmount)}
                                     </p>
                                 </div>
-
-                                {/* Thông tin chuyển khoản thủ công */}
                                 <div className="w-full bg-gray-50 p-3 rounded-lg text-sm space-y-2 border border-dashed border-gray-300">
-                                    <p className="font-semibold text-gray-700 text-center mb-1">
-                                        Thông tin chuyển khoản:
-                                    </p>
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-500">Ngân hàng:</span>
                                         <span className="font-medium">{MY_BANK_ID}</span>
@@ -213,11 +246,10 @@ export default function PaymentScreen() {
                                         </span>
                                     </div>
                                 </div>
-
                                 <div className="mt-6 w-full text-center">
                                     <div className="flex items-center justify-center text-xs text-blue-600">
-                                        <Loader2 className="animate-spin mr-1" size={14} />
-                                        Đang chờ xác nhận thanh toán...
+                                        <Loader2 className="animate-spin mr-1" size={14} /> Đang chờ
+                                        xác nhận thanh toán...
                                     </div>
                                 </div>
                             </div>
