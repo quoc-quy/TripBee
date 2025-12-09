@@ -83,6 +83,13 @@ public class TourAdminController {
         );
     }
 
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Void> complete(@PathVariable String id) {
+        tourAdminService.completeTour(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 
 }

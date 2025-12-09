@@ -7,6 +7,7 @@ import com.tripbee.backend.admin.dto.response.tour.TourDetailAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourSimpleForParticipantsAdminResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourSimpleResponse;
 import com.tripbee.backend.model.*;
+import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.TourStatus;
 import com.tripbee.backend.repository.*;
 import jakarta.persistence.criteria.Join;
@@ -299,6 +300,27 @@ public Tour updateTour(String id, TourRequest dto) {
                 .map(TourSimpleForParticipantsAdminResponse::new)
                 .toList();
     }
+
+    @Transactional
+    public void completeTour(String id) {
+        Tour tour = tourRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tour not found"));
+
+        // Cập nhật trạng thái tour
+        tour.setStatus(TourStatus.COMPLETED);
+
+        // Cập nhật các booking liên quan
+        if (tour.getBookings() != null) {
+            for (Booking booking : tour.getBookings()) {
+                if (booking.getStatus() != BookingStatus.COMPLETED) {
+                    booking.setStatus(BookingStatus.COMPLETED);
+                }
+            }
+        }
+
+        tourRepository.save(tour);
+    }
+
 
 
 }

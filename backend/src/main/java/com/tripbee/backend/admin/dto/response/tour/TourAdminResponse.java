@@ -4,6 +4,7 @@ import com.tripbee.backend.model.Tour;
 import com.tripbee.backend.model.TourDestination;
 import com.tripbee.backend.model.enums.TourStatus;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public class TourAdminResponse {
@@ -16,6 +17,7 @@ public class TourAdminResponse {
     private String tourTypeName;
     private String destinationName;
     private TourStatus status;
+    private LocalDate endDate;
 
     public TourAdminResponse(Tour tour) {
         this.tourID = tour.getTourID();
@@ -25,6 +27,7 @@ public class TourAdminResponse {
         this.durationNights = tour.getDurationNights();
         this.priceAdult = tour.getPriceAdult();
         this.status = tour.getStatus();
+        this.endDate = tour.getEndDate();
 
         if (tour.getTourType() != null) {
             this.tourTypeName = tour.getTourType().getNameType();
@@ -49,4 +52,6 @@ public class TourAdminResponse {
     public String getTourTypeName() { return tourTypeName; }
     public String getDestinationName() { return destinationName; }
     public TourStatus getStatus() { return status; }
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
 }
