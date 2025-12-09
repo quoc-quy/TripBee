@@ -14,6 +14,8 @@ export const tourAdminApi = {
 
   updateTour: (id: string, data: any) => http.put(`/admin/tours/${id}`, data),
 
+  completeTour: (id: string) => http.put(`/admin/tours/${id}/complete`, null),
+
   uploadTourImage(file: File) {
     const formData = new FormData();
     formData.append("file", file);

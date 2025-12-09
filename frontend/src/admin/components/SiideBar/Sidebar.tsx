@@ -9,6 +9,7 @@ import {
     MessageSquare,
     MessageSquareMore,
     ListOrdered,
+    MapPin,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -19,13 +20,13 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activeMenu, setActiveMenu }) => {
     const menuItems = [
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "booking", label: "Quản lý Booking", icon: Calendar },
         { id: "tour", label: "Quản lý Tour", icon: Map },
+        { id: "tour-type", label: "Quản lý Loại tour", icon: ListOrdered },
+        { id: "destination", label: "Quản lý Điểm đến", icon: MapPin },
         { id: "promotion", label: "Quản lý Khuyến mãi", icon: Tag },
         { id: "user", label: "Quản lý Người dùng", icon: Users },
         { id: "review", label: "Quản lý Review", icon: MessageSquareMore },
-        { id: "destination", label: "Quản lý Điểm đến", icon: Map },
-        { id: "tour-type", label: "Quản lý Loại tour", icon: ListOrdered },
-        { id: "booking", label: "Quản lý Booking", icon: Calendar },
         // { id: "settings", label: "Cài đặt", icon: Settings },
         { id: "contact-message", label: "Tin nhắn liên hệ", icon: MessageSquare },
     ];

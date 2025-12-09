@@ -15,6 +15,7 @@ const statusLabelMap: Record<BookingStatus, string> = {
   CONFIRMED: "Đã xác nhận",
   COMPLETED: "Hoàn thành",
   CANCELED: "Đã hủy",
+  CANCELLATION_REQUESTED: "Chờ duyệt hủy"
 };
 
 const genderLabelMap: Record<string, string> = {

@@ -1,8 +1,8 @@
-  import React from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { tourAdminApi } from "../../apis/tourAdmin.api";
-import { Edit2, Eye, Trash2 } from "lucide-react";
+import { CheckCircle, Edit2, Eye, Trash2 } from "lucide-react";
 import { omitBy, isUndefined } from "lodash";
 import { tourTypeApi } from "../../../apis/tourType.api";
 import type { TourListAdminParams } from "../../../types/tour";
@@ -52,6 +52,11 @@ export default function ManageTourScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParams = parseSearchParams(searchParams);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [selectedTour, setSelectedTour] = useState<any | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // === Lấy danh sách tour admin ===
   const { data, isLoading } = useQuery({
@@ -82,6 +87,45 @@ export default function ManageTourScreen() {
     setSearchParams(newParams as any);
   };
 
+  // hiển thị nút xác nhận hoàn thành
+  const today = React.useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const canCompleteTour = (tour: any) => {
+    if (!tour.endDate) return false;
+    const end = new Date(tour.endDate);
+    end.setHours(0, 0, 0, 0);
+
+    // chỉ cho complete khi đã kết thúc và chưa COMPLETED/CANCELED
+    return (
+      end < today &&
+      tour.status !== "COMPLETED" &&
+      tour.status !== "CANCELED"
+    );
+  };
+
+  // mảng tour đã kết thúc + sort
+  const displayTours = React.useMemo(() => {
+    if (!tours || tours.length === 0) return [];
+
+    const ended = tours
+      .filter((t: any) => canCompleteTour(t))
+      .sort((a: any, b: any) => {
+        const da = new Date(a.endDate).getTime();
+        const db = new Date(b.endDate).getTime();
+        return da - db; // tăng dần
+      });
+
+    if (ended.length === 0) return tours;
+
+    const others = tours.filter((t: any) => !canCompleteTour(t));
+    return [...ended, ...others];
+  }, [tours, today]);
+
+
   const handleCreate = () => {
     navigate("/admin/tours/new"); // đường dẫn form tạo mới
   };
@@ -93,6 +137,30 @@ export default function ManageTourScreen() {
   const handleDetail = (tourId: string) => {
     navigate(`/admin/tours/details/${tourId}`); // hoặc route detail mà bạn đang dùng
   };
+
+  // xác nhận hoàn thành
+  const handleOpenConfirm = (tour: any) => {
+    setSelectedTour(tour);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!selectedTour) return;
+    try {
+      setIsCompleting(true);
+      await tourAdminApi.completeTour(selectedTour.tourID);
+      setIsConfirmOpen(false);
+      setSelectedTour(null);
+      // refetch danh sách
+      await queryClient.invalidateQueries({ queryKey: ["admin-tours"] });
+    } catch (e) {
+      console.error(e);
+      // nếu muốn có thể thêm toast ở đây
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
 
 
   return (
@@ -202,7 +270,7 @@ export default function ManageTourScreen() {
                 Giá
               </th>
               <th className="px-5 py-3 text-center font-bold text-black">
-                Thời gian
+                Ngày kết thúc
               </th>
               <th className="px-5 py-3 text-center font-bold text-black">
                 Trạng thái
@@ -224,7 +292,7 @@ export default function ManageTourScreen() {
                 </td>
               </tr>
             ) : (
-              tours.map((tour: any) => {
+              displayTours.map((tour: any) => {
                 const label =
                   STATUS_LABELS[tour.status] || tour.status;
                 const color =
@@ -261,8 +329,9 @@ export default function ManageTourScreen() {
                       </div>
                     </td>
                     <td className="px-5 py-4 text-center text-sm">
-                      {tour.durationDays} ngày{" "}
-                      {tour.durationNights} đêm
+                      {tour.endDate
+                        ? new Date(tour.endDate).toLocaleDateString("vi-VN")
+                        : "/"}
                     </td>
                     <td className="px-5 py-4 text-center text-sm">
                       <span
@@ -275,7 +344,7 @@ export default function ManageTourScreen() {
                     {/* Xem chi tiết */}
                     <td className="px-5 py-4 text-center text-sm">
                       <div className="inline-flex gap-2">
-                        
+
                         <button
                           onClick={() => handleDetail(tour.tourID)}
                           className="border border-gray-400 text-gray-600 rounded-lg p-2 hover:bg-gray-50"
@@ -294,10 +363,17 @@ export default function ManageTourScreen() {
                           </button>
                         )}
 
-                        {/* Xóa (tùy rule, nếu cũng muốn khóa khi COMPLETED thì thêm điều kiện tương tự) */}
-                        {/* <button className="border border-red-500 text-red-500 rounded-lg p-2 hover:bg-red-50">
-                          <Trash2 size={16} />
-                        </button> */}
+                        {/* Chỉ hiện nút sửa nếu chưa COMPLETED */}
+                        {canCompleteTour(tour) && (
+                          <button
+                            onClick={() => handleOpenConfirm(tour)}
+                            className="border border-emerald-500 text-emerald-600 rounded-lg p-2 hover:bg-emerald-50"
+                            title="Xác nhận tour đã hoàn thành"
+                          >
+                            <CheckCircle size={16} />
+                          </button>
+                        )}
+
                       </div>
                     </td>
 
@@ -335,6 +411,47 @@ export default function ManageTourScreen() {
           </button>
         </div>
       )}
+
+      {/* model xác nhận hoàn thành  */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-semibold mb-3">
+              Xác nhận hoàn thành tour
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Bạn có chắc chắn muốn xác nhận tour{" "}
+              <span className="font-semibold">
+                "{selectedTour?.title}"
+              </span>{" "}
+              đã <span className="font-semibold">hoàn thành</span>?{" "}
+         
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={isCompleting}
+                onClick={() => {
+                  if (isCompleting) return;
+                  setIsConfirmOpen(false);
+                  setSelectedTour(null);
+                }}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmComplete}
+                disabled={isCompleting}
+                className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {isCompleting ? "Đang cập nhật..." : "Xác nhận"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

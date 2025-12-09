@@ -13,6 +13,7 @@ export interface TourAdmin {
   tourTypeName: string;
   destinationName: string;
   status: string;
+  endDate: string;
 }
 
 export interface TourListAdmin {

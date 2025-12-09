@@ -66,6 +66,7 @@ const statusLabelMap: Record<BookingStatus, string> = {
   CONFIRMED: "Đã xác nhận",
   COMPLETED: "Hoàn thành",
   CANCELED: "Đã hủy",
+  CANCELLATION_REQUESTED: "Chờ duyệt hủy"
 };
 
 const statusBadgeClassMap: Record<BookingStatus, string> = {
@@ -73,6 +74,7 @@ const statusBadgeClassMap: Record<BookingStatus, string> = {
   CONFIRMED: "bg-green-50 text-green-700 border border-green-200",
   COMPLETED: "bg-blue-50 text-blue-700 border border-blue-200",
   CANCELED: "bg-red-50 text-red-600 border border-red-200",
+  CANCELLATION_REQUESTED: "bg-red-50 text-red-600 border border-red-200",
 };
 
 const paymentLabelMap: Record<PaymentStatus, string> = {

@@ -27,6 +27,10 @@ const CanceledBookingsScreen: React.FC = () => {
   const [page, setPage] = React.useState(0);
   const size = 10;
 
+  const [selectedBooking, setSelectedBooking] = React.useState<BookingAdmin | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-canceled-bookings", page, size],
     queryFn: async () => {
@@ -44,22 +48,28 @@ const CanceledBookingsScreen: React.FC = () => {
     refetch();
   };
 
-  const handleCancel = async (id: string) => {
-    const ok = window.confirm(
-      "Bạn có chắc chắn muốn duyệt hủy booking này không? Khách sẽ nhận email xác nhận hủy tour."
-    );
-    if (!ok) return;
+  const handleOpenCancelModal = (booking: BookingAdmin) => {
+    setSelectedBooking(booking);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!selectedBooking) return;
 
     try {
-      await bookingAdminApi.approveCancel(id);
-      alert("Đã duyệt hủy booking thành công và gửi email cho khách.");
+      setIsProcessing(true);
+      await bookingAdminApi.approveCancel(selectedBooking.bookingID);
+      setIsConfirmOpen(false);
+      setSelectedBooking(null);
       refetch();
     } catch (error) {
       console.error(error);
       alert("Xử lý thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsProcessing(false);
     }
-
   };
+
 
   const handlePageChange = (nextPage: number) => {
     if (nextPage < 0 || nextPage >= totalPages) return;
@@ -187,23 +197,23 @@ const CanceledBookingsScreen: React.FC = () => {
 
                   <td className="px-5 py-4 align-top text-center">
                     <div className="flex items-center justify-center gap-2">
-                        {/* Nút xem chi tiết */}
+                      {/* Nút xem chi tiết */}
                       <button
                         type="button"
                         onClick={() => navigate(`/admin/manage-booking/detail/${b.bookingID}`)}
-                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-500 text-blue-600 bg-white text-xs font-medium hover:bg-blue-50" >
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-500 text-blue-600 bg-white text-xs font-medium hover:bg-blue-50" >
                         Chi tiết đơn
                       </button>
                       {/* Nút duyệt hủy */}
                       <button
                         type="button"
-                        onClick={() => handleCancel(b.bookingID)}
+                        onClick={() => handleOpenCancelModal(b)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-medium hover:bg-red-600 border border-transparent"
                       >
                         Hủy
                       </button>
 
-                    
+
                     </div>
                   </td>
 
@@ -238,6 +248,53 @@ const CanceledBookingsScreen: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* xác nhận hủy  */}
+      {/* Modal xác nhận hủy booking */}
+      {isConfirmOpen && selectedBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              Xác nhận duyệt hủy booking
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Bạn có chắc chắn muốn{" "}
+              <span className="font-semibold text-red-600">
+                duyệt hủy booking #{selectedBooking.bookingID}
+              </span>{" "}
+              cho khách{" "}
+              <span className="font-semibold">
+                {selectedBooking.customerName}
+              </span>{" "}
+              không?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={() => {
+                  if (isProcessing) return;
+                  setIsConfirmOpen(false);
+                  setSelectedBooking(null);
+                }}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 disabled:opacity-60"
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                disabled={isProcessing}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-60"
+              >
+                {isProcessing ? "Đang xử lý..." : "Xác nhận duyệt hủy"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
