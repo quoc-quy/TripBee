@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, FileDown } from "lucide-react";
+import { RefreshCw, FileDown, ArrowLeft } from "lucide-react";
 import Select from "react-select";
 
 import { tourAdminApi } from "../../apis/tourAdmin.api";
@@ -173,6 +173,12 @@ const TourParticipantsScreen: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/admin/manage-booking")}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-50 border border-gray-200"
+          >
+            <ArrowLeft size={16} />
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Xem khách theo tour
@@ -278,8 +284,7 @@ const TourParticipantsScreen: React.FC = () => {
           </div>
         ) : !selectedTourId ? (
           <div className="p-6 text-center text-gray-500 text-sm">
-            Vui lòng chọn tour (tên + radio nếu có nhiều chuyến) để xem danh
-            sách khách.
+            Vui lòng chọn tour để xem danh sách
           </div>
         ) : tourParticipants && tourParticipants.participants.length === 0 ? (
           <div className="p-6 text-center text-gray-500 text-sm">

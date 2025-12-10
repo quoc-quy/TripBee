@@ -11,6 +11,7 @@ import type { PromotionSimple } from "@/admin/types/promotionAdmin";
 import type { ItineraryAdmin } from "@/admin/types/itineraryAdmin";
 import type { SimpleTour, TourDetailAdmin } from "@/admin/types/tourAdmin";
 import Select from "react-select";
+import { ArrowLeft } from "lucide-react";
 
 // ==== Types local ====
 
@@ -451,62 +452,6 @@ export default function FormTourScreen() {
   };
 
 
-  // ==== Validate & Submit ====
-
-  // const validate = (): FormErrors => {
-  //   const newErrors: FormErrors = {};
-
-  //   if (!form.title.trim()) newErrors.title = "Không được để trống";
-  //   if (!form.description.trim())
-  //     newErrors.description = "Không được để trống";
-
-  //   if (!form.tourTypeId) newErrors.tourTypeId = "Chọn loại tour";
-  //   if (!form.region) newErrors.region = "Chọn miền";
-
-  //   if (selectedDestinations.length === 0) {
-  //     newErrors.destinationId = "Chọn ít nhất một điểm đến";
-  //   }
-
-  //   if (itineraries.length === 0) {
-  //     newErrors.itineraries = "Cần thêm ít nhất một ngày lịch trình.";
-  //   }
-
-  //   const checkPositive = (
-  //     value: number | "",
-  //     field: keyof TourForm,
-  //     label: string
-  //   ) => {
-  //     if (value === "" || Number(value) <= 0) {
-  //       newErrors[field] = `${label} phải > 0`;
-  //     }
-  //   };
-
-  //   checkPositive(form.priceAdult, "priceAdult", "Giá người lớn");
-  //   checkPositive(form.priceChild, "priceChild", "Giá trẻ em");
-  //   checkPositive(form.minGuests, "minGuests", "Số lượng tối thiểu");
-  //   checkPositive(form.maxGuests, "maxGuests", "Số lượng tối đa");
-  //   checkPositive(form.durationDays, "durationDays", "Số ngày");
-  //   checkPositive(form.durationNights, "durationNights", "Số đêm");
-
-  //   if (!form.startDate) newErrors.startDate = "Chọn ngày khởi hành";
-
-  //   if (!form.endDate) {
-  //     newErrors.endDate = "Chọn ngày kết thúc";
-  //   } else if (form.startDate) {
-  //     const start = new Date(form.startDate);
-  //     const end = new Date(form.endDate);
-  //     if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end <= start) {
-  //       newErrors.endDate = "Ngày kết thúc phải sau ngày khởi hành";
-  //     }
-  //   }
-
-  //   if (!form.imageURL.trim()) {
-  //     newErrors.imageURL = "Không được để trống";
-  //   }
-
-  //   return newErrors;
-  // };
-
   const validate = (): FormErrors => {
     const newErrors: FormErrors = {};
 
@@ -650,7 +595,13 @@ export default function FormTourScreen() {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen text-base">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-3 mb-7">
+        <button
+          onClick={() => navigate("/admin/manage-tour")}
+          className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-50 border border-gray-200"
+        >
+          <ArrowLeft size={16} />
+        </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
             {isEdit ? "Chỉnh sửa tour" : "Tạo tour mới"}

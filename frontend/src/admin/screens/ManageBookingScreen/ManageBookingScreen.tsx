@@ -1,5 +1,5 @@
 import React from "react";
-import { useSearchParams, useNavigate  } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { omitBy, isUndefined } from "lodash";
 import { Eye, RefreshCw, FileDown, XCircle, ListFilter } from "lucide-react";
@@ -22,20 +22,47 @@ const toDateInputValue = (d: Date) => {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 };
+
 type ParsedBookingParams = {
   page: number;
   size: number;
   search?: string;
   status?: BookingStatus;
   sort?: BookingAdminListParams["sort"];
-  fromDate: string;
-  toDate: string;
+  fromDate?: string;
+  toDate?: string;
 };
 
-const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
-  const today = new Date();
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+// const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
+//   const today = new Date();
+//   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
+//   const page = sp.get("page") ? Number(sp.get("page")) : 0;
+//   const size = sp.get("size") ? Number(sp.get("size")) : 10;
+
+//   const search = sp.get("search") || undefined;
+//   const status = (sp.get("status") || undefined) as BookingStatus | undefined;
+//   const sort = (sp.get("sort") || undefined) as
+//     | BookingAdminListParams["sort"]
+//     | undefined;
+
+//   const fromDate = sp.get("fromDate") || toDateInputValue(firstOfMonth);
+//   const toDate = sp.get("toDate") || toDateInputValue(today);
+
+//   const params: ParsedBookingParams = {
+//     page,
+//     size,
+//     search,
+//     status,
+//     sort,
+//     fromDate,
+//     toDate,
+//   };
+
+//   return omitBy(params, isUndefined) as ParsedBookingParams;
+// };
+
+const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
   const page = sp.get("page") ? Number(sp.get("page")) : 0;
   const size = sp.get("size") ? Number(sp.get("size")) : 10;
 
@@ -45,8 +72,8 @@ const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
     | BookingAdminListParams["sort"]
     | undefined;
 
-  const fromDate = sp.get("fromDate") || toDateInputValue(firstOfMonth);
-  const toDate = sp.get("toDate") || toDateInputValue(today);
+  const fromDate = sp.get("fromDate") || undefined;
+  const toDate = sp.get("toDate") || undefined;
 
   const params: ParsedBookingParams = {
     page,
@@ -137,25 +164,23 @@ const ManageBookingScreen: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    const today = new Date();
-    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    setSearchParams({
-      page: "0",
-      size: String(queryParams.size || 10),
-      fromDate: toDateInputValue(firstOfMonth),
-      toDate: toDateInputValue(today),
+    updateParams({
+      page: 0,
+      fromDate: "",  // sẽ bị xóa khỏi URL
+      toDate: "",    // sẽ bị xóa khỏi URL
     });
   };
 
+
   const handleGetCustomerByTour = async () => {
-   navigate("/admin/manage-booking/tour-participants");
+    navigate("/admin/manage-booking/tour-participants");
   };
 
   const handleProcessCancel = async () => {
     navigate("/admin/manage-booking/canceled");
   };
 
-   const handleViewBooking = (id: string) => {
+  const handleViewBooking = (id: string) => {
     navigate(`/admin/manage-booking/detail/${id}`);
   };
 
@@ -185,7 +210,7 @@ const ManageBookingScreen: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500 text-red-600 text-sm font-medium bg-white hover:bg-red-50 transition"
           >
             <XCircle size={16} />
-            Xử lý hủy tour
+            Xử lý hủy booking
           </button>
 
           <button
@@ -232,10 +257,11 @@ const ManageBookingScreen: React.FC = () => {
       {/* Filter bar */}
       {/* Khung 1: Tìm kiếm + trạng thái + sắp xếp */}
       <div className="bg-white shadow-md rounded-xl p-5 flex flex-wrap items-center gap-4 mb-4">
-        <input
+        {/* <input
           type="text"
           placeholder="Tìm kiếm theo mã booking, tên khách hàng hoặc tour..."
-          defaultValue={queryParams.search || ""}
+          value={queryParams.search || ""} 
+          defaultValue={""}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               updateParams({
@@ -245,7 +271,20 @@ const ManageBookingScreen: React.FC = () => {
             }
           }}
           className="border border-gray-300 rounded-lg px-4 py-2 w-full lg:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        /> */}
+        <input
+  type="text"
+  placeholder="Tìm kiếm theo mã booking, tên khách hàng hoặc tour..."
+  value={queryParams.search || ""} // controlled input
+  onChange={(e) => {
+    updateParams({
+      search: e.target.value || undefined,
+      page: 0,
+    });
+  }}
+  className="border border-gray-300 rounded-lg px-4 py-2 w-full lg:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+/>
+
 
         {/* status */}
         <select
@@ -290,26 +329,30 @@ const ManageBookingScreen: React.FC = () => {
       <div className="bg-white shadow-md rounded-xl p-5 flex flex-wrap items-center gap-4 mb-6 text-xs text-gray-500">
         <div className="flex flex-col">
           <span className="mb-1">Từ ngày</span>
+
           <input
             type="date"
-            value={queryParams.fromDate}
+            value={queryParams.fromDate || ""}   // <- thêm || ""
             onChange={(e) =>
-              updateParams({ fromDate: e.target.value, page: 0 })
+              updateParams({ fromDate: e.target.value || undefined, page: 0 })
             }
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
           />
+
         </div>
 
         <div className="flex flex-col">
           <span className="mb-1">Đến ngày</span>
+
           <input
             type="date"
-            value={queryParams.toDate}
+            value={queryParams.toDate || ""}
             onChange={(e) =>
-              updateParams({ toDate: e.target.value, page: 0 })
+              updateParams({ toDate: e.target.value || undefined, page: 0 })
             }
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
           />
+
         </div>
       </div>
 

@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import type { BookingAdmin } from "../../types/bookingAdmin";
 import type { PaymentStatus } from "@/admin/types/paymentStatus";
 import { bookingAdminApi } from "../../apis/bookingAdmin.api";
-import { RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 
 // helper
 const formatCurrency = (value: number) =>
@@ -27,9 +27,13 @@ const CanceledBookingsScreen: React.FC = () => {
   const [page, setPage] = React.useState(0);
   const size = 10;
 
-  const [selectedBooking, setSelectedBooking] = React.useState<BookingAdmin | null>(null);
-  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<BookingAdmin | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [action, setAction] = useState<"CANCEL" | "KEEP" | null>(null);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-canceled-bookings", page, size],
@@ -48,19 +52,31 @@ const CanceledBookingsScreen: React.FC = () => {
     refetch();
   };
 
-  const handleOpenCancelModal = (booking: BookingAdmin) => {
+  const handleOpenActionModal = (booking: BookingAdmin, type: "CANCEL" | "KEEP") => {
     setSelectedBooking(booking);
+    setAction(type);
     setIsConfirmOpen(true);
   };
 
-  const handleConfirmCancel = async () => {
-    if (!selectedBooking) return;
+  const handleConfirmAction = async () => {
+    if (!selectedBooking || !action) return;
 
     try {
       setIsProcessing(true);
-      await bookingAdminApi.approveCancel(selectedBooking.bookingID);
+
+      if (action === "CANCEL") {
+        await bookingAdminApi.approveCancel(selectedBooking.bookingID);
+        setSuccessMessage(`Đã duyệt hủy booking #${selectedBooking.bookingID} thành công.`);
+      } else if (action === "KEEP") {
+        await bookingAdminApi.keepBooking(selectedBooking.bookingID);
+        setSuccessMessage(`Đã KHÔNG hủy booking #${selectedBooking.bookingID}.`);
+      }
+
+      setIsSuccessOpen(true); // mở modal thành công
       setIsConfirmOpen(false);
       setSelectedBooking(null);
+      setAction(null);
+
       refetch();
     } catch (error) {
       console.error(error);
@@ -71,16 +87,27 @@ const CanceledBookingsScreen: React.FC = () => {
   };
 
 
+
+
   const handlePageChange = (nextPage: number) => {
     if (nextPage < 0 || nextPage >= totalPages) return;
     setPage(nextPage);
   };
+
+    
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
+
+         <button
+            onClick={() => navigate("/admin/manage-booking")}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-50 border border-gray-200"
+          >
+            <ArrowLeft size={16} />
+          </button>
 
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -204,10 +231,20 @@ const CanceledBookingsScreen: React.FC = () => {
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-500 text-blue-600 bg-white text-xs font-medium hover:bg-blue-50" >
                         Chi tiết đơn
                       </button>
+
+                      {/* Nút KHÔNG hủy */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenActionModal(b, "KEEP")}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium hover:bg-green-600 border border-transparent"
+                      >
+                        Không hủy
+                      </button>
+
                       {/* Nút duyệt hủy */}
                       <button
                         type="button"
-                        onClick={() => handleOpenCancelModal(b)}
+                        onClick={() => handleOpenActionModal(b, "CANCEL")}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-medium hover:bg-red-600 border border-transparent"
                       >
                         Hủy
@@ -255,12 +292,16 @@ const CanceledBookingsScreen: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              Xác nhận duyệt hủy booking
+              {action === "CANCEL"
+                ? "Xác nhận duyệt hủy booking"
+                : "Xác nhận KHÔNG hủy booking"}
             </h3>
+
             <p className="text-sm text-gray-600 mb-4">
               Bạn có chắc chắn muốn{" "}
               <span className="font-semibold text-red-600">
-                duyệt hủy booking #{selectedBooking.bookingID}
+                {action === "CANCEL" ? "duyệt hủy" : "KHÔNG hủy"} booking #
+                {selectedBooking.bookingID}
               </span>{" "}
               cho khách{" "}
               <span className="font-semibold">
@@ -277,6 +318,7 @@ const CanceledBookingsScreen: React.FC = () => {
                   if (isProcessing) return;
                   setIsConfirmOpen(false);
                   setSelectedBooking(null);
+                  setAction(null);
                 }}
                 className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 disabled:opacity-60"
               >
@@ -284,16 +326,46 @@ const CanceledBookingsScreen: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={handleConfirmCancel}
+                onClick={handleConfirmAction}
                 disabled={isProcessing}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-60"
+                className={`px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:opacity-60 ${action === "CANCEL" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+                  }`}
               >
-                {isProcessing ? "Đang xử lý..." : "Xác nhận duyệt hủy"}
+                {isProcessing
+                  ? "Đang xử lý..."
+                  : action === "CANCEL"
+                    ? "Xác nhận duyệt hủy"
+                    : "Xác nhận KHÔNG hủy"}
               </button>
             </div>
           </div>
         </div>
+      )}{/* Modal thông báo thành công */}
+      {isSuccessOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+
+            <h3 className="text-lg font-semibold text-green-600 mb-3">
+              Thao tác thành công
+            </h3>
+
+            <p className="text-sm text-gray-700 mb-6">
+              {successMessage}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setIsSuccessOpen(false)}
+              className="px-4 py-2 w-full rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+            >
+              Đóng
+            </button>
+
+          </div>
+        </div>
       )}
+
+
 
     </div>
   );

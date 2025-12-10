@@ -72,7 +72,12 @@ export default function TourDetailAdminScreen() {
     <div className="p-8 bg-gray-50 min-h-screen text-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        
+        <button
+          onClick={() => navigate("/admin/manage-tour")}
+          className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-50 border border-gray-200"
+        >
+          <ArrowLeft size={16} />
+        </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
             Chi tiết tour

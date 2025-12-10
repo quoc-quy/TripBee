@@ -162,22 +162,15 @@ export default function ManageTourScreen() {
         }
     };
 
-    // FIX: Xử lý khi gõ vào ô tìm kiếm
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchValue(value);
 
-        // Nếu xóa rỗng, trigger tìm kiếm ngay lập tức
-        if (value === "") {
-            updateParams({ search: "", page: 0 });
-        }
-    };
-
-    // FIX: Xử lý khi nhấn Enter
-    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            updateParams({ search: searchValue, page: 0 });
-        }
+        // Cập nhật query params mỗi lần gõ
+        updateParams({
+            search: value || undefined, // nếu rỗng thì bỏ param
+            page: 0,
+        });
     };
 
     return (
@@ -202,9 +195,8 @@ export default function ManageTourScreen() {
                 <input
                     type="text"
                     placeholder="Tìm kiếm tour..."
-                    value={searchValue} // FIX: Dùng value thay vì defaultValue
-                    onChange={handleSearchChange} // FIX: Thêm sự kiện onChange
-                    onKeyDown={handleSearchKeyDown} // FIX: Tách hàm onKeyDown
+                    value={searchValue} 
+                    onChange={handleSearchChange} 
                     className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
 

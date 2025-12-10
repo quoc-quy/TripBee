@@ -52,12 +52,12 @@ const TourTypeDetailAdminScreen: React.FC = () => {
     <div className="p-8 bg-gray-50 min-h-screen text-sm">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          {/* <button
+          <button
             onClick={handleBack}
             className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-50 border border-gray-200"
           >
             <ArrowLeft size={16} />
-          </button> */}
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               {tourType.nameType}

@@ -48,4 +48,6 @@ export const bookingAdminApi = {
     // Body để rỗng {}, vì backend chỉ cần ID trên URL
     return http.put<any>(`admin/bookings/${id}/cancel`, {});
   },
+  keepBooking: (id: string) =>
+    http.put<void>(`/admin/bookings/${id}/keep`, {}),
 };

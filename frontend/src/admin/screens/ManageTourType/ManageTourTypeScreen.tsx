@@ -39,6 +39,12 @@ const ManageTourTypeScreen: React.FC = () => {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  const [searchValue, setSearchValue] = useState(queryParams.search || "");
+
+  useEffect(() => {
+    setSearchValue(queryParams.search || "");
+  }, [queryParams.search]);
+
   const {
     data,
     isLoading,
@@ -116,17 +122,20 @@ const ManageTourTypeScreen: React.FC = () => {
         <input
           type="text"
           placeholder="Tìm theo tên loại tour..."
-          defaultValue={queryParams.search || ""}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              updateParams({
-                search: e.currentTarget.value || undefined,
-                page: 0,
-              });
-            }
+          value={searchValue}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchValue(value);
+
+            // cập nhật query param mỗi lần gõ
+            updateParams({
+              search: value || undefined, // rỗng thì bỏ param
+              page: 0,
+            });
           }}
           className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
         />
+
       </div>
 
       {/* Bảng dữ liệu */}
@@ -440,8 +449,8 @@ const TourTypeFormModal: React.FC<TourTypeFormModalProps> = ({
                 {submitting
                   ? "Đang lưu..."
                   : isEdit
-                  ? "Lưu thay đổi"
-                  : "Tạo loại tour"}
+                    ? "Lưu thay đổi"
+                    : "Tạo loại tour"}
               </button>
             </div>
           </form>

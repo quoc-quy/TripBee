@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { omitBy, isUndefined } from "lodash";
@@ -37,6 +37,12 @@ const ManageDestinationScreen: React.FC = () => {
   const navigate = useNavigate();
   const queryParams = parseSearchParams(searchParams);
 
+  const [searchValue, setSearchValue] = useState(queryParams.search || "");
+  // đồng bộ khi URL thay đổi (Back/Forward)
+  useEffect(() => {
+    setSearchValue(queryParams.search || "");
+  }, [queryParams.search]);
+
   // Danh sách điểm đến: phân trang + filter
   const { data, isLoading } = useQuery({
     queryKey: ["admin-destinations", queryParams],
@@ -62,12 +68,12 @@ const ManageDestinationScreen: React.FC = () => {
     () =>
       allForFilter
         ? Array.from(
-            new Set(
-              allForFilter
-                .map((d) => d.region)
-                .filter((r): r is string => Boolean(r && r.trim()))
-            )
+          new Set(
+            allForFilter
+              .map((d) => d.region)
+              .filter((r): r is string => Boolean(r && r.trim()))
           )
+        )
         : [],
     [allForFilter]
   );
@@ -76,12 +82,12 @@ const ManageDestinationScreen: React.FC = () => {
     () =>
       allForFilter
         ? Array.from(
-            new Set(
-              allForFilter
-                .map((d) => d.location)
-                .filter((l): l is string => Boolean(l && l.trim()))
-            )
+          new Set(
+            allForFilter
+              .map((d) => d.location)
+              .filter((l): l is string => Boolean(l && l.trim()))
           )
+        )
         : [],
     [allForFilter]
   );
@@ -104,15 +110,15 @@ const ManageDestinationScreen: React.FC = () => {
 
   // Thao tác
   const handleDetail = (id: string) => {
-    navigate(`/admin/manage-destination/detail/${id}`); 
+    navigate(`/admin/manage-destination/detail/${id}`);
   };
 
   const handleEdit = (id: string) => {
-    navigate(`/admin/manage-destination/${id}/edit`); 
+    navigate(`/admin/manage-destination/${id}/edit`);
   };
 
-    const handleCreate = () => {
-    navigate("/admin/manage-destination/new"); 
+  const handleCreate = () => {
+    navigate("/admin/manage-destination/new");
   };
 
   return (
@@ -135,20 +141,24 @@ const ManageDestinationScreen: React.FC = () => {
       {/* Bộ lọc */}
       <div className="bg-white shadow-md rounded-xl p-5 flex flex-wrap items-center gap-4 mb-6">
         {/* Tìm kiếm theo tên điểm đến */}
+
         <input
           type="text"
           placeholder="Tìm kiếm theo tên điểm đến..."
-          defaultValue={queryParams.search || ""}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              updateParams({
-                search: e.currentTarget.value || undefined,
-                page: 0,
-              });
-            }
+          value={searchValue}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchValue(value);
+
+            // cập nhật query param mỗi lần gõ
+            updateParams({
+              search: value || undefined, // rỗng thì bỏ param
+              page: 0,
+            });
           }}
           className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
+
 
         {/* Lọc theo khu vực (miền Bắc / Trung / Nam / ...) */}
         <select
@@ -231,20 +241,20 @@ const ManageDestinationScreen: React.FC = () => {
                     {des.nameDes}
                   </td> */}
                   <td className="px-5 py-4">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={des.imageUrl}
-                          alt={des.nameDes}
-                          className="w-20 h-20 rounded-xl object-cover"
-                        />
-                        <div>
-                          <p className="font-semibold text-gray-900 text-sm">
-                            {des.nameDes}
-                          </p>
-                          
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={des.imageUrl}
+                        alt={des.nameDes}
+                        className="w-20 h-20 rounded-xl object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">
+                          {des.nameDes}
+                        </p>
+
                       </div>
-                    </td>
+                    </div>
+                  </td>
                   <td className="px-5 py-4 text-sm">
                     {des.location || "-"}
                   </td>
@@ -252,7 +262,7 @@ const ManageDestinationScreen: React.FC = () => {
                     {des.region || "-"}
                   </td>
 
-                   {/* Xem chi tiết */}
+                  {/* Xem chi tiết */}
                   <td className="px-5 py-4 text-center text-sm">
                     <div className="inline-flex gap-2">
                       <button

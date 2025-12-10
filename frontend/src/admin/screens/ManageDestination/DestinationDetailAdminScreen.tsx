@@ -59,6 +59,12 @@ const DestinationDetailAdminScreen: React.FC = () => {
       {/* Back + tiêu đề */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/admin/manage-destination")}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-50 border border-gray-200"
+          >
+            <ArrowLeft size={16} />
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               {destination.nameDes}
