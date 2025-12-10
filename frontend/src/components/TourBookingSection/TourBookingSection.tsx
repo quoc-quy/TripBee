@@ -1,6 +1,6 @@
 // frontend-demo/src/components/TourBookingSection/TourBookingSection.tsx
 
-import { useEffect, useState, useContext } from "react"; // (1) Import useContext
+import { useEffect, useState, useContext } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Calendar, Users, DollarSign, Heart } from "lucide-react";
 import type { TourDetails } from "../../types/tour";
@@ -8,7 +8,6 @@ import { formatCurrency } from "../../utils/utils";
 import Button from "../../components/Button";
 import BookingModal from "../BookingModal";
 
-// (2) Import các thư viện cần thiết cho chức năng Favorite
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { AppContext } from "../../contexts/app.context";
@@ -26,12 +25,10 @@ interface BookingFormData {
 }
 
 export default function TourBookingSection({ tour }: Props) {
-    // (3) Lấy context và queryClient
     const { isAuthenticated, favoriteIds, addFavoriteId, removeFavoriteId } =
         useContext(AppContext);
     const queryClient = useQueryClient();
 
-    // (4) Kiểm tra xem tour này đã được like chưa
     const isLiked = favoriteIds.has(tour.tourID);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,24 +57,31 @@ export default function TourBookingSection({ tour }: Props) {
         setValue("totalPrice", total);
     }, [adults, children, tour.finalPriceAdult, tour.finalPriceChild, setValue]);
 
+    // --- PHẦN SỬA ĐỔI CHÍNH Ở ĐÂY ---
     const handleOpenBookingModal = () => {
+        // 1. Kiểm tra đăng nhập trước tiên
+        if (!isAuthenticated) {
+            toast.info("Bạn vui lòng đăng nhập để đặt tour nhé!");
+            return;
+        }
+
+        // 2. Sau đó mới kiểm tra dữ liệu form
         if (errors.adults || errors.children) {
             return;
         }
+
         setIsModalOpen(true);
     };
+    // --------------------------------
 
-    // (5) Định nghĩa Mutation Thêm yêu thích
     const addFavoriteMutation = useMutation({
         mutationFn: favoriteApi.addFavorite,
     });
 
-    // (6) Định nghĩa Mutation Xóa yêu thích
     const removeFavoriteMutation = useMutation({
         mutationFn: favoriteApi.removeFavorite,
     });
 
-    // (7) Hàm xử lý khi nhấn nút Yêu thích
     const handleFavorite = () => {
         if (!isAuthenticated) {
             toast.info("Bạn cần đăng nhập để thực hiện chức năng này");
@@ -85,7 +89,6 @@ export default function TourBookingSection({ tour }: Props) {
         }
 
         if (isLiked) {
-            // --- BỎ LIKE ---
             removeFavoriteMutation.mutate(tour.tourID, {
                 onSuccess: () => {
                     removeFavoriteId(tour.tourID);
@@ -97,7 +100,6 @@ export default function TourBookingSection({ tour }: Props) {
                 },
             });
         } else {
-            // --- THÊM LIKE ---
             addFavoriteMutation.mutate(
                 { tourId: tour.tourID },
                 {
@@ -107,7 +109,6 @@ export default function TourBookingSection({ tour }: Props) {
                         queryClient.invalidateQueries({ queryKey: ["favoriteIds"] });
                     },
                     onError: (error: Error | AxiosError) => {
-                        // Fix type error
                         const axiosError = error as AxiosError<{ message: string }>;
                         if (axiosError.response?.status === 409) {
                             addFavoriteId(tour.tourID);
@@ -159,7 +160,6 @@ export default function TourBookingSection({ tour }: Props) {
 
             <hr className="my-4" />
 
-            {/* Chọn số lượng khách */}
             <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label
@@ -257,7 +257,6 @@ export default function TourBookingSection({ tour }: Props) {
                     Đặt Tour
                 </Button>
 
-                {/* (8) Cập nhật nút Yêu thích */}
                 <Button
                     type="button"
                     variant="outline"
