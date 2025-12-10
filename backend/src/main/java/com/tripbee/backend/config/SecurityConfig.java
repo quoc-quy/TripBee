@@ -64,7 +64,7 @@ public class SecurityConfig {
 
 //                        .requestMatchers("/api/admin/**").hasAuthority(RoleType.ADMIN.name())
 //                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
+                                .requestMatchers("/api/contact-messages").permitAll()
                         .anyRequest().authenticated()
                 );
 

@@ -44,8 +44,13 @@ public class ContactAdminService {
                 // --- (THÊM MỚI) Tìm kiếm theo ID ---
                 Predicate idLike = cb.like(cb.lower(root.get("contactMessID")), keyword);
 
+                Predicate nameLike = cb.like(cb.lower(root.get("name")), keyword);
+                Predicate subjectLike = cb.like(cb.lower(root.get("subject")), keyword);
+
                 // Thêm idLike vào trong danh sách OR
-                predicates.add(cb.or(emailLike, phoneLike, messageLike, idLike));
+                predicates.add(cb.or(
+                        emailLike, phoneLike, messageLike, idLike, nameLike, subjectLike
+                ));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
