@@ -34,7 +34,7 @@ export default function PaymentScreen() {
 
         // Tính thời gian hết hạn: Thời gian tạo + 3 phút
         const bookingTime = new Date(booking.bookingDate).getTime(); // Đảm bảo bookingDate là chuỗi ISO chuẩn
-        const expireTime = bookingTime + 3 * 60 * 1000; // 3 phút = 180000ms
+        const expireTime = bookingTime + 1 * 60 * 1000; // 3 phút = 180000ms
 
         const interval = setInterval(() => {
             const now = new Date().getTime();

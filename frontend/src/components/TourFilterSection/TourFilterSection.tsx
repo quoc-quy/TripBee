@@ -131,7 +131,7 @@ export default function TourFilterSection({ showAdvancedFilters = false, default
                                 // (CẬP NHẬT) Đổi tên trường
                                 {...register("destination_id")}
                                 id="destination_id"
-                                className="p-2 border rounded-md text-gray-900"
+                                className="p-2 border border-gray-500 rounded-md text-gray-900"
                             >
                                 <option value="">Tất cả</option>
                                 {destinationsData?.data.map((dest) => (
@@ -153,7 +153,7 @@ export default function TourFilterSection({ showAdvancedFilters = false, default
                                 // (CẬP NHẬT) Đổi tên trường
                                 {...register("tour_type_id")}
                                 id="tour_type_id"
-                                className="p-2 border rounded-md text-gray-900"
+                                className="p-2 border border-gray-500 rounded-md text-gray-900"
                             >
                                 <option value="">Tất cả</option>
                                 {tourTypesData?.data.map((type) => (
@@ -174,7 +174,7 @@ export default function TourFilterSection({ showAdvancedFilters = false, default
                             <select
                                 {...register("sort")}
                                 id="sort"
-                                className="p-2 border rounded-md text-gray-900"
+                                className="p-2 border border-gray-500 rounded-md text-gray-900"
                             >
                                 <option value="">Nổi bật (Ranking)</option>
                                 {/* (FIX) Đổi lại thành priceAdult */}
@@ -188,7 +188,7 @@ export default function TourFilterSection({ showAdvancedFilters = false, default
                         <button
                             type="button"
                             onClick={handleResetFilters}
-                            className="text-sm text-gray-600 hover:text-orange-500"
+                            className="text-sm text-gray-600 hover:text-orange-500 cursor-pointer"
                         >
                             Xóa bộ lọc
                         </button>
