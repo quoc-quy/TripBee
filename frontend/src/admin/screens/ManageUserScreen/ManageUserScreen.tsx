@@ -218,7 +218,7 @@ export default function ManageUserScreen() {
             ) : (
               users.map((u) => (
                 <tr key={u.userID} className="border-b border-gray-100 hover:bg-gray-50 transition-all">
-                  <td className="px-5 py-4 text-sm font-semibold text-gray-900">{u.name}</td>
+                  <td className="px-5 py-4 text-sm font-semibold text-gray-900 di">{u.name}</td>
                   <td className="px-5 py-4 text-sm text-gray-700">{u.email}</td>
                   <td className="px-5 py-4 text-sm text-gray-700">{u.phoneNumber || "-"}</td>
                   <td className="px-5 py-4 text-center text-sm">
@@ -491,7 +491,7 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
                   value={form.name}
                   onChange={handleChange}
                   className={inputBase}
-                  disabled={isSaving}
+                  disabled={isSaving || isEdit}
                 />
               </div>
 
@@ -544,7 +544,7 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
                   value={form.phoneNumber}
                   onChange={handleChange}
                   className={inputBase}
-                  disabled={isSaving}
+                  disabled={isSaving || isEdit}
                 />
               </div>
 
