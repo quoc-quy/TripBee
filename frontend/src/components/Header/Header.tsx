@@ -122,12 +122,12 @@ export default function Header() {
                                             >
                                                 Hồ sơ
                                             </Link>
-                                            <Link
+                                            {/* <Link
                                                 to="/tours"
                                                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                                             >
                                                 Đặt tour
-                                            </Link>
+                                            </Link> */}
                                             <div className="border-t border-gray-200 my-2"></div>
                                             <button
                                                 onClick={handleLogout}
