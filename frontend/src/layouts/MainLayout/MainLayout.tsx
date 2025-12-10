@@ -1,17 +1,19 @@
 import React from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 
 interface Props {
-  children?: React.ReactNode;
+    children?: React.ReactNode;
 }
 
 export default function MainLayout({ children }: Props) {
-  return (
-    <div>
-      <Header />
-      {children}
-      <Footer />
-    </div>
-  );
+    return (
+        <div>
+            <ScrollToTop />
+            <Header />
+            {children}
+            <Footer />
+        </div>
+    );
 }
