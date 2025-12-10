@@ -111,4 +111,12 @@ public class BookingAdminController {
         return ResponseEntity.ok("Đã duyệt hủy tour");
     }
 
+    // Không duyệt hủy booking: từ CANCELLATION_REQUESTED -> CONFIRMED
+    @PutMapping("/{id}/keep")
+    public ResponseEntity<Void> keepBooking(@PathVariable String id) {
+        bookingAdminService.keepBooking(id);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

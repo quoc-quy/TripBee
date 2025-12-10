@@ -42,17 +42,30 @@ public class BookingAdminService {
     }
 
     /**
-     * xây khoảng thời gian: nếu null thì lấy tháng hiện tại
+     * xây khoảng thời gian
      */
-    private LocalDateTime[] buildRange(LocalDate fromDate, LocalDate toDate) {
-        LocalDate today = LocalDate.now();
-        LocalDate firstOfMonth = today.withDayOfMonth(1);
 
-        LocalDate from = (fromDate != null) ? fromDate : firstOfMonth;
-        LocalDate to = (toDate != null) ? toDate : today;
+    private LocalDateTime[] buildRange(LocalDate fromDate, LocalDate toDate) {
+        // Không có tham số thời gian nào -> không lọc
+        if (fromDate == null && toDate == null) {
+//            return null;
+            LocalDate today = LocalDate.now();
+            LocalDate from = (fromDate != null) ? fromDate : LocalDate.of(1970, 1, 1);
+            LocalDate to = (toDate != null) ? toDate : today;
+
+            LocalDateTime start = from.atStartOfDay();
+            LocalDateTime end = to.atTime(LocalTime.MAX);
+            return new LocalDateTime[]{start, end};
+        }
+
+
+        // Nếu chỉ có 1 đầu thì cho đầu kia một giá trị "mặc định rộng"
+        LocalDate from = (fromDate != null) ? fromDate : LocalDate.of(1970, 1, 1);
+        LocalDate to = (toDate != null) ? toDate : LocalDate.of(2100, 12, 31);
 
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
+
         return new LocalDateTime[]{start, end};
     }
 
@@ -84,7 +97,10 @@ public class BookingAdminService {
             List<Predicate> predicates = new ArrayList<>();
 
             // lọc theo khoảng thời gian đặt
-            predicates.add(cb.between(root.get("bookingDate"), start, end));
+//            predicates.add(cb.between(root.get("bookingDate"), start, end));
+            if (start != null && end != null) {
+                predicates.add(cb.between(root.get("bookingDate"), start, end));
+            }
 
             // search: mã booking, tên user, tên tour
             if (search != null && !search.isBlank()) {
@@ -92,7 +108,7 @@ public class BookingAdminService {
 
                 Predicate byCode = cb.like(cb.lower(root.get("bookingID")), pattern);
                 Predicate byUser = cb.like(
-                        cb.lower(root.join("user").get("fullName")),
+                        cb.lower(root.join("user").get("name")),
                         pattern
                 );
                 Predicate byTour = cb.like(
@@ -321,7 +337,7 @@ public class BookingAdminService {
                 java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         String startStr = dto.getStartDate() != null ? dto.getStartDate().format(df) : "-";
-        String endStr   = dto.getEndDate()   != null ? dto.getEndDate().format(df)   : "-";
+        String endStr = dto.getEndDate() != null ? dto.getEndDate().format(df) : "-";
 
         // ====== THÔNG TIN TOUR ======
         Paragraph tourLine1 = new Paragraph(
@@ -467,6 +483,7 @@ public class BookingAdminService {
             emailService.sendBookingCanceledEmail(data);
         }
     }
+
     // Thêm method duyệt hủy
     public void approveCancel(Long bookingId) {
         Booking booking = bookingRepository.findById(String.valueOf(bookingId))
@@ -477,6 +494,21 @@ public class BookingAdminService {
             // TODO: Thêm logic hoàn tiền (Refund) ở đây nếu cần
             bookingRepository.save(booking);
         }
+    }
+
+    @Transactional
+    public void keepBooking(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+
+        if (booking.getStatus() != BookingStatus.CANCELLATION_REQUESTED) {
+            throw new IllegalStateException("Booking không ở trạng thái CHỜ HỦY");
+        }
+
+        // Chuyển về CONFIRMED
+        booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
+
     }
 
 
