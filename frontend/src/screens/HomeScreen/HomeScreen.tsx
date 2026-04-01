@@ -75,7 +75,7 @@ function HeroSection() {
         <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 drop-shadow-xl tracking-tight">
           Hành Trình Chạm Đến
         </h1>
-        <h2 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-500 mb-8 drop-shadow-lg">
+        <h2 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-500 pb-8 drop-shadow-lg">
           Những Giấc Mơ
         </h2>
         <p className="text-lg md:text-xl text-gray-200 max-w-3xl mb-12 drop-shadow-md font-light">

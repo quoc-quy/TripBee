@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { tourApi } from '../../apis/tour'
@@ -11,6 +12,7 @@ import { useMemo } from 'react'
 import { FaChevronLeft, FaChevronRight, FaCompass } from 'react-icons/fa'
 
 type ParsedTourParams = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   region: any
   page: number
   size: number
@@ -86,14 +88,14 @@ export default function TourScreen() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/hero.jpg)', backgroundAttachment: 'fixed' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#6f6f6f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#373737]" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="text-center mb-10">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-bold tracking-wider uppercase mb-4 shadow-lg">
               <FaCompass /> Hành trình của bạn
             </span>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-500 mb-8 drop-shadow-lg">
+            <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-500 pb-8 drop-shadow-lg">
               Tìm Kiếm Chuyến Đi Hoàn Hảo
             </h1>
             {/* <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-xl tracking-tight">
