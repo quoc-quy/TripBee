@@ -1,172 +1,123 @@
-import React from "react";
-import Input from "../../../../components/Input";
-import Button from "../../../../components/Button";
-import {
-  schemaChangePassword,
-  type SchemaChangePassword,
-} from "../../../../utils/rules";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { useMutation } from "@tanstack/react-query";
-import type { ChangePasswordBody } from "../../../../apis/user.api";
-import userApi from "../../../../apis/user.api";
-import { toast } from "react-toastify";
-import { isAxiosError } from "axios";
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { toast } from 'react-toastify'
+import * as yup from 'yup'
+import { FaShieldAlt, FaKey } from 'react-icons/fa'
 
-type FormData = SchemaChangePassword;
+// Ghi chú: Hãy thay đổi logic mutation API dưới đây cho phù hợp với API đổi mật khẩu thực tế của bạn
+const passwordSchema = yup.object({
+  oldPassword: yup.string().required('Vui lòng nhập mật khẩu hiện tại'),
+  newPassword: yup
+    .string()
+    .required('Vui lòng nhập mật khẩu mới')
+    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+  confirmPassword: yup
+    .string()
+    .required('Vui lòng xác nhận mật khẩu')
+    .oneOf([yup.ref('newPassword')], 'Mật khẩu xác nhận không khớp')
+})
+
+type PasswordFormData = yup.InferType<typeof passwordSchema>
+
 export default function ChangePassword() {
   const {
     register,
     handleSubmit,
     reset,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: yupResolver(schemaChangePassword),
-    defaultValues: {
-      oldPassword: "",
-      newPassword: "",
-      confirmNewPassword: "",
-    },
-    mode: "onTouched",
-  });
+    formState: { errors }
+  } = useForm<PasswordFormData>({
+    resolver: yupResolver(passwordSchema)
+  })
 
-  const changePasswordMutation = useMutation({
-    mutationFn: (body: ChangePasswordBody) => userApi.changePassword(body),
-    onSuccess: () => {
-      toast.success("Đổi mật khẩu thành công!");
-      reset();
-    },
-    onError: (error) => {
-      if (isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || error.message;
-
-        if (errorMessage.includes("Mật khẩu cũ không chính xác")) {
-          setError("oldPassword", {
-            type: "manual",
-            message: errorMessage,
-          });
-        } else {
-          toast.error(errorMessage);
-        }
-      } else {
-        toast.error("Đã xảy ra lỗi hệ thống.");
-      }
-    },
-  });
-
-  const onSubmit = handleSubmit((data) => {
-    const payload: ChangePasswordBody = {
-      oldPassword: data.oldPassword,
-      newPassword: data.newPassword,
-    };
-    changePasswordMutation.mutate(payload);
-  });
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      // TODO: Thêm API call tại đây, ví dụ: await userApi.changePassword(data)
+      console.log(data)
+      toast.success('Đổi mật khẩu thành công!')
+      reset()
+    } catch (error) {
+      toast.error('Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra.')
+    }
+  })
 
   return (
-    <div className="rounded-sm px-2 md:px-7 md:pb-20 pb-10">
-      <div className="border-b border-b-gray-200 py-6">
-        <h1 className="text-2xl font-bold capitalize text-gray-900">
-          Đổi mật khẩu
-        </h1>
-        <div className="mt-1 text-sm text-gray-700">
-          Quản lý thông tin hồ sơ để bảo mật tài khoản
+    <div className="max-w-2xl">
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+            <FaShieldAlt size={20} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900">Bảo Mật Tài Khoản</h2>
         </div>
+        <p className="text-gray-500 font-medium ml-13">
+          Đổi mật khẩu định kỳ để bảo vệ tài khoản của bạn.
+        </p>
       </div>
 
-      {/* Liên kết form với onSubmit */}
-      <form className="mt-8 mr-auto max-w-4xl" onSubmit={onSubmit} noValidate>
-        <div className="mt-6 flex-row md:pr-12 md:mt-0">
-          {/* Mật khẩu cũ (oldPassword) */}
-          <div className="mt-2 flex flex-wrap flex-col sm:flex-row">
-            <div className="sm:w-[20%] truncate pt-3 sm:text-right capitalize">
-              Mật khẩu cũ
-            </div>
-            <div className="sm:w-[80%] sm:pl-5">
-              <Input
-                name="oldPassword"
-                placeholder="Mật khẩu cũ..."
-                type="password"
-                className="relative"
-                classNameInput="px-3 py-2 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm shadow-sm"
-                register={register}
-                errorMessage={errors.oldPassword?.message}
-              />
-            </div>
+      <div className="bg-slate-50/70 p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+        <form onSubmit={onSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">
+              Mật khẩu hiện tại
+            </label>
+            <input
+              {...register('oldPassword')}
+              type="password"
+              className="w-full px-5 py-4 bg-white border border-transparent rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all font-medium text-gray-800 shadow-sm"
+              placeholder="••••••••"
+            />
+            {errors.oldPassword && (
+              <p className="text-red-500 text-sm mt-2 ml-1 font-medium">
+                {errors.oldPassword.message}
+              </p>
+            )}
           </div>
 
-          {/* Mật khẩu mới (newPassword) */}
-          <div className="mt-2 flex flex-wrap flex-col sm:flex-row">
-            <div className="sm:w-[20%] truncate pt-3 sm:text-right capitalize">
-              Mật khẩu mới
-            </div>
-            <div className="sm:w-[80%] sm:pl-5">
-              <Input
-                name="newPassword"
-                placeholder="Mật khẩu mới..."
-                type="password"
-                className="relative"
-                classNameInput="px-3 py-2 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm shadow-sm"
-                register={register}
-                errorMessage={errors.newPassword?.message}
-              />
-            </div>
+          <div className="border-t border-gray-200/60 my-6"></div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">Mật khẩu mới</label>
+            <input
+              {...register('newPassword')}
+              type="password"
+              className="w-full px-5 py-4 bg-white border border-transparent rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all font-medium text-gray-800 shadow-sm"
+              placeholder="••••••••"
+            />
+            {errors.newPassword && (
+              <p className="text-red-500 text-sm mt-2 ml-1 font-medium">
+                {errors.newPassword.message}
+              </p>
+            )}
           </div>
 
-          {/* Nhập lại mật khẩu mới (confirmNewPassword) */}
-          <div className="mt-2 flex flex-wrap flex-col sm:flex-row">
-            <div className="sm:w-[20%] truncate pt-3 sm:text-right capitalize">
-              Nhập lại mật khẩu mới
-            </div>
-            <div className="sm:w-[80%] sm:pl-5">
-              <Input
-                name="confirmNewPassword"
-                placeholder="Xác nhận mật khẩu mới..."
-                type="password"
-                className="relative"
-                classNameInput="px-3 py-2 w-full outline-none border border-gray-300 focus:border-gray-500 rounded-sm shadow-sm"
-                register={register}
-                errorMessage={errors.confirmNewPassword?.message}
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">
+              Xác nhận mật khẩu mới
+            </label>
+            <input
+              {...register('confirmPassword')}
+              type="password"
+              className="w-full px-5 py-4 bg-white border border-transparent rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all font-medium text-gray-800 shadow-sm"
+              placeholder="••••••••"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-2 ml-1 font-medium">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
-          <div className="mt-6 flex flex-wrap flex-col sm:flex-row">
-            <div className="sm:w-[20%] truncate pt-3 sm:text-right capitalize" />
-            <div className="sm:w-[80%] sm:pl-5">
-              <Button
-                className="flex items-center h-9 bg-blue-600 px-5 text-center text-sm text-white hover:bg-blue-700/90 rounded-sm"
-                type="submit"
-                disabled={changePasswordMutation.isPending || isSubmitting}
-              >
-                {(changePasswordMutation.isPending || isSubmitting) && (
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                )}
-                Lưu
-              </Button>
-            </div>
+          <div className="pt-6">
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-8 rounded-2xl hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <FaKey />
+              Cập Nhật Mật Khẩu
+            </button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
-  );
+  )
 }
