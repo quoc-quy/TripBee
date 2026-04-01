@@ -3,7 +3,7 @@ package com.tripbee.backend.admin.service;
 import com.tripbee.backend.admin.dto.request.TourTypeRequest;
 import com.tripbee.backend.admin.dto.response.tourType.TourTypeAdminResponse;
 import com.tripbee.backend.admin.dto.response.tourType.TourTypeResponse;
-import com.tripbee.backend.admin.dto.response.tourtype.TourTypeDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tourType.TourTypeDetailAdminResponse;
 import com.tripbee.backend.model.TourType;
 import com.tripbee.backend.repository.TourTypeRepository;
 import jakarta.persistence.criteria.Predicate;

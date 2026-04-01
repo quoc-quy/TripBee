@@ -3,7 +3,7 @@ package com.tripbee.backend.admin.controller;
 import com.tripbee.backend.admin.dto.request.TourTypeRequest;
 import com.tripbee.backend.admin.dto.response.tourType.TourTypeAdminResponse;
 import com.tripbee.backend.admin.dto.response.tourType.TourTypeResponse;      // dùng cho combobox
-import com.tripbee.backend.admin.dto.response.tourtype.TourTypeDetailAdminResponse;
+import com.tripbee.backend.admin.dto.response.tourType.TourTypeDetailAdminResponse;
 import com.tripbee.backend.admin.service.TourTypeAdminService;
 import com.tripbee.backend.model.TourType;
 import org.springframework.data.domain.Page;
