@@ -1,190 +1,162 @@
-import React from "react";
-import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa"; // Cần cài đặt react-icons: npm install react-icons
+import React from 'react'
+import {
+  FaFacebookF,
+  FaTwitter,
+  FaInstagram,
+  FaYoutube,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaHeadset
+} from 'react-icons/fa'
 
 export default function Footer() {
-    const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear()
 
-    const quickLinks = [
-        { name: "Tất cả Tours", href: "#" },
-        { name: "Điểm đến hot", href: "#" },
-        { name: "Hướng dẫn đặt tour", href: "#" },
-        { name: "Cẩm nang du lịch", href: "#" },
-        { name: "Khuyến mãi", href: "#" },
-    ];
+  const quickLinks = [
+    { name: 'Tất cả Tours', href: '#' },
+    { name: 'Điểm đến hot', href: '#' },
+    { name: 'Hướng dẫn đặt tour', href: '#' },
+    { name: 'Cẩm nang du lịch', href: '#' },
+    { name: 'Khuyến mãi', href: '#' }
+  ]
 
-    const supportLinks = [
-        { name: "Liên hệ", href: "#" },
-        { name: "Câu hỏi thường gặp", href: "#" },
-        { name: "Điều khoản dịch vụ", href: "#" },
-        { name: "Chính sách bảo mật", href: "#" },
-        { name: "Chính sách hoàn tiền", href: "#" },
-    ];
+  const supportLinks = [
+    { name: 'Liên hệ', href: '#' },
+    { name: 'Câu hỏi thường gặp', href: '#' },
+    { name: 'Điều khoản dịch vụ', href: '#' },
+    { name: 'Chính sách bảo mật', href: '#' },
+    { name: 'Chính sách hoàn tiền', href: '#' }
+  ]
 
-    return (
-        <footer className="bg-gray-900 text-white pt-12 pb-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-gray-700 pb-10">
-                    <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <img src="Logo-TripBee.png" alt="" className="w-20" />
-                        </div>
-                        <p className="text-sm text-gray-400">
-                            Khám phá vẻ đẹp Việt Nam cùng chúng tôi. Chúng tôi cung cấp những tour
-                            du lịch chất lượng cao với dịch vụ tận tâm và giá cả hợp lý.
-                        </p>
-                        <div className="flex space-x-3 mt-4">
-                            <a
-                                href="#"
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 transition duration-300"
-                                aria-label="Facebook"
-                            >
-                                <FaFacebookF />
-                            </a>
-                            <a
-                                href="#"
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-400 hover:bg-blue-500 transition duration-300"
-                                aria-label="Twitter"
-                            >
-                                <FaTwitter />
-                            </a>
-                            <a
-                                href="#"
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-pink-500 hover:bg-pink-600 transition duration-300"
-                                aria-label="Instagram"
-                            >
-                                <FaInstagram />
-                            </a>
-                            <a
-                                href="#"
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 transition duration-300"
-                                aria-label="Youtube"
-                            >
-                                <FaYoutube />
-                            </a>
-                        </div>
-                    </div>
+  return (
+    <footer className="bg-[#0a0f1c] text-white pt-20 pb-8 relative overflow-hidden">
+      {/* Background Glow Elements */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
 
-                    <div>
-                        <h3 className="text-lg font-semibold mb-4">Liên kết nhanh</h3>
-                        <ul className="space-y-2 text-sm">
-                            {quickLinks.map((item) => (
-                                <li key={item.name}>
-                                    <a
-                                        href={item.href}
-                                        className="text-gray-400 hover:text-white transition duration-300"
-                                    >
-                                        {item.name}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 className="text-lg font-semibold mb-4">Hỗ trợ</h3>
-                        <ul className="space-y-2 text-sm">
-                            {supportLinks.map((item) => (
-                                <li key={item.name}>
-                                    <a
-                                        href={item.href}
-                                        className="text-gray-400 hover:text-white transition duration-300"
-                                    >
-                                        {item.name}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 className="text-lg font-semibold mb-4">Thông tin liên hệ</h3>
-                        <div className="space-y-3 text-sm text-gray-400">
-                            <div className="flex items-start">
-                                <svg
-                                    className="h-5 w-5 mr-3 flex-shrink-0"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.244-4.243a8 8 0 1111.314 0zM12 13a3 3 0 100-6 3 3 0 000 6z"
-                                    />
-                                </svg>
-                                <p>123 Đường Lê Lợi, Quận 1, TP.HCM, Việt Nam</p>
-                            </div>
-                            <div className="flex items-center">
-                                <svg
-                                    className="h-5 w-5 mr-3 flex-shrink-0"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-3.957c-1.398 0-2.67-1.144-4.123-2.616C8.204 15.658 6 12.593 6 8.5V5a2 2 0 012-2z"
-                                    />
-                                </svg>
-                                <p>+84 901 234 567</p>
-                            </div>
-                            <div className="flex items-center">
-                                <svg
-                                    className="h-5 w-5 mr-3 flex-shrink-0"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-2 4v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h14a2 2 0 012 2z"
-                                    />
-                                </svg>
-                                <p>info@travelviet.com</p>
-                            </div>
-                            <div className="flex items-center">
-                                <svg
-                                    className="h-5 w-5 mr-3 flex-shrink-0"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                                <p>24/7 hỗ trợ khách hàng</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row justify-between items-center mt-6 text-sm text-gray-400">
-                    <p>&copy; {currentYear} TravelViet. Tất cả quyền được bảo lưu</p>
-                    <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                        <p>Made with Readdy</p>
-                        <div className="flex space-x-2">
-                            <div className="bg-white p-1 rounded">
-                                <span className="text-gray-900 font-bold text-xs">VISA</span>
-                            </div>
-                            <div className="bg-white p-1 rounded">
-                                <span className="text-gray-900 font-bold text-xs">MASTER</span>
-                            </div>
-                            <div className="bg-white p-1 rounded">
-                                <span className="text-gray-900 font-bold text-xs">MOMO</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-b border-gray-800/60 pb-16">
+          {/* Cột 1: Thông tin thương hiệu */}
+          <div className="space-y-6">
+            <div className="flex items-center">
+              <img src="Logo-TripBee.png" alt="TripBee" className="w-24 drop-shadow-lg" />
             </div>
-        </footer>
-    );
+            <p className="text-gray-400 leading-relaxed text-sm">
+              Hành trình của bạn, đam mê của chúng tôi. TripBee cam kết mang đến những trải nghiệm
+              du lịch tuyệt vời, an toàn và đáng nhớ nhất tại Việt Nam.
+            </p>
+            <div className="flex space-x-3 pt-2">
+              {[FaFacebookF, FaTwitter, FaInstagram, FaYoutube].map((Icon, index) => (
+                <a
+                  key={index}
+                  href="#"
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:bg-blue-600 hover:border-blue-600 hover:-translate-y-1 transition-all duration-300 text-gray-300 hover:text-white"
+                >
+                  <Icon size={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Cột 2: Liên kết nhanh */}
+          <div>
+            <h3 className="text-lg font-bold mb-6 text-gray-100 tracking-wide uppercase text-sm">
+              Khám Phá
+            </h3>
+            <ul className="space-y-3">
+              {quickLinks.map((item) => (
+                <li key={item.name}>
+                  <a
+                    href={item.href}
+                    className="text-gray-400 hover:text-blue-400 transition duration-300 flex items-center gap-2 text-sm group"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Cột 3: Hỗ trợ */}
+          <div>
+            <h3 className="text-lg font-bold mb-6 text-gray-100 tracking-wide uppercase text-sm">
+              Khách Hàng
+            </h3>
+            <ul className="space-y-3">
+              {supportLinks.map((item) => (
+                <li key={item.name}>
+                  <a
+                    href={item.href}
+                    className="text-gray-400 hover:text-blue-400 transition duration-300 flex items-center gap-2 text-sm group"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Cột 4: Liên hệ */}
+          <div>
+            <h3 className="text-lg font-bold mb-6 text-gray-100 tracking-wide uppercase text-sm">
+              Liên Hệ
+            </h3>
+            <div className="space-y-4 text-sm text-gray-400">
+              <div className="flex items-start gap-3 group">
+                <FaMapMarkerAlt
+                  className="text-blue-500 mt-1 flex-shrink-0 group-hover:text-blue-400 transition-colors"
+                  size={16}
+                />
+                <p className="leading-relaxed">
+                  123 Đường Nguyễn Văn Bảo, Phường 4, Gò Vấp, TP.HCM
+                </p>
+              </div>
+              <div className="flex items-center gap-3 group">
+                <FaPhoneAlt
+                  className="text-blue-500 flex-shrink-0 group-hover:text-blue-400 transition-colors"
+                  size={16}
+                />
+                <p>+84 901 234 567</p>
+              </div>
+              <div className="flex items-center gap-3 group">
+                <FaEnvelope
+                  className="text-blue-500 flex-shrink-0 group-hover:text-blue-400 transition-colors"
+                  size={16}
+                />
+                <p>support@tripbee.com</p>
+              </div>
+              <div className="flex items-center gap-3 group">
+                <FaHeadset
+                  className="text-blue-500 flex-shrink-0 group-hover:text-blue-400 transition-colors"
+                  size={16}
+                />
+                <p>Hỗ trợ trực tuyến 24/7</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Footer */}
+        <div className="flex flex-col md:flex-row justify-between items-center pt-8 text-sm text-gray-500">
+          <p>&copy; {currentYear} TripBee. Bản quyền thuộc về sinh viên IUH.</p>
+          <div className="flex items-center gap-4 mt-4 md:mt-0">
+            <span className="hidden sm:inline-block">Thanh toán an toàn:</span>
+            <div className="flex gap-2">
+              {['VISA', 'MASTER', 'MOMO'].map((method) => (
+                <div
+                  key={method}
+                  className="bg-white/10 px-3 py-1.5 rounded border border-white/5 backdrop-blur-sm"
+                >
+                  <span className="text-gray-300 font-bold text-xs tracking-wider">{method}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
 }
