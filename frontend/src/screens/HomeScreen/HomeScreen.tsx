@@ -26,15 +26,9 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaArrowRight,
-  FaRegStar,
-  FaCheckCircle,
-  FaThumbsUp,
   FaUserFriends,
   FaLeaf,
-  FaBookOpen,
   FaEnvelope,
-  FaGift,
-  FaBell,
   FaCompass
 } from 'react-icons/fa'
 
@@ -65,7 +59,7 @@ function HeroSection() {
   }
 
   return (
-    <div className="relative min-h-[90vh] flex items-center justify-center z-20 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center z-20 overflow-hidden">
       {/* Background Image with Zoom Effect */}
       <div
         className="absolute inset-0 bg-cover bg-center animate-out scale-105 duration-1000"

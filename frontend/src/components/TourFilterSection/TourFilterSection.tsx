@@ -1,200 +1,246 @@
 // frontend-demo/src/components/TourFilterSection/TourFilterSection.tsx
 
-import { useEffect, useRef, useCallback } from "react";
-import type { TourListParams } from "../../types/tour";
-import { useQuery } from "@tanstack/react-query";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { createSearchParams, useNavigate } from "react-router-dom";
-import { tourTypeApi } from "../../apis/tourType.api";
-import { destinationApi } from "../../apis/destination";
-import { omitBy, isUndefined, isEqual, debounce } from "lodash";
+import { useEffect, useRef, useCallback } from 'react'
+import type { TourListParams } from '../../types/tour'
+import { useQuery } from '@tanstack/react-query'
+import { useForm, type SubmitHandler } from 'react-hook-form'
+import { createSearchParams, useNavigate } from 'react-router-dom'
+import { tourTypeApi } from '../../apis/tourType.api'
+import { destinationApi } from '../../apis/destination'
+import { omitBy, isUndefined, isEqual, debounce } from 'lodash'
 
-// (CẬP NHẬT) Đổi tên trường sang snake_case
+// Import các Icon hiện đại
+import {
+  FaSearch,
+  FaMapMarkerAlt,
+  FaLayerGroup,
+  FaSortAmountDown,
+  FaTimes,
+  FaChevronDown
+} from 'react-icons/fa'
+
 type FormData = {
-    search?: string;
-    destination_id?: string;
-    tour_type_id?: string;
-    sort?: string;
-};
+  search?: string
+  destination_id?: string
+  tour_type_id?: string
+  sort?: string
+}
 
 interface Props {
-    showAdvancedFilters?: boolean;
-    defaultValues?: FormData;
+  showAdvancedFilters?: boolean
+  defaultValues?: FormData
 }
 
 export default function TourFilterSection({ showAdvancedFilters = false, defaultValues }: Props) {
-    const navigate = useNavigate();
-    const { register, handleSubmit, reset, watch } = useForm<FormData>({
-        defaultValues: defaultValues,
-    });
+  const navigate = useNavigate()
+  const { register, handleSubmit, reset, watch } = useForm<FormData>({
+    defaultValues: defaultValues
+  })
 
-    const watchedValues = watch();
-    const isMounted = useRef(false);
+  const watchedValues = watch()
+  const isMounted = useRef(false)
 
-    const { data: destinationsData } = useQuery({
-        queryKey: ["destinations"],
-        queryFn: destinationApi.getPopularDestinations,
-    });
+  const { data: destinationsData } = useQuery({
+    queryKey: ['destinations'],
+    queryFn: destinationApi.getPopularDestinations
+  })
 
-    const { data: tourTypesData } = useQuery({
-        queryKey: ["tourTypes"],
-        queryFn: tourTypeApi.getTourTypes,
-    });
+  const { data: tourTypesData } = useQuery({
+    queryKey: ['tourTypes'],
+    queryFn: tourTypeApi.getTourTypes
+  })
 
-    useEffect(() => {
-        if (!isEqual(defaultValues, watch())) {
-            reset(defaultValues);
-        }
-    }, [defaultValues, reset, watch]);
+  useEffect(() => {
+    if (!isEqual(defaultValues, watch())) {
+      reset(defaultValues)
+    }
+  }, [defaultValues, reset, watch])
 
-    const debouncedNavigate = useCallback(
-        debounce((newParams: TourListParams) => {
-            navigate({
-                pathname: "/tours",
-                search: createSearchParams(newParams as any).toString(),
-            });
-        }, 500),
-        [navigate]
-    );
+  const debouncedNavigate = useCallback(
+    debounce((newParams: TourListParams) => {
+      navigate({
+        pathname: '/tours',
+        search: createSearchParams(newParams as any).toString()
+      })
+    }, 500),
+    [navigate]
+  )
 
-    useEffect(() => {
-        if (!isMounted.current) {
-            isMounted.current = true;
-            const initialCleanParams = omitBy(watchedValues, (v) => isUndefined(v) || v === "");
-            const defaultCleanParams = omitBy(defaultValues, (v) => isUndefined(v) || v === "");
-            if (isEqual(initialCleanParams, defaultCleanParams)) {
-                return;
-            }
-        }
-        const params: TourListParams = omitBy(
-            { ...watchedValues },
-            (value) => isUndefined(value) || value === ""
-        );
-        debouncedNavigate(params);
-        return () => {
-            debouncedNavigate.cancel();
-        };
-    }, [watchedValues, debouncedNavigate, defaultValues]);
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true
+      const initialCleanParams = omitBy(watchedValues, (v) => isUndefined(v) || v === '')
+      const defaultCleanParams = omitBy(defaultValues, (v) => isUndefined(v) || v === '')
+      if (isEqual(initialCleanParams, defaultCleanParams)) {
+        return
+      }
+    }
+    const params: TourListParams = omitBy(
+      { ...watchedValues },
+      (value) => isUndefined(value) || value === ''
+    )
+    debouncedNavigate(params)
+    return () => {
+      debouncedNavigate.cancel()
+    }
+  }, [watchedValues, debouncedNavigate, defaultValues])
 
-    const onSubmit: SubmitHandler<FormData> = (data) => {
-        const params: TourListParams = omitBy(
-            { ...data },
-            (value) => isUndefined(value) || value === ""
-        );
-        debouncedNavigate.cancel();
-        navigate({
-            pathname: "/tours",
-            search: createSearchParams(params as any).toString(),
-        });
-    };
+  const onSubmit: SubmitHandler<FormData> = (data) => {
+    const params: TourListParams = omitBy(
+      { ...data },
+      (value) => isUndefined(value) || value === ''
+    )
+    debouncedNavigate.cancel()
+    navigate({
+      pathname: '/tours',
+      search: createSearchParams(params as any).toString()
+    })
+  }
 
-    const handleResetFilters = () => {
-        // (CẬP NHẬT) Đổi tên trường sang snake_case
-        reset({
-            search: "",
-            destination_id: "",
-            tour_type_id: "",
-            sort: "",
-        });
-        debouncedNavigate.cancel();
-        navigate("/tours");
-    };
+  const handleResetFilters = () => {
+    reset({
+      search: '',
+      destination_id: '',
+      tour_type_id: '',
+      sort: ''
+    })
+    debouncedNavigate.cancel()
+    navigate('/tours')
+  }
 
-    return (
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-            <div className="flex flex-col md:flex-row gap-2">
-                <input
-                    {...register("search")}
-                    type="text"
-                    placeholder="Tìm kiếm điểm đến, tour..."
-                    className="flex-grow p-3 rounded-lg text-gray-900 shadow-sm bg-white"
-                />
-                <button
-                    type="submit"
-                    className="bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg font-semibold shadow-sm"
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full relative z-10">
+      {/* Thanh tìm kiếm chính */}
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-grow group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <FaSearch
+              className="text-gray-400 group-focus-within:text-blue-500 transition-colors"
+              size={18}
+            />
+          </div>
+          <input
+            {...register('search')}
+            type="text"
+            placeholder="Bạn muốn khám phá nơi nào? (Vịnh Hạ Long, Sapa...)"
+            className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-gray-900 placeholder-gray-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all duration-300 shadow-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-2xl font-bold shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] transition-all duration-300 flex items-center justify-center gap-2 transform active:scale-95 whitespace-nowrap"
+        >
+          <FaSearch size={16} />
+          <span>Tìm kiếm</span>
+        </button>
+      </div>
+
+      {/* Bộ lọc nâng cao */}
+      {showAdvancedFilters && (
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Cột 1: Điểm đến */}
+            <div className="relative group">
+              <label
+                htmlFor="destination_id"
+                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1"
+              >
+                Điểm đến
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <FaMapMarkerAlt className="text-blue-500/70" size={16} />
+                </div>
+                <select
+                  {...register('destination_id')}
+                  id="destination_id"
+                  className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-transparent rounded-xl text-gray-800 font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all hover:bg-slate-100"
                 >
-                    Tìm kiếm
-                </button>
+                  <option value="">Tất cả điểm đến</option>
+                  {destinationsData?.data.map((dest) => (
+                    <option key={dest.destinationID} value={dest.destinationID}>
+                      {dest.nameDes}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                  <FaChevronDown className="text-gray-400" size={14} />
+                </div>
+              </div>
             </div>
 
-            {showAdvancedFilters && (
-                <div className="mt-4 p-4 bg-white/90 rounded-lg shadow-lg backdrop-blur-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex flex-col">
-                            <label
-                                htmlFor="destination_id"
-                                className="text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Điểm đến
-                            </label>
-                            <select
-                                // (CẬP NHẬT) Đổi tên trường
-                                {...register("destination_id")}
-                                id="destination_id"
-                                className="p-2 border border-gray-500 rounded-md text-gray-900"
-                            >
-                                <option value="">Tất cả</option>
-                                {destinationsData?.data.map((dest) => (
-                                    <option key={dest.destinationID} value={dest.destinationID}>
-                                        {dest.nameDes}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label
-                                htmlFor="tour_type_id"
-                                className="text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Loại hình
-                            </label>
-                            <select
-                                // (CẬP NHẬT) Đổi tên trường
-                                {...register("tour_type_id")}
-                                id="tour_type_id"
-                                className="p-2 border border-gray-500 rounded-md text-gray-900"
-                            >
-                                <option value="">Tất cả</option>
-                                {tourTypesData?.data.map((type) => (
-                                    <option key={type.tourTypeID} value={type.tourTypeID}>
-                                        {type.nameType}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label
-                                htmlFor="sort"
-                                className="text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Sắp xếp theo
-                            </label>
-                            <select
-                                {...register("sort")}
-                                id="sort"
-                                className="p-2 border border-gray-500 rounded-md text-gray-900"
-                            >
-                                <option value="">Nổi bật (Ranking)</option>
-                                {/* (FIX) Đổi lại thành priceAdult */}
-                                <option value="priceAdult,asc">Giá tăng dần</option>
-                                <option value="priceAdult,desc">Giá giảm dần</option>
-                                <option value="startDate,asc">Ngày đi gần nhất</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div className="flex justify-end mt-4">
-                        <button
-                            type="button"
-                            onClick={handleResetFilters}
-                            className="text-sm text-gray-600 hover:text-orange-500 cursor-pointer"
-                        >
-                            Xóa bộ lọc
-                        </button>
-                    </div>
+            {/* Cột 2: Loại hình */}
+            <div className="relative group">
+              <label
+                htmlFor="tour_type_id"
+                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1"
+              >
+                Loại hình
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <FaLayerGroup className="text-purple-500/70" size={16} />
                 </div>
-            )}
-        </form>
-    );
+                <select
+                  {...register('tour_type_id')}
+                  id="tour_type_id"
+                  className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-transparent rounded-xl text-gray-800 font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all hover:bg-slate-100"
+                >
+                  <option value="">Tất cả loại hình</option>
+                  {tourTypesData?.data.map((type) => (
+                    <option key={type.tourTypeID} value={type.tourTypeID}>
+                      {type.nameType}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                  <FaChevronDown className="text-gray-400" size={14} />
+                </div>
+              </div>
+            </div>
+
+            {/* Cột 3: Sắp xếp */}
+            <div className="relative group">
+              <label
+                htmlFor="sort"
+                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1"
+              >
+                Sắp xếp
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <FaSortAmountDown className="text-orange-500/70" size={16} />
+                </div>
+                <select
+                  {...register('sort')}
+                  id="sort"
+                  className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-transparent rounded-xl text-gray-800 font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all hover:bg-slate-100"
+                >
+                  <option value="">Mặc định (Nổi bật nhất)</option>
+                  <option value="priceAdult,asc">Giá tour: Thấp đến Cao</option>
+                  <option value="priceAdult,desc">Giá tour: Cao đến Thấp</option>
+                  <option value="startDate,asc">Ngày khởi hành: Gần nhất</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                  <FaChevronDown className="text-gray-400" size={14} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nút Xoá bộ lọc */}
+          <div className="flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 cursor-pointer"
+            >
+              <FaTimes size={12} />
+              Xóa bộ lọc
+            </button>
+          </div>
+        </div>
+      )}
+    </form>
+  )
 }
