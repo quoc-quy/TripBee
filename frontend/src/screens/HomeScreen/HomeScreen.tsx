@@ -1,801 +1,671 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { tourApi } from "../../apis/tour";
-import { destinationApi } from "../../apis/destination";
-import type { Tour } from "../../types/tour";
-import type { Destination } from "../../types/destination";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { tourApi } from '../../apis/tour'
+import { destinationApi } from '../../apis/destination'
+import type { Tour } from '../../types/tour'
+import type { Destination } from '../../types/destination'
+import { Link, useNavigate } from 'react-router-dom'
 
-// (MỚI) Import các component đã tách
-import Button from "../../components/Button";
-import TourCard from "../../components/TourCard";
-import DestinationCard from "../../components/DestinationCard";
-import TourFilterSection from "../../components/TourFilterSection";
+// Import các component UI
+import Button from '../../components/Button'
+import TourCard from '../../components/TourCard'
+import DestinationCard from '../../components/DestinationCard'
 
 // Import icons
 import {
-    FaStar,
-    FaMapMarkerAlt,
-    FaCalendarAlt,
-    FaSearch,
-    FaShieldAlt,
-    FaTag,
-    FaHeadset,
-    FaSyncAlt,
-    FaUserGraduate,
-    FaQuoteLeft,
-    FaChevronRight,
-    FaArrowRight,
-    FaArrowLeft,
-    FaRegStar,
-    FaCheckCircle,
-    FaThumbsUp,
-    FaUserFriends,
-    FaLeaf,
-    FaBookOpen,
-    FaEnvelope,
-    FaGift,
-    FaBell,
-} from "react-icons/fa";
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaSearch,
+  FaShieldAlt,
+  FaTag,
+  FaHeadset,
+  FaSyncAlt,
+  FaUserGraduate,
+  FaStar,
+  FaQuoteLeft,
+  FaChevronLeft,
+  FaChevronRight,
+  FaArrowRight,
+  FaRegStar,
+  FaCheckCircle,
+  FaThumbsUp,
+  FaUserFriends,
+  FaLeaf,
+  FaBookOpen,
+  FaEnvelope,
+  FaGift,
+  FaBell,
+  FaCompass
+} from 'react-icons/fa'
 
-// === PHẦN 1: HERO SECTION ===
-// (Không thay đổi)
+// === PHẦN 1: HERO SECTION (PREMIUM GLASSMORPHISM) ===
 function HeroSection() {
-    const navigate = useNavigate(); // (MỚI) Hook để điều hướng
-    const [searchTerm, setSearchTerm] = useState(""); // (MỚI) State cho ô tìm kiếm
+  const navigate = useNavigate()
 
-    // (MỚI) Hàm xử lý khi submit form tìm kiếm
-    const handleSubmitSearch = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault(); // Ngăn form reload lại trang
+  const [searchParams, setSearchParams] = useState({
+    destination: '',
+    startDate: '',
+    duration: '',
+    guests: ''
+  })
 
-        const params = new URLSearchParams();
-        if (searchTerm.trim()) {
-            // Chúng ta sẽ dùng 'search' cho tìm kiếm văn bản tự do
-            params.append("search", searchTerm.trim());
-        }
-        // Bạn có thể thêm các trường khác (date, duration...) vào params ở đây
-        // Ví dụ:
-        // const date = (e.target as any).date.value;
-        // if (date) params.append("departureDate", date);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setSearchParams((prev) => ({ ...prev, [name]: value }))
+  }
 
-        // Điều hướng đến trang /tours với các tham số
-        navigate(`/tours?${params.toString()}`);
-    };
+  const handleSubmitSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (searchParams.destination.trim()) params.append('search', searchParams.destination.trim())
+    if (searchParams.startDate) params.append('startDate', searchParams.startDate)
+    if (searchParams.duration) params.append('duration', searchParams.duration)
+    if (searchParams.guests) params.append('guests', searchParams.guests)
+    navigate(`/tours?${params.toString()}`)
+  }
 
-    return (
-        <div
-            className="relative min-h-screen-nav flex items-center justify-center text-white z-20"
-            style={{
-                backgroundImage: "url(/hero.jpg)",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-            }}
-        >
-            {/* Lớp phủ mờ */}
-            <div className="absolute inset-0 bg-black/40" />
+  return (
+    <div className="relative min-h-[90vh] flex items-center justify-center z-20 overflow-hidden">
+      {/* Background Image with Zoom Effect */}
+      <div
+        className="absolute inset-0 bg-cover bg-center animate-out scale-105 duration-1000"
+        style={{ backgroundImage: 'url(/hero.jpg)' }}
+      />
+      {/* Lớp phủ Gradient mượt mà hơn */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
 
-            <div className="relative z-10 flex flex-col items-center text-center p-4">
-                <h1 className="text-5xl md:text-7xl font-bold mb-4 text-shadow-2xs">
-                    Khám Phá Vẻ Đẹp
-                </h1>
-                <h2 className="text-5xl md:text-7xl font-bold text-primary-light mb-6 text-[#f7c34a]">
-                    Việt Nam Cùng Chúng Tôi
-                </h2>
-                <p className="text-2xl max-w-4xl mb-12 text-shadow-lg hidden md:block">
-                    Trải nghiệm những chuyến du lịch độc đáo, khám phá văn hóa đậm đà và cảnh đẹp
-                    thiên nhiên tuyệt vời của đất nước hình chữ S
-                </p>
+      <div className="relative z-10 flex flex-col items-center text-center p-4 w-full max-w-6xl mt-10">
+        <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-medium tracking-wider uppercase mb-6 shadow-lg">
+          Khám phá thế giới cùng TripBee
+        </span>
+        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 drop-shadow-xl tracking-tight">
+          Hành Trình Chạm Đến
+        </h1>
+        <h2 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-500 mb-8 drop-shadow-lg">
+          Những Giấc Mơ
+        </h2>
+        <p className="text-lg md:text-xl text-gray-200 max-w-3xl mb-12 drop-shadow-md font-light">
+          Hơn 10,000+ điểm đến tuyệt đẹp đang chờ đón. Hãy để chúng tôi đồng hành cùng bạn trên mọi
+          nẻo đường khám phá đất nước hình chữ S.
+        </p>
 
-                {/* Thanh tìm kiếm */}
-                <div className="bg-white text-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-5xl">
-                    {/* (CẬP NHẬT) Thêm onSubmit */}
-                    <form
-                        className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-10 gap-4"
-                        onSubmit={handleSubmitSearch}
-                    >
-                        {/* Điểm đến */}
-                        <div className="lg:col-span-3">
-                            <label
-                                htmlFor="destination"
-                                className="block text-left text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Điểm đến
-                            </label>
-                            <div className="relative">
-                                <FaMapMarkerAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    id="destination"
-                                    placeholder="Bạn muốn đi đâu?"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                                    // (CẬP NHẬT) Kết nối với state
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                        {/* Ngày khởi hành */}
-                        <div className="lg:col-span-2">
-                            <label
-                                htmlFor="date"
-                                className="block text-left text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Ngày khởi hành
-                            </label>
-                            <div className="relative">
-                                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="date"
-                                    id="date" // (MỚI) Thêm name="date" nếu bạn muốn lấy giá trị
-                                    name="date"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                                />
-                            </div>
-                        </div>
-                        {/* Thời gian */}
-                        <div className="lg:col-span-2">
-                            <label
-                                htmlFor="duration"
-                                className="block text-left text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Thời gian
-                            </label>
-                            <select
-                                id="duration"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                            >
-                                <option>Tất cả</option>
-                                <option>1-3 ngày</option>
-                                <option>4-6 ngày</option>
-                                <option>7+ ngày</option>
-                            </select>
-                        </div>
-                        {/* Số khách */}
-                        <div className="lg:col-span-1">
-                            <label
-                                htmlFor="guests"
-                                className="block text-left text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Số khách
-                            </label>
-                            <input
-                                type="number"
-                                id="guests"
-                                placeholder="2"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                            />
-                        </div>
-                        {/* Nút tìm kiếm */}
-                        <div className="lg:col-span-2 flex items-end">
-                            <button
-                                type="submit" // (CẬP NHẬT) Đảm bảo type là "submit"
-                                className="w-full bg-blue-600 text-white py-3 px-6 rounded-md font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2"
-                            >
-                                <FaSearch />
-                                Tìm kiếm
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        {/* Thanh tìm kiếm Glassmorphism */}
+        <div className="w-full bg-white/10 backdrop-blur-xl border border-white/20 p-4 md:p-6 rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]">
+          <form
+            className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-10 gap-3"
+            onSubmit={handleSubmitSearch}
+          >
+            <div className="lg:col-span-3 bg-white rounded-2xl p-2 flex flex-col justify-center transition-all focus-within:ring-2 focus-within:ring-blue-500">
+              <label
+                htmlFor="destination"
+                className="text-xs font-bold text-gray-500 uppercase ml-9 mb-1"
+              >
+                Điểm đến
+              </label>
+              <div className="relative flex items-center">
+                <FaMapMarkerAlt className="absolute left-3 text-blue-500 text-lg" />
+                <input
+                  type="text"
+                  id="destination"
+                  name="destination"
+                  placeholder="Bạn muốn đi đâu?"
+                  className="w-full pl-10 pr-3 py-1 bg-transparent border-none outline-none text-gray-800 font-medium placeholder-gray-400"
+                  value={searchParams.destination}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
+
+            <div className="lg:col-span-2 bg-white rounded-2xl p-2 flex flex-col justify-center transition-all focus-within:ring-2 focus-within:ring-blue-500">
+              <label htmlFor="date" className="text-xs font-bold text-gray-500 uppercase ml-9 mb-1">
+                Khởi hành
+              </label>
+              <div className="relative flex items-center">
+                <FaCalendarAlt className="absolute left-3 text-blue-500 text-lg" />
+                <input
+                  type="date"
+                  id="date"
+                  name="startDate"
+                  className="w-full pl-10 pr-3 py-1 bg-transparent border-none outline-none text-gray-800 font-medium cursor-pointer"
+                  value={searchParams.startDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 bg-white rounded-2xl p-2 flex flex-col justify-center transition-all focus-within:ring-2 focus-within:ring-blue-500">
+              <label
+                htmlFor="duration"
+                className="text-xs font-bold text-gray-500 uppercase ml-3 mb-1"
+              >
+                Thời gian
+              </label>
+              <select
+                id="duration"
+                name="duration"
+                className="w-full px-3 py-1 bg-transparent border-none outline-none text-gray-800 font-medium cursor-pointer"
+                value={searchParams.duration}
+                onChange={handleInputChange}
+              >
+                <option value="">Tất cả thời gian</option>
+                <option value="1-3">1 - 3 ngày</option>
+                <option value="4-6">4 - 6 ngày</option>
+                <option value="7+">Trên 7 ngày</option>
+              </select>
+            </div>
+
+            <div className="lg:col-span-1 bg-white rounded-2xl p-2 flex flex-col justify-center transition-all focus-within:ring-2 focus-within:ring-blue-500">
+              <label
+                htmlFor="guests"
+                className="text-xs font-bold text-gray-500 uppercase ml-3 mb-1"
+              >
+                Khách
+              </label>
+              <input
+                type="number"
+                id="guests"
+                name="guests"
+                placeholder="02"
+                min="1"
+                className="w-full px-3 py-1 bg-transparent border-none outline-none text-gray-800 font-medium"
+                value={searchParams.guests}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="lg:col-span-2 flex">
+              <button
+                type="submit"
+                className="w-full h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-blue-500/50 transition-all duration-300 flex items-center justify-center gap-2 transform hover:-translate-y-1"
+              >
+                <FaSearch />
+                Khám Phá
+              </button>
+            </div>
+          </form>
         </div>
-    );
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 2: TOURS NỔI BẬT ===
 function FeaturedTours() {
-    const { data: toursData, isLoading } = useQuery({
-        queryKey: ["featuredTours"],
-        queryFn: tourApi.getFeaturedTours,
-    });
+  const { data: toursData, isLoading } = useQuery({
+    queryKey: ['featuredTours'],
+    queryFn: tourApi.getFeaturedTours
+  })
 
-    const tours = toursData?.data.content || [];
+  const tours = toursData?.data.content || []
 
-    return (
-        <div className="py-16 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-4xl font-bold text-center text-secondary-dark mb-4">
-                    Tours Nổi Bật
-                </h2>
-                <p className="text-lg text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                    Khám phá những điểm đến tuyệt vời nhất Việt Nam với các tour được lựa chọn kỹ
-                    lưỡng
-                </p>
-                {isLoading ? (
-                    <div className="text-center">Đang tải...</div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {tours.map((tour: Tour) => (
-                            <TourCard key={tour.tourID} tour={tour} />
-                        ))}
-                    </div>
-                )}
-                <div className="text-center mt-12">
-                    {/* (CẬP NHẬT) Dùng component Button */}
-                    <Button
-                        as="link"
-                        to="/tours"
-                        variant="solid"
-                        className="px-8 py-3 text-center inline-block"
-                    >
-                        Xem tất cả tours
-                    </Button>
-                </div>
-            </div>
+  return (
+    <div className="py-20 bg-[#f8fafc]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center mb-16">
+          <span className="text-blue-600 font-bold tracking-wider uppercase text-sm bg-blue-100 px-4 py-1.5 rounded-full mb-4 flex items-center gap-2">
+            <FaCompass /> Top Đề Cử
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 text-center mb-4">
+            Tour Du Lịch Nổi Bật
+          </h2>
+          <p className="text-lg text-gray-500 text-center max-w-2xl">
+            Những hành trình được yêu thích nhất với chất lượng dịch vụ hàng đầu, hứa hẹn mang lại
+            trải nghiệm không thể nào quên.
+          </p>
         </div>
-    );
+
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {tours.map((tour: Tour) => (
+              <div
+                key={tour.tourID}
+                className="group hover:-translate-y-2 transition-transform duration-300"
+              >
+                <TourCard tour={tour} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="text-center mt-14">
+          <Button
+            as="link"
+            to="/tours"
+            className="px-8 py-4 bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-600 hover:text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-md hover:shadow-xl inline-flex items-center gap-2"
+          >
+            Xem tất cả lịch trình <FaArrowRight />
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 3: ĐIỂM ĐẾN PHỔ BIẾN ===
 function PopularDestinations() {
-    const { data: destinationsData, isLoading } = useQuery({
-        queryKey: ["popularDestinations"],
-        queryFn: destinationApi.getPopularDestinations,
-    });
+  const { data: destinationsData, isLoading } = useQuery({
+    queryKey: ['popularDestinations'],
+    queryFn: destinationApi.getPopularDestinations
+  })
 
-    const destinations = destinationsData?.data || [];
+  const destinations = destinationsData?.data || []
 
-    return (
-        <div className="py-16 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-4xl font-bold text-center text-secondary-dark mb-4">
-                    Điểm Đến Phổ Biến
-                </h2>
-                <p className="text-lg text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                    Khám phá những vùng đất đẹp nhất Việt Nam với hàng trăm tour đa dạng
-                </p>
-                {isLoading ? (
-                    <div className="text-center">Đang tải...</div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {destinations.slice(0, 6).map((dest: Destination) => (
-                            <DestinationCard key={dest.destinationID} destination={dest} />
-                        ))}
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+          <div className="max-w-2xl">
+            <span className="text-orange-500 font-bold tracking-wider uppercase text-sm bg-orange-100 px-4 py-1.5 rounded-full mb-4 inline-block">
+              Điểm Đến Hot
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+              Khám Phá Việt Nam
+            </h2>
+            <p className="text-lg text-gray-500">
+              Lựa chọn điểm đến tiếp theo cho hành trình của bạn từ những địa danh nổi tiếng nhất.
+            </p>
+          </div>
+          <Link
+            to="/tours"
+            className="hidden md:flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-800 transition-colors group"
+          >
+            Xem tất cả điểm đến{' '}
+            <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
-    );
+
+        {isLoading ? (
+          <div className="text-center text-gray-500">Đang tải dữ liệu...</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {destinations.slice(0, 6).map((dest: Destination) => (
+              <div
+                key={dest.destinationID}
+                className="rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300"
+              >
+                <DestinationCard destination={dest} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 4: TẠI SAO CHỌN CHÚNG TÔI ===
-// (Không thay đổi)
 const features = [
-    {
-        icon: FaShieldAlt,
-        title: "Đảm Bảo Chất Lượng",
-        desc: "Cam kết cung cấp dịch vụ và tour chất lượng cao, chuyên nghiệp.",
-        background: "#dbeafe", // bg-blue-100
-        color: "#2563eb", // text-blue-600
-    },
-    {
-        icon: FaTag,
-        title: "Giá Cả Hợp Lý",
-        desc: "Mức giá cạnh tranh và minh bạch, không phát sinh chi phí ẩn.",
-        background: "#dcfce7", // bg-green-100
-        color: "#16a34a", // text-green-600
-    },
-    {
-        icon: FaHeadset,
-        title: "Hỗ Trợ 24/7",
-        desc: "Đội ngũ chuyên gia sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.",
-        background: "#e0e7ff", // bg-indigo-100
-        color: "#4f46e5", // text-indigo-600
-    },
-    {
-        icon: FaSyncAlt,
-        title: "Lịch Trình Linh Hoạt",
-        desc: "Thiết kế tour linh hoạt, có thể thay đổi theo yêu cầu của khách hàng.",
-        background: "#fef3c7", // bg-amber-100
-        color: "#d97706", // text-amber-700
-    },
-    {
-        icon: FaUserGraduate,
-        title: "Đội Ngũ Chuyên Nghiệp",
-        desc: "Hướng dẫn viên địa phương am hiểu, giàu kinh nghiệm và nhiệt tình.",
-        background: "#f1f5f9", // bg-slate-100
-        color: "#475569", // text-slate-600
-    },
-    {
-        icon: FaStar,
-        title: "Trải Nghiệm Đáng Nhớ",
-        desc: "Tạo ra những kỷ niệm đẹp và trải nghiệm khó quên cho chuyến đi.",
-        background: "#fce7f3", // bg-pink-100
-        color: "#db2777", // text-pink-600
-    },
-];
-
-const stats = [
-    {
-        icon: FaRegStar,
-        value: "10+",
-        label: "Năm kinh nghiệm",
-        background: "#dbeafe",
-        color: "#2563eb",
-    },
-    {
-        icon: FaCheckCircle,
-        value: "98%",
-        label: "Khách hàng hài lòng",
-        background: "#dcfce7",
-        color: "#16a34a",
-    },
-    {
-        icon: FaUserGraduate,
-        value: "50+",
-        label: "Hướng dẫn viên",
-        background: "#f3e8ff",
-        color: "#9333ea",
-    },
-    {
-        icon: FaTag,
-        value: "25+",
-        label: "Giải thưởng",
-        background: "#ffedd5",
-        color: "#ea580c",
-    },
-];
+  {
+    icon: FaShieldAlt,
+    title: 'An Toàn Tuyệt Đối',
+    desc: 'Chuyến đi được bảo vệ và hỗ trợ rủi ro 24/7.',
+    gradient: 'from-blue-500 to-cyan-400'
+  },
+  {
+    icon: FaTag,
+    title: 'Giá Tốt Nhất',
+    desc: 'Cam kết không phát sinh chi phí ẩn, giá cả minh bạch.',
+    gradient: 'from-green-500 to-emerald-400'
+  },
+  {
+    icon: FaHeadset,
+    title: 'Hỗ Trợ Tận Tâm',
+    desc: 'Đội ngũ chuyên gia luôn sẵn sàng giải đáp mọi thắc mắc.',
+    gradient: 'from-purple-500 to-indigo-400'
+  },
+  {
+    icon: FaSyncAlt,
+    title: 'Lịch Trình Đa Dạng',
+    desc: 'Tùy biến linh hoạt theo nhu cầu riêng của bạn.',
+    gradient: 'from-orange-500 to-amber-400'
+  },
+  {
+    icon: FaUserGraduate,
+    title: 'HDV Chuyên Nghiệp',
+    desc: 'Am hiểu sâu sắc văn hóa, lịch sử và địa phương.',
+    gradient: 'from-pink-500 to-rose-400'
+  },
+  {
+    icon: FaStar,
+    title: 'Trải Nghiệm Đẳng Cấp',
+    desc: 'Lưu trú và dịch vụ chuẩn sao mang đến sự thoải mái nhất.',
+    gradient: 'from-yellow-400 to-orange-400'
+  }
+]
 
 function WhyChooseUs() {
-    return (
-        <div className="py-16 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-4xl font-bold text-center text-secondary-dark mb-4">
-                    Tại Sao Chọn Chúng Tôi?
-                </h2>
-                <p className="text-lg text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                    Với hơn 10 năm kinh nghiệm, chúng tôi tự hào mang đến những trải nghiệm tuyệt
-                    vời nhất
-                </p>
+  return (
+    <div className="py-24 bg-slate-50 relative overflow-hidden">
+      {/* Abstract Background Shapes */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-orange-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 translate-x-1/3 translate-y-1/3"></div>
 
-                {/* 6 Lợi ích với màu động */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {features.map((feature) => (
-                        <div
-                            key={feature.title}
-                            className="bg-white p-8 rounded-lg shadow-md text-center flex flex-col items-center"
-                        >
-                            <div
-                                className="rounded-full p-4 mb-5 inline-flex"
-                                style={{
-                                    backgroundColor: feature.background,
-                                    color: feature.color,
-                                }}
-                            >
-                                <feature.icon size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold text-secondary-dark mb-2">
-                                {feature.title}
-                            </h3>
-                            <p className="text-gray-600">{feature.desc}</p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Thanh thống kê với màu động */}
-                <div className="mt-16 bg-white p-8 rounded-lg shadow-lg">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        {stats.map((stat) => (
-                            <div key={stat.label} className="flex flex-col items-center">
-                                <div
-                                    className="rounded-full p-4 mb-4 inline-flex"
-                                    style={{
-                                        backgroundColor: stat.background,
-                                        color: stat.color,
-                                    }}
-                                >
-                                    <stat.icon size={28} />
-                                </div>
-                                <span className="text-4xl font-bold" style={{ color: stat.color }}>
-                                    {stat.value}
-                                </span>
-                                <p className="text-gray-600 mt-1">{stat.label}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            Tại Sao Chọn TripBee?
+          </h2>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Chúng tôi không chỉ tổ chức tour, chúng tôi thiết kế những kỷ niệm đáng nhớ bằng sự tử
+            tế và chuyên nghiệp.
+          </p>
         </div>
-    );
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
+            >
+              <div
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} text-white flex items-center justify-center mb-6 shadow-lg`}
+              >
+                <feature.icon size={28} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+              <p className="text-gray-500 leading-relaxed">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 5: TRẢI NGHIỆM ĐỘC ĐÁO ===
-// (Không thay đổi)
 function UniqueExperience() {
-    return (
-        <div className="py-16 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-4xl font-bold text-center text-secondary-dark mb-4">
-                    Trải Nghiệm Độc Đáo
-                </h2>
-                <p className="text-lg text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                    Chúng tôi không chỉ bán tour, chúng tôi mang đến những trải nghiệm
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Card 1 */}
-                    <Link
-                        to="/tours"
-                        className="relative h-96 rounded-lg overflow-hidden shadow-lg group"
-                    >
-                        <img
-                            src="./dulichmaohiem.avif"
-                            alt="Du Lịch Mạo Hiểm"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                        <div className="absolute bottom-6 left-6 text-white">
-                            <div className="bg-blue-600 text-white rounded-full p-3 mb-3 inline-flex">
-                                <FaLeaf size={24} />
-                            </div>
-                            <h3 className="text-3xl font-bold mb-1">Du Lịch Mạo Hiểm</h3>
-                            <p className="text-lg">Khám phá giới hạn của bản thân</p>
-                        </div>
-                    </Link>
-                    {/* Card 2 */}
-                    <Link
-                        to="/tours"
-                        className="relative h-96 rounded-lg overflow-hidden shadow-lg group"
-                    >
-                        <img
-                            src="./khamphaamthuc.avif"
-                            alt="Khám Phá Ẩm Thực"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                        <div className="absolute bottom-6 left-6 text-white">
-                            <div className="bg-primary bg-amber-500 text-secondary-dark rounded-full p-3 mb-3 inline-flex">
-                                <FaUserFriends size={24} />
-                            </div>
-                            <h3 className="text-3xl font-bold mb-1">Khám Phá Ẩm Thực</h3>
-                            <p className="text-lg">Thưởng thức hương vị địa phương</p>
-                        </div>
-                    </Link>
-                </div>
-            </div>
+  return (
+    <div className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            Bộ Sưu Tập Trải Nghiệm
+          </h2>
+          <p className="text-lg text-gray-500">Khám phá Việt Nam theo cách riêng của bạn</p>
         </div>
-    );
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Link
+            to="/tours"
+            className="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl group cursor-pointer"
+          >
+            <img
+              src="./dulichmaohiem.avif"
+              alt="Du Lịch Mạo Hiểm"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-300" />
+            <div className="absolute bottom-8 left-8 text-white transform transition-transform duration-500 group-hover:-translate-y-2">
+              <div className="bg-white/20 backdrop-blur-md text-white rounded-full p-3 mb-4 inline-flex border border-white/30">
+                <FaLeaf size={24} />
+              </div>
+              <h3 className="text-4xl font-bold mb-2">Thiên Nhiên Kỳ Vĩ</h3>
+              <p className="text-gray-200 text-lg flex items-center gap-2">
+                Tìm về bản ngã, hòa mình vào đất trời{' '}
+                <FaArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            to="/tours"
+            className="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl group cursor-pointer"
+          >
+            <img
+              src="./khamphaamthuc.avif"
+              alt="Khám Phá Ẩm Thực"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-300" />
+            <div className="absolute bottom-8 left-8 text-white transform transition-transform duration-500 group-hover:-translate-y-2">
+              <div className="bg-amber-500/80 backdrop-blur-md text-white rounded-full p-3 mb-4 inline-flex border border-amber-400/50">
+                <FaUserFriends size={24} />
+              </div>
+              <h3 className="text-4xl font-bold mb-2">Văn Hóa & Ẩm Thực</h3>
+              <p className="text-gray-200 text-lg flex items-center gap-2">
+                Thưởng thức tinh hoa ngàn năm{' '}
+                <FaArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 6: BLOG DU LỊCH ===
-// (GIỮ LẠI THEO YÊU CẦU)
 const blogPosts = [
-    {
-        id: 1,
-        image: "./blog-01.avif",
-        date: "25 Tháng 10, 2025",
-        title: "10 địa điểm không thể bỏ qua khi đến Hà Giang",
-        link: "/blog/1",
-    },
-    {
-        id: 2,
-        image: "./blog-02.jpg",
-        date: "20 Tháng 10, 2025",
-        title: "Kinh nghiệm du lịch Phú Quốc từ A đến Z",
-        link: "/blog/2",
-    },
-    {
-        id: 3,
-        image: "./blog-03.avif",
-        date: "15 Tháng 10, 2025",
-        title: "Ẩm thực đường phố Sài Gòn: Ăn gì, ở đâu?",
-        link: "/blog/3",
-    },
-];
-
-// (GIỮ LẠI THEO YÊU CẦU)
-function BlogCard({
-    post,
-}: {
-    post: {
-        id: number;
-        image: string;
-        date: string;
-        title: string;
-        link: string;
-    };
-}) {
-    return (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden group">
-            <Link to={post.link} className="block h-56">
-                <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-            </Link>
-            <div className="p-5">
-                <p className="text-sm text-gray-500 mb-2">{post.date}</p>
-                <h3 className="text-xl font-bold text-secondary-dark mb-4 h-14 line-clamp-2">
-                    <Link to={post.link} className="hover:text-blue-600 transition">
-                        {post.title}
-                    </Link>
-                </h3>
-                <Link
-                    to={post.link}
-                    className="font-semibold text-blue-600 hover:text-blue-700 transition flex items-center gap-2"
-                >
-                    Đọc thêm <FaArrowRight size={14} />
-                </Link>
-            </div>
-        </div>
-    );
-}
+  {
+    id: 1,
+    image: './blog-01.avif',
+    date: '25/10/2025',
+    category: 'Kinh nghiệm',
+    title: '10 địa điểm không thể bỏ qua khi đến Hà Giang mùa lúa chín',
+    link: '/blog/1'
+  },
+  {
+    id: 2,
+    image: './blog-02.jpg',
+    date: '20/10/2025',
+    category: 'Cẩm nang',
+    title: 'Review chi tiết lịch trình khám phá đảo ngọc Phú Quốc 4N3Đ',
+    link: '/blog/2'
+  },
+  {
+    id: 3,
+    image: './blog-03.avif',
+    date: '15/10/2025',
+    category: 'Ẩm thực',
+    title: 'Bản đồ ẩm thực đường phố Sài Gòn: Ăn sập chợ Bến Thành',
+    link: '/blog/3'
+  }
+]
 
 function TravelBlog() {
-    return (
-        <div className="py-16 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-4xl font-bold text-center text-secondary-dark mb-4">
-                    Blog Du Lịch
-                </h2>
-                <p className="text-lg text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                    Cập nhật những tin tức, cẩm nang và kinh nghiệm du lịch mới nhất
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {blogPosts.map((post) => (
-                        <BlogCard key={post.id} post={post} />
-                    ))}
-                </div>
-            </div>
+  return (
+    <div className="py-24 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+          <div>
+            <span className="text-purple-600 font-bold tracking-wider uppercase text-sm bg-purple-100 px-4 py-1.5 rounded-full mb-4 inline-block">
+              Cảm hứng du lịch
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Góc Sẻ Chia</h2>
+          </div>
         </div>
-    );
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {blogPosts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group border border-gray-100"
+            >
+              <Link to={post.link} className="block relative h-60 overflow-hidden">
+                <img
+                  src={post.image}
+                  alt={post.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-800">
+                  {post.category}
+                </div>
+              </Link>
+              <div className="p-6">
+                <div className="text-sm text-gray-400 mb-3 flex items-center gap-2">
+                  <FaCalendarAlt /> {post.date}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                  <Link to={post.link}>{post.title}</Link>
+                </h3>
+                <Link
+                  to={post.link}
+                  className="text-blue-600 font-semibold flex items-center gap-2 hover:gap-3 transition-all"
+                >
+                  Đọc tiếp <FaArrowRight />
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 7: KHÁCH HÀNG NÓI GÌ ===
-// (Không thay đổi)
 const testimonialData = [
-    {
-        id: 1,
-        quote: "Tour Hạ Long cực kỳ tuyệt vời! Dịch vụ chu đáo, hướng dẫn viên nhiệt tình. Chắc chắn sẽ quay lại!",
-        image: "https://i.pravatar.cc/100?img=12",
-        name: "Nguyễn Minh Anh",
-        tour: "Tour Hạ Long Bay Luxury Cruise",
-    },
-    {
-        id: 2,
-        quote: "Chuyến đi Đà Nẵng - Hội An rất ưng ý. Khách sạn đẹp, đồ ăn ngon, lịch trình hợp lý. Cảm ơn TripBee.",
-        image: "https://i.pravatar.cc/100?img=5",
-        name: "Trần Văn Hùng",
-        tour: "Tour Đà Nẵng - Hội An 4N3Đ",
-    },
-    {
-        id: 3,
-        quote: "Mình đã đặt tour đi Phú Quốc cho cả gia đình. Ai cũng hài lòng. Dịch vụ của các bạn rất chuyên nghiệp.",
-        image: "https://i.pravatar.cc/100?img=32",
-        name: "Lê Thị Bích",
-        tour: "Tour Phú Quốc 3N2Đ",
-    },
-];
-
-const testimonialStats = [
-    {
-        icon: FaRegStar,
-        value: "4.8/5",
-        label: "Đánh giá trung bình",
-    },
-    {
-        icon: FaSyncAlt,
-        value: "85%",
-        label: "Khách hàng quay lại",
-    },
-    {
-        icon: FaThumbsUp,
-        value: "92%",
-        label: "Giới thiệu bạn bè",
-    },
-];
+  {
+    id: 1,
+    quote:
+      'Một trải nghiệm tuyệt vời ngoài sức tưởng tượng. Mọi thứ từ xe đưa đón, khách sạn đến bữa ăn đều được TripBee chuẩn bị vô cùng chu đáo. Hướng dẫn viên siêu nhiệt tình!',
+    image: 'https://i.pravatar.cc/150?img=12',
+    name: 'Nguyễn Minh Anh',
+    tour: 'Tour Hạ Long Bay Luxury 3N2Đ'
+  },
+  {
+    id: 2,
+    quote:
+      'Gia đình tôi đã có một kỷ niệm đáng nhớ tại Hội An. Lịch trình thiết kế rất hợp lý cho cả người già và trẻ em. Chắc chắn sẽ tiếp tục ủng hộ TripBee trong các chuyến đi tới.',
+    image: 'https://i.pravatar.cc/150?img=11',
+    name: 'Trần Văn Hùng',
+    tour: 'Tour Đà Nẵng - Hội An 4N3Đ'
+  }
+]
 
 function Testimonials() {
-    const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-    const prevSlide = () => {
-        setCurrentSlide(currentSlide === 0 ? testimonialData.length - 1 : currentSlide - 1);
-    };
+  return (
+    <div className="relative py-24 bg-gray-900 overflow-hidden">
+      {/* Background Pattern */}
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '40px 40px'
+        }}
+      ></div>
 
-    const nextSlide = () => {
-        setCurrentSlide(currentSlide === testimonialData.length - 1 ? 0 : currentSlide + 1);
-    };
-
-    return (
-        <div
-            className="relative py-20 bg-gray-800 text-white z-10"
-            style={{
-                backgroundImage:
-                    "url(https://images.unsplash.com/photo-1531685253026-700b907f9011?q=80&w=2070&auto=format&fit=crop)",
-                backgroundAttachment: "fixed",
-                backgroundSize: "cover",
-            }}
-        >
-            <div className="absolute inset-0 bg-gray-900/70" />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <h2 className="text-4xl font-bold text-center mb-4">
-                    Khách Hàng Nói Gì Về Chúng Tôi
-                </h2>
-                <p className="text-lg text-center text-gray-300 mb-12 max-w-2xl mx-auto">
-                    Những chia sẻ chân thực từ khách hàng đã trải nghiệm dịch vụ của chúng tôi
-                </p>
-                <div className="bg-white text-gray-800 max-w-3xl mx-auto rounded-lg shadow-xl p-10 md:p-12 text-center relative overflow-hidden min-h-[420px]">
-                    {/* Nút lùi */}
-                    <button
-                        onClick={prevSlide}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-full transition z-10"
-                        aria-label="Đánh giá trước"
-                    >
-                        <FaArrowLeft />
-                    </button>
-                    {/* Nút tới */}
-                    <button
-                        onClick={nextSlide}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-full transition z-10"
-                        aria-label="Đánh giá kế tiếp"
-                    >
-                        <FaArrowRight />
-                    </button>
-
-                    {/* Nội dung Testimonial */}
-                    {testimonialData.map((item, index) => (
-                        <div
-                            key={item.id}
-                            className={`transition-opacity duration-500 ease-in-out ${
-                                index === currentSlide ? "opacity-100" : "opacity-0 absolute"
-                            }`}
-                        >
-                            {index === currentSlide && (
-                                <>
-                                    <FaQuoteLeft className="text-5xl text-gray-200 mb-6 mx-auto" />
-                                    <p className="text-xl md:text-2xl italic text-gray-700 leading-relaxed min-h-[100px]">
-                                        "{item.quote}"
-                                    </p>
-                                    <div className="mt-8">
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-gray-200"
-                                        />
-                                        <h4 className="text-xl font-bold text-secondary-dark">
-                                            {item.name}
-                                        </h4>
-                                        <p className="text-gray-500">{item.tour}</p>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ))}
-
-                    {/* Dấu chấm */}
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
-                        {testimonialData.map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setCurrentSlide(index)}
-                                className={`w-3 h-3 rounded-full ${
-                                    index === currentSlide ? "bg-blue-600" : "bg-gray-300"
-                                } transition`}
-                                aria-label={`Slide ${index + 1}`}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Thống kê Testimonial */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto mt-12 text-center">
-                    {testimonialStats.map((stat) => (
-                        <div key={stat.label}>
-                            <div className="text-blue-400 mb-3 inline-flex">
-                                <stat.icon size={36} />
-                            </div>
-                            <span className="block text-4xl font-bold text-white">
-                                {stat.value}
-                            </span>
-                            <p className="text-gray-300 mt-1">{stat.label}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-16">
+          <span className="text-yellow-400 font-bold tracking-wider uppercase text-sm bg-yellow-400/10 border border-yellow-400/20 px-4 py-1.5 rounded-full mb-4 inline-block">
+            Đánh giá thực tế
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white">Khách Hàng Nói Gì?</h2>
         </div>
-    );
+
+        <div className="max-w-4xl mx-auto">
+          <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 md:p-14 text-center shadow-2xl min-h-[350px] flex flex-col justify-center">
+            <FaQuoteLeft className="text-6xl text-white/20 absolute top-8 left-8" />
+
+            {testimonialData.map((item, index) => (
+              <div
+                key={item.id}
+                className={`transition-all duration-700 ease-in-out ${index === currentSlide ? 'opacity-100 translate-y-0 relative z-10' : 'opacity-0 absolute inset-0 translate-y-4 pointer-events-none'}`}
+              >
+                <p className="text-xl md:text-2xl italic text-gray-100 leading-relaxed mb-8 px-4 md:px-12">
+                  "{item.quote}"
+                </p>
+                <div className="flex flex-col items-center">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-20 h-20 rounded-full border-4 border-blue-500 shadow-xl mb-4"
+                  />
+                  <h4 className="text-xl font-bold text-white mb-1">{item.name}</h4>
+                  <p className="text-blue-300 font-medium">{item.tour}</p>
+                  <div className="flex text-yellow-400 mt-2 gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar key={i} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Controls */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 md:-mx-6">
+              <button
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev === 0 ? testimonialData.length - 1 : prev - 1))
+                }
+                className="bg-white/20 hover:bg-white/40 text-white p-3 md:p-4 rounded-full backdrop-blur-md transition-all"
+              >
+                <FaChevronLeft />
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev === testimonialData.length - 1 ? 0 : prev + 1))
+                }
+                className="bg-white/20 hover:bg-white/40 text-white p-3 md:p-4 rounded-full backdrop-blur-md transition-all"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // === PHẦN 8: NHẬN THÔNG TIN ===
-// (Không thay đổi)
-const newsletterBenefits = [
-    {
-        icon: FaGift,
-        title: "Ưu đãi độc quyền",
-        desc: "Nhận các ưu đãi đặc biệt chỉ dành cho thành viên đăng ký.",
-    },
-    {
-        icon: FaBell,
-        title: "Thông báo sớm",
-        desc: "Biết thông tin về các tour mới và khuyến mãi trước bất kỳ ai.",
-    },
-    {
-        icon: FaBookOpen,
-        title: "Cẩm nang du lịch",
-        desc: "Những bài viết, mẹo vặt và cẩm nang hữu ích cho chuyến đi.",
-    },
-];
-
 function Newsletter() {
-    return (
-        <div
-            className="py-20 bg-blue-600 text-white relative overflow-hidden"
-            style={{
-                backgroundImage: "url('/hero.jpg')",
-                backgroundPosition: "bottom center",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "100% auto",
-            }}
-        >
-            {/* Lớp phủ màu */}
-            <div className="absolute inset-0 bg-blue-500/85" />
+  return (
+    <div className="py-24 bg-white relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-[3rem] p-10 md:p-16 text-center text-white shadow-2xl relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400 opacity-20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
 
-            {/* Container nội dung */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-                <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                    <FaEnvelope size={32} />
-                </div>
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <FaEnvelope className="text-5xl text-blue-200 mx-auto mb-6" />
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
+              Sẵn Sàng Cho Chuyến Đi Tiếp Theo?
+            </h2>
+            <p className="text-lg text-blue-100 mb-10">
+              Để lại email để nhận ngay voucher giảm giá 15% cho tour đầu tiên và các cẩm nang du
+              lịch độc quyền.
+            </p>
 
-                <h2 className="text-4xl font-bold mb-4">Nhận Thông Tin Tours Mới Nhất</h2>
-                <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto">
-                    Đăng ký nhận bản tin để không bỏ lỡ những tour du lịch hấp dẫn và ưu đãi đặc
-                    biệt từ chúng tôi
-                </p>
-
-                {/* Form đăng ký */}
-                <form className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
-                    <input
-                        type="email"
-                        placeholder="Nhập email của bạn..."
-                        className="bg-white flex-grow px-5 py-3 rounded-lg text-gray-900 border-0 focus:ring-2 focus:ring-primary-light focus:outline-none min-w-0"
-                        required
-                    />
-                    {/* (CẬP NHẬT) Dùng component Button */}
-                    <Button
-                        type="submit"
-                        className="bg-white text-blue-600! font-bold px-8 py-3 hover:bg-blue-600 hover:text-white flex-shrink-0"
-                    >
-                        Đăng ký
-                    </Button>
-                </form>
-
-                <p className="text-xs text-blue-100 mt-4 max-w-xl mx-auto">
-                    Bằng cách đăng ký, bạn đồng ý với{" "}
-                    <Link to="/privacy" className="font-semibold underline hover:text-white">
-                        Chính sách bảo mật
-                    </Link>{" "}
-                    của chúng tôi.
-                </p>
-
-                {/* 3 Lợi ích */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-16">
-                    {newsletterBenefits.map((item) => (
-                        <div key={item.title} className="flex flex-col items-center p-4">
-                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-3">
-                                <item.icon size={22} />
-                            </div>
-                            <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
-                            <p className="text-blue-100 text-sm">{item.desc}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <form className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/20 shadow-xl">
+              <input
+                type="email"
+                placeholder="Nhập địa chỉ email của bạn..."
+                className="bg-transparent flex-grow px-6 py-3 text-white placeholder-blue-200 focus:outline-none min-w-0"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-white text-blue-700 font-bold px-8 py-3 rounded-full hover:bg-blue-50 transition-colors shadow-md whitespace-nowrap"
+              >
+                Đăng ký ngay
+              </button>
+            </form>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  )
 }
 
-// === COMPONENT CHÍNH: HOMESCREEN ===
+// === COMPONENT CHÍNH ===
 export default function HomeScreen() {
-    return (
-        <div className="bg-white">
-            <HeroSection />
-            <FeaturedTours />
-            <PopularDestinations />
-            <WhyChooseUs />
-            <UniqueExperience />
-            <TravelBlog />
-            <Testimonials />
-            <Newsletter />
-        </div>
-    );
+  return (
+    <div className="bg-white w-full overflow-hidden">
+      <HeroSection />
+      <FeaturedTours />
+      <PopularDestinations />
+      <WhyChooseUs />
+      <UniqueExperience />
+      <TravelBlog />
+      <Testimonials />
+      <Newsletter />
+    </div>
+  )
 }
