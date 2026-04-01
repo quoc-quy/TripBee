@@ -1,366 +1,239 @@
-import React, { useContext, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import Popover from "../Popover";
-import { AppContext } from "../../contexts/app.context";
-import { useMutation } from "@tanstack/react-query";
-import { logout } from "../../apis/auth.api";
-import userImage from "../../assets/user.png";
+import React, { useContext, useState, useEffect } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import Popover from '../Popover'
+import { AppContext } from '../../contexts/app.context'
+import { useMutation } from '@tanstack/react-query'
+import { logout } from '../../apis/auth.api'
+import userImage from '../../assets/user.png'
 
 export default function Header() {
-    const { isAuthenticated, setIsAuthenticated, setProfile, profile } = useContext(AppContext);
-    // Thêm state cho mobile menu
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, setIsAuthenticated, setProfile, profile } = useContext(AppContext)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
-    const logoutMutation = useMutation({
-        mutationFn: logout,
-        onSuccess: () => {
-            setIsAuthenticated(false);
-            setProfile(null);
-        },
-    });
+  // Hiệu ứng đổi màu header khi scroll
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
-    const handleLogout = () => {
-        logoutMutation.mutate();
-    };
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      setIsAuthenticated(false)
+      setProfile(null)
+    }
+  })
 
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
+  const handleLogout = () => logoutMutation.mutate()
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-    return (
-        <div className="top-0 sticky z-50 flex justify-between items-center w-full bg-white text-black px-4 lg:px-12 py-3 border border-b-gray-300">
-            {/* --- Logo --- */}
-            <Link to="/" className="hover:text-[#2663ec]">
-                <img src="/Logo-TripBee.png" alt="" className="w-16" />
-            </Link>
-
-            {/* --- Menu Điều Hướng (Chỉ hiển thị trên màn hình lớn) --- */}
-            <div className="hidden lg:flex gap-10 font-semibold">
-                {/* NavLinks giữ nguyên */}
-                <NavLink
-                    to="/"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Trang chủ
-                </NavLink>
-                <NavLink
-                    to="/tours"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Tours
-                </NavLink>
-                {/* <NavLink
-          to="/destinations"
-          className={({ isActive }) =>
-            isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-          }
+  return (
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm py-2'
+          : 'bg-white border-b border-gray-100 py-3'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        {/* --- Logo --- */}
+        <Link
+          to="/"
+          className="flex items-center gap-2 group transform transition-transform hover:scale-105"
         >
-          Điểm đến
-        </NavLink> */}
-                <NavLink
-                    to="/about"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Về chúng tôi
-                </NavLink>
-                <NavLink
-                    to="/contact"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Liên hệ
-                </NavLink>
-                {/* <NavLink
-                    to="/admin/dashboard"
-                    className={({ isActive }) =>
-                        isActive ? "text-[#2663ec]" : "hover:text-[#2663ec]"
-                    }
-                >
-                    Admin
-                </NavLink> */}
-            </div>
+          <img src="/Logo-TripBee.png" alt="TripBee Logo" className="w-16 drop-shadow-sm" />
+        </Link>
 
-            {/* --- Account/Auth & Mobile Menu Toggle --- */}
-            <div className="flex items-center gap-4">
-                {/* Popover cho User/Auth (Luôn hiển thị) */}
-                <div className="hidden lg:block">
-                    <div className="col-span-1 justify-self-start">
-                        {isAuthenticated && (
-                            <Popover
-                                renderPopover={
-                                    <div className="bg-white relative shadow-md rounded-sm border border-gray-200 w-60 text-md">
-                                        <div className="flex flex-col gap-2 text-left mt-2 mb-2">
-                                            <Link
-                                                to="/account/profile"
-                                                className="flex gap-2 items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                <img
-                                                    src={userImage} // Dùng biến import userImage
-                                                    alt="User avatar"
-                                                    className="w-10 h-10 cursor-pointer object-cover rounded-full"
-                                                />
-                                                <div className="flex flex-col min-w-0 w-40">
-                                                    <span className="font-bold line-clamp-1">
-                                                        {profile?.userID}
-                                                    </span>
-                                                    <span className="line-clamp-1 block max-w-full">
-                                                        {profile?.email}
-                                                    </span>
-                                                </div>
-                                            </Link>
-                                            <div className="border-t border-gray-200 my-2"></div>
-                                            <Link
-                                                to="/account/profile"
-                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Hồ sơ
-                                            </Link>
-                                            {/* <Link
-                                                to="/tours"
-                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Đặt tour
-                                            </Link> */}
-                                            <div className="border-t border-gray-200 my-2"></div>
-                                            <button
-                                                onClick={handleLogout}
-                                                className="block text-left px-4 py-2 cursor-pointer font-semibold text-red-500 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Đăng xuất
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            >
-                                <img
-                                    src={userImage} // Dùng biến import userImage
-                                    alt="User avatar"
-                                    className="w-10 h-10 cursor-pointer object-cover rounded-full"
-                                />
-                            </Popover>
-                        )}
-                        {!isAuthenticated && (
-                            <Popover
-                                renderPopover={
-                                    <div className="bg-white relative shadow-md rounded-sm border border-gray-200 w-48 text-md">
-                                        <div className="flex flex-col gap-2 text-left mt-2 mb-2">
-                                            <Link
-                                                to="/login"
-                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Đăng nhập
-                                            </Link>
-                                            <Link
-                                                to="/register"
-                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                            >
-                                                Đăng ký
-                                            </Link>
-                                        </div>
-                                    </div>
-                                }
-                            >
-                                <div className="flex hover:text-[#2663ec] font-semibold gap-2 cursor-pointer items-center">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth="1.5"
-                                        stroke="currentColor"
-                                        className="size-5"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                                        />
-                                    </svg>
-                                    Tài khoản
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth="1.5"
-                                        stroke="currentColor"
-                                        className="size-5"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                                        />
-                                    </svg>
-                                </div>
-                            </Popover>
-                        )}
-                    </div>
-                </div>
-
-                <button
-                    onClick={toggleMenu}
-                    className="lg:hidden p-2 hover:bg-gray-100 rounded"
-                    aria-expanded={isMenuOpen}
-                    aria-controls="mobile-menu"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-6 h-6"
-                    >
-                        {isMenuOpen ? (
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        ) : (
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                            />
-                        )}
-                    </svg>
-                </button>
-            </div>
-            <div
-                id="mobile-menu"
-                className={`absolute top-[68px] left-0 w-full bg-white border-b border-gray-200 mt-5 shadow-lg lg:hidden z-50 ${
-                    isMenuOpen ? "block" : "hidden"
-                }`}
+        {/* --- Menu Điều Hướng (Desktop) --- */}
+        <div className="hidden lg:flex items-center gap-2 font-medium">
+          {[
+            { path: '/', label: 'Trang chủ' },
+            { path: '/tours', label: 'Tours' },
+            { path: '/about', label: 'Về chúng tôi' },
+            { path: '/contact', label: 'Liên hệ' }
+          ].map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-full transition-all duration-300 ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-600 font-bold'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
+                }`
+              }
             >
-                <div className="flex flex-col p-4 space-y-2 font-semibold">
-                    <NavLink
-                        to="/"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md ${
-                                isActive
-                                    ? "bg-[#2663ec] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            }`
-                        }
-                    >
-                        Trang chủ
-                    </NavLink>
-                    <NavLink
-                        to="/tours"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md ${
-                                isActive
-                                    ? "bg-[#2663ec] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            }`
-                        }
-                    >
-                        Tours
-                    </NavLink>
-                    <NavLink
-                        to="/destinations"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md ${
-                                isActive
-                                    ? "bg-[#2663ec] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            }`
-                        }
-                    >
-                        Điểm đến
-                    </NavLink>
-                    <NavLink
-                        to="/about"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md ${
-                                isActive
-                                    ? "bg-[#2663ec] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            }`
-                        }
-                    >
-                        Về chúng tôi
-                    </NavLink>
-                    <NavLink
-                        to="/contact"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md ${
-                                isActive
-                                    ? "bg-[#2663ec] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            }`
-                        }
-                    >
-                        Liên hệ
-                    </NavLink>
-                    <NavLink
-                        to="/admin/dashboard"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md ${
-                                isActive
-                                    ? "bg-[#2663ec] text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
-                            }`
-                        }
-                    >
-                        Admin
-                    </NavLink>
-
-                    <div className="border-t border-gray-200 pt-2 mt-2"></div>
-
-                    {isAuthenticated && (
-                        <Link
-                            to="/account/profile"
-                            onClick={toggleMenu}
-                            className="block text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                        >
-                            Hồ sơ
-                        </Link>
-                    )}
-
-                    {isAuthenticated ? (
-                        <button
-                            onClick={() => {
-                                handleLogout();
-                                toggleMenu();
-                            }}
-                            className="w-full text-left px-3 py-2 rounded-md cursor-pointer bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
-                        >
-                            Đăng xuất
-                        </button>
-                    ) : (
-                        <>
-                            <Link
-                                to="/login"
-                                onClick={toggleMenu}
-                                className="block text-center px-3 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
-                            >
-                                Đăng nhập
-                            </Link>
-                            <Link
-                                to="/register"
-                                onClick={toggleMenu}
-                                className="block text-center px-3 py-2 rounded-md text-gray-700 border border-gray-300 hover:bg-gray-100 transition-colors duration-200"
-                            >
-                                Đăng ký
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </div>
+              {item.label}
+            </NavLink>
+          ))}
         </div>
-    );
+
+        {/* --- Account/Auth & Mobile Toggle --- */}
+        <div className="flex items-center gap-4">
+          <div className="hidden lg:block">
+            {isAuthenticated ? (
+              <Popover
+                renderPopover={
+                  <div className="bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl border border-gray-100 w-64 text-sm overflow-hidden transform transition-all p-2">
+                    <div className="flex flex-col gap-1 text-left">
+                      <Link
+                        to="/account/profile"
+                        className="flex gap-3 items-center px-4 py-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors duration-300 mb-2"
+                      >
+                        <img
+                          src={userImage}
+                          alt="User avatar"
+                          className="w-11 h-11 object-cover rounded-full border-2 border-white shadow-sm"
+                        />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="font-bold text-gray-900 truncate">
+                            {profile?.userID || 'User'}
+                          </span>
+                          <span className="text-xs text-gray-500 truncate">{profile?.email}</span>
+                        </div>
+                      </Link>
+                      <Link
+                        to="/account/profile"
+                        className="block px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-blue-600 rounded-lg font-medium transition-colors"
+                      >
+                        Hồ sơ cá nhân
+                      </Link>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2.5 cursor-pointer font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                }
+              >
+                <img
+                  src={userImage}
+                  alt="User avatar"
+                  className="w-10 h-10 cursor-pointer object-cover rounded-full ring-2 ring-gray-100 hover:ring-blue-500 transition-all shadow-sm"
+                />
+              </Popover>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/login"
+                  className="px-5 py-2.5 text-gray-700 font-semibold hover:text-blue-600 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                >
+                  Đăng ký
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={toggleMenu}
+            className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            aria-expanded={isMenuOpen}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              {isMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
+
+        {/* --- Mobile Menu --- */}
+        <div
+          className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-gray-200 shadow-xl lg:hidden transition-all duration-300 origin-top ${
+            isMenuOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'
+          }`}
+        >
+          <div className="flex flex-col p-4 space-y-2 font-medium">
+            {[
+              { path: '/', label: 'Trang chủ' },
+              { path: '/tours', label: 'Tours' },
+              { path: '/destinations', label: 'Điểm đến' },
+              { path: '/about', label: 'Về chúng tôi' },
+              { path: '/contact', label: 'Liên hệ' }
+            ].map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={toggleMenu}
+                className={({ isActive }) =>
+                  `block px-4 py-3 rounded-xl transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-600 font-bold'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+
+            <div className="border-t border-gray-100 my-2"></div>
+
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/account/profile"
+                  onClick={toggleMenu}
+                  className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Hồ sơ cá nhân
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout()
+                    toggleMenu()
+                  }}
+                  className="w-full text-left px-4 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-colors"
+                >
+                  Đăng xuất
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col gap-2 mt-2">
+                <Link
+                  to="/login"
+                  onClick={toggleMenu}
+                  className="block text-center px-4 py-3 rounded-xl bg-gray-50 text-gray-800 font-semibold hover:bg-gray-100 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={toggleMenu}
+                  className="block text-center px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-md"
+                >
+                  Đăng ký
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+  )
 }
