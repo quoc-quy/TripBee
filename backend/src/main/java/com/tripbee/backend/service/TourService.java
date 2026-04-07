@@ -1,34 +1,31 @@
 package com.tripbee.backend.service;
 
-import com.tripbee.backend.dto.TourDetailsResponse;
-import com.tripbee.backend.dto.TourSummaryResponse;
-import com.tripbee.backend.model.Tour;
-import com.tripbee.backend.model.TourDestination; // Cần để join
-import com.tripbee.backend.model.TourType; // Cần để join
-import com.tripbee.backend.model.Destination; // Cần để join
-// (Mới) Import thêm các model/enum cần thiết
-import com.tripbee.backend.model.TourPromotion;
-import com.tripbee.backend.model.Promotion;
-import com.tripbee.backend.model.Review;
-import com.tripbee.backend.model.enums.TourStatus;
-import com.tripbee.backend.repository.TourRepository;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import com.tripbee.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-// (Mới) Import Fetch và JoinType
+import com.tripbee.backend.dto.TourDetailsResponse; // Cần để join
+import com.tripbee.backend.dto.TourSummaryResponse; // Cần để join
+import com.tripbee.backend.exception.ResourceNotFoundException; // Cần để join
+import com.tripbee.backend.model.Destination;
+import com.tripbee.backend.model.Tour;
+import com.tripbee.backend.model.TourDestination;
+import com.tripbee.backend.model.TourPromotion;
+import com.tripbee.backend.model.TourType;
+import com.tripbee.backend.model.enums.TourStatus;
+import com.tripbee.backend.repository.TourRepository;
+
 import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import jakarta.persistence.criteria.Predicate;
 @Service
 public class TourService {
 
@@ -58,7 +55,8 @@ public class TourService {
         // Constructor của TourSummaryResponse (đã sửa) sẽ lo việc tính toán
         return tourPage.map(TourSummaryResponse::new);
     }
-
+    
+    @Cacheable(value = "tours", key = "#tourId")
     public TourDetailsResponse getTourDetails(String tourId) {
         // Tìm tour bằng ID, nếu không thấy thì ném lỗi 404
         Tour tour = tourRepository.findById(tourId)
