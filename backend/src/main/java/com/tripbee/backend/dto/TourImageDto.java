@@ -11,6 +11,8 @@ public class TourImageDto {
         this.url = tourImage.getUrl();
         this.caption = tourImage.getCaption();
     }
+    public TourImageDto() {
+    }
 
     // Getters
     public String getUrl() { return url; }
