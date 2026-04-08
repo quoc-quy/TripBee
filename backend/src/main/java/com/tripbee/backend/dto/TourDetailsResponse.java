@@ -1,25 +1,20 @@
 package com.tripbee.backend.dto;
 
-import com.tripbee.backend.model.Destination;
-import com.tripbee.backend.model.Tour;
-import com.tripbee.backend.model.TourDestination;
-import com.tripbee.backend.model.TourImage;
-import com.tripbee.backend.model.Itinerary;
-import com.tripbee.backend.model.TourType;
-// (MỚI) Import thêm các model/util cần thiết
-import com.tripbee.backend.model.Promotion;
-import com.tripbee.backend.model.TourPromotion;
-import com.tripbee.backend.model.enums.PromotionStatus; // Import enum PromotionStatus
-import java.util.Comparator;
-import java.util.Optional;
-
-// Sửa import: Dùng LocalDate và Double
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.lang.Math; // <-- (MỚI) Thêm import cho Math.ceil
 
-public class TourDetailsResponse {
+import com.tripbee.backend.model.Promotion;
+import com.tripbee.backend.model.Tour;
+import com.tripbee.backend.model.TourDestination; // Import enum PromotionStatus
+import com.tripbee.backend.model.TourPromotion;
+import com.tripbee.backend.model.enums.PromotionStatus;
+
+public class TourDetailsResponse implements Serializable  {
+private static final long serialVersionUID = 1L;
     private String tourID;
     private String title;
     private String description;

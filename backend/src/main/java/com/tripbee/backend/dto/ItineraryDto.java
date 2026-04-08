@@ -13,6 +13,8 @@ public class ItineraryDto {
         this.title = itinerary.getTitle();
         this.description = itinerary.getDescription();
     }
+    public ItineraryDto() {
+    }
 
     // Getters
     public int getDayNumber() { return dayNumber; }

@@ -1,9 +1,9 @@
 package com.tripbee.backend.dto;
 
+import java.time.LocalDateTime;
+
 import com.tripbee.backend.model.Review;
 import com.tripbee.backend.model.User;
-
-import java.time.LocalDateTime;
 
 public class ReviewDto {
 
@@ -12,6 +12,9 @@ public class ReviewDto {
     private LocalDateTime createdAt;
     private ReviewUserDto user; // (1) Thông tin người dùng lồng bên trong
 
+    // THÊM ĐOẠN NÀY VÀO CHO CLASS CHÍNH
+    public ReviewDto() {
+    }
     // Constructor để chuyển đổi từ Review Entity sang DTO
     public ReviewDto(Review review) {
         this.rating = review.getRating();
@@ -36,7 +39,9 @@ public class ReviewDto {
     private static class ReviewUserDto {
         private String name;
         private String avatarURL;
-
+// THÊM ĐOẠN NÀY VÀO CHO CLASS LỒNG BÊN TRONG
+        public ReviewUserDto() {
+        }
         public ReviewUserDto(User user) {
             this.name = user.getName();
             this.avatarURL = user.getAvatarURL();
