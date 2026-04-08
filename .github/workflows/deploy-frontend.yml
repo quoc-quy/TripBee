@@ -10,7 +10,6 @@ on:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    # Thêm dòng này để nói cho GitHub biết phải chui vào thư mục frontend để chạy lệnh
     defaults:
       run:
         working-directory: ./frontend
