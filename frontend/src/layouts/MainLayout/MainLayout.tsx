@@ -1,19 +1,24 @@
-import React from "react";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import ScrollToTop from "@/components/ScrollToTop";
+import Footer from '@/components/Footer'
+import Header from '@/components/Header'
+import React from 'react'
+import { Outlet } from 'react-router-dom'
+// 1. IMPORT CHATBOX VÀO ĐÂY
+import Chatbox from '@/components/Chatbox/Chatbox'
 
 interface Props {
-    children?: React.ReactNode;
+  children?: React.ReactNode
 }
 
 export default function MainLayout({ children }: Props) {
-    return (
-        <div>
-            <ScrollToTop />
-            <Header />
-            {children}
-            <Footer />
-        </div>
-    );
+  return (
+    <div>
+      <Header />
+      <main className='mt-24'>{children}</main>
+      <Outlet />
+      <Footer />
+      
+      {/* 2. THÊM COMPONENT CHATBOX VÀO ĐÂY */}
+      <Chatbox />
+    </div>
+  )
 }

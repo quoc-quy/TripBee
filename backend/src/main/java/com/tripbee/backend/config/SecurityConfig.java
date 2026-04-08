@@ -56,15 +56,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers("/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
-                        .requestMatchers("/api/admin/**", "/api/admin/tours/**").permitAll()
-                        .requestMatchers("/images/**").permitAll()
-                        .requestMatchers("/api/webhooks/**").permitAll()
-                                .requestMatchers("/api/reviews/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/ai/chat").permitAll()
 
-//                        .requestMatchers("/api/admin/**").hasAuthority(RoleType.ADMIN.name())
-//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                .requestMatchers("/api/contact-messages").permitAll()
+                        .requestMatchers("/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
+                        .requestMatchers("/api/reviews/**").permitAll()
+                        .requestMatchers("/api/webhooks/**").permitAll()
+                        .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/contact-messages").permitAll()
+
+                        .requestMatchers("/api/admin/**", "/api/admin/tours/**").permitAll()
+
                         .anyRequest().authenticated()
                 );
 
