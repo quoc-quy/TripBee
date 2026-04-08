@@ -1,16 +1,20 @@
 name: Deploy Frontend to Vercel
 
-# Khi nào thì chạy kịch bản này?
 on:
   push:
     branches:
-      - main # Chạy khi có code đẩy lên nhánh main
+      - main
     paths:
-      - 'frontend/**' # CHỈ chạy khi thư mục frontend có sự thay đổi (giúp tiết kiệm tài nguyên)
+      - 'frontend/**'
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
+    # Thêm dòng này để nói cho GitHub biết phải chui vào thư mục frontend để chạy lệnh
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
       - name: 1. Clone code từ GitHub về máy chủ ảo
         uses: actions/checkout@v3
@@ -20,22 +24,25 @@ jobs:
         with:
           node-version: '18'
 
-      - name: 3. Cài đặt Vercel CLI
+      - name: 3. Cài đặt các thư viện (NPM Install)
+        run: npm install # Bắt buộc phải có bước này để máy chủ tải Vite về
+
+      - name: 4. Cài đặt Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: 4. Lấy thông tin dự án từ Vercel
+      - name: 5. Lấy thông tin dự án từ Vercel
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: 5. Build code Frontend
+      - name: 6. Build code Frontend
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: 6. Deploy lên Vercel
+      - name: 7. Deploy lên Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
