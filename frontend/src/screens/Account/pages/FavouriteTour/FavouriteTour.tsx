@@ -5,7 +5,7 @@ import type { TourDetails, Tour } from '../../../../types/tour'
 import TourCard from '../../../../components/TourCard'
 import { FaHeart, FaTrashAlt } from 'react-icons/fa'
 import { toast } from 'react-toastify'
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { AppContext } from '../../../../contexts/app.context'
 
 export default function FavouriteTour() {
@@ -26,7 +26,7 @@ export default function FavouriteTour() {
 
   const removeFavoriteMutation = useMutation({
     mutationFn: favoriteApi.removeFavorite,
-    onSuccess: (data, tourId) => {
+    onSuccess: (_response, tourId) => {
       removeFavoriteId(tourId)
 
       queryClient.invalidateQueries({ queryKey: ['favoriteIds'] })
@@ -57,7 +57,7 @@ export default function FavouriteTour() {
   const favoriteTours: Tour[] = tourQueries
     .filter((query) => query.isSuccess && query.data)
     .map((query) => {
-      const details = query.data.data as TourDetails
+      const details = query.data!.data as TourDetails
 
       const destinationName =
         details.destinations?.[0]?.nameDes || details.departurePlace || 'Chưa xác định'

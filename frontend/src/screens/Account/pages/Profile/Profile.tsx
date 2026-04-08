@@ -25,7 +25,7 @@ export default function Profile() {
     setValue,
     formState: { errors }
   } = useForm<FormData>({
-    resolver: yupResolver(schemaProfile),
+    resolver: yupResolver(schemaProfile) as any,
     defaultValues: {
       name: '',
       phoneNumber: '',
@@ -44,7 +44,7 @@ export default function Profile() {
   }, [userData, setValue])
 
   const updateProfileMutation = useMutation({
-    mutationFn: (body: FormData) => userApi.updateProfile(body),
+    mutationFn: (body: UpdateProfileBody) => userApi.updateProfile(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('Cập nhật hồ sơ thành công!')
@@ -55,12 +55,17 @@ export default function Profile() {
   })
 
   const onSubmit = handleSubmit((data) => {
-    const payload: UpdateProfileBody = {
-      name: data.name || undefined,
-      phoneNumber: data.phoneNumber || undefined,
-      address: data.address || undefined,
-      avatarUrl: data.avatarUrl || undefined
+    const normalize = (value: string | null | undefined): string | undefined => {
+      return value ? value.trim() : undefined
     }
+
+    const payload: UpdateProfileBody = {
+      name: normalize(data.name),
+      phoneNumber: normalize(data.phoneNumber),
+      address: normalize(data.address),
+      avatarUrl: normalize(data.avatarUrl)
+    }
+
     updateProfileMutation.mutate(payload)
   })
 

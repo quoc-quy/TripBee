@@ -1,0 +1,30 @@
+name: Deploy Backend to Railway
+
+# Khi nào thì chạy kịch bản này?
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**' # CHỈ chạy khi thư mục backend có sự thay đổi
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Clone code từ GitHub về máy chủ ảo
+        uses: actions/checkout@v3
+
+      - name: 2. Cài đặt Node.js (cần thiết để chạy Railway CLI)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 3. Cài đặt Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: 4. Ra lệnh cho Railway tiến hành Deploy
+        working-directory: ./backend # Trỏ đúng vào thư mục backend để chạy lệnh
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

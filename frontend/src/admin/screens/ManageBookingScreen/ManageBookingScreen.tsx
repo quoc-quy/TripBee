@@ -1,37 +1,27 @@
-import React from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { omitBy, isUndefined } from "lodash";
-import { Eye, RefreshCw, FileDown, XCircle, ListFilter } from "lucide-react";
+import React from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { omitBy, isUndefined } from 'lodash'
+import { Eye, RefreshCw, XCircle, ListFilter } from 'lucide-react'
 
-import type {
-  BookingAdmin,
-  BookingAdminListParams,
-} from "../../types/bookingAdmin";
-import type { BookingStatus } from "@/types/booking.type";
-import type { PaymentStatus } from "@/admin/types/paymentStatus";
-import { bookingAdminApi } from "../../apis/bookingAdmin.api";
+import type { BookingAdmin, BookingAdminListParams } from '../../types/bookingAdmin'
+import type { BookingStatus } from '@/types/booking.type'
+import type { PaymentStatus } from '@/admin/types/paymentStatus'
+import { bookingAdminApi } from '../../apis/bookingAdmin.api'
 
 // helper
 const formatCurrency = (value: number) =>
-  value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-
-const toDateInputValue = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
+  value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
 
 type ParsedBookingParams = {
-  page: number;
-  size: number;
-  search?: string;
-  status?: BookingStatus;
-  sort?: BookingAdminListParams["sort"];
-  fromDate?: string;
-  toDate?: string;
-};
+  page: number
+  size: number
+  search?: string
+  status?: BookingStatus
+  sort?: BookingAdminListParams['sort']
+  fromDate?: string
+  toDate?: string
+}
 
 // const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
 //   const today = new Date();
@@ -63,17 +53,15 @@ type ParsedBookingParams = {
 // };
 
 const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
-  const page = sp.get("page") ? Number(sp.get("page")) : 0;
-  const size = sp.get("size") ? Number(sp.get("size")) : 10;
+  const page = sp.get('page') ? Number(sp.get('page')) : 0
+  const size = sp.get('size') ? Number(sp.get('size')) : 10
 
-  const search = sp.get("search") || undefined;
-  const status = (sp.get("status") || undefined) as BookingStatus | undefined;
-  const sort = (sp.get("sort") || undefined) as
-    | BookingAdminListParams["sort"]
-    | undefined;
+  const search = sp.get('search') || undefined
+  const status = (sp.get('status') || undefined) as BookingStatus | undefined
+  const sort = (sp.get('sort') || undefined) as BookingAdminListParams['sort'] | undefined
 
-  const fromDate = sp.get("fromDate") || undefined;
-  const toDate = sp.get("toDate") || undefined;
+  const fromDate = sp.get('fromDate') || undefined
+  const toDate = sp.get('toDate') || undefined
 
   const params: ParsedBookingParams = {
     page,
@@ -82,108 +70,106 @@ const parseSearchParams = (sp: URLSearchParams): ParsedBookingParams => {
     status,
     sort,
     fromDate,
-    toDate,
-  };
+    toDate
+  }
 
-  return omitBy(params, isUndefined) as ParsedBookingParams;
-};
+  return omitBy(params, isUndefined) as ParsedBookingParams
+}
 
 const statusLabelMap: Record<BookingStatus, string> = {
-  PROCESSING: "Đang xử lý",
-  CONFIRMED: "Đã xác nhận",
-  COMPLETED: "Hoàn thành",
-  CANCELED: "Đã hủy",
-  CANCELLATION_REQUESTED: "Chờ duyệt hủy"
-};
+  PROCESSING: 'Đang xử lý',
+  CONFIRMED: 'Đã xác nhận',
+  COMPLETED: 'Hoàn thành',
+  CANCELED: 'Đã hủy',
+  CANCELLATION_REQUESTED: 'Chờ duyệt hủy'
+}
 
 const statusBadgeClassMap: Record<BookingStatus, string> = {
-  PROCESSING: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  CONFIRMED: "bg-green-50 text-green-700 border border-green-200",
-  COMPLETED: "bg-blue-50 text-blue-700 border border-blue-200",
-  CANCELED: "bg-red-50 text-red-600 border border-red-200",
-  CANCELLATION_REQUESTED: "bg-red-50 text-red-600 border border-red-200",
-};
+  PROCESSING: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+  CONFIRMED: 'bg-green-50 text-green-700 border border-green-200',
+  COMPLETED: 'bg-blue-50 text-blue-700 border border-blue-200',
+  CANCELED: 'bg-red-50 text-red-600 border border-red-200',
+  CANCELLATION_REQUESTED: 'bg-red-50 text-red-600 border border-red-200'
+}
 
 const paymentLabelMap: Record<PaymentStatus, string> = {
-  PENDING: "Chờ thanh toán",
-  SUCCESS: "Đã thanh toán",
-  FAILED: "Thanh toán lỗi",
-};
+  PENDING: 'Chờ thanh toán',
+  SUCCESS: 'Đã thanh toán',
+  FAILED: 'Thanh toán lỗi'
+}
 
 const paymentBadgeClassMap: Record<PaymentStatus, string> = {
-  PENDING: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  SUCCESS: "bg-green-50 text-green-700 border border-green-200",
-  FAILED: "bg-red-50 text-red-600 border border-red-200",
-};
+  PENDING: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+  SUCCESS: 'bg-green-50 text-green-700 border border-green-200',
+  FAILED: 'bg-red-50 text-red-600 border border-red-200'
+}
 
 const ManageBookingScreen: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const queryParams = parseSearchParams(searchParams);
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams()
+  const queryParams = parseSearchParams(searchParams)
+  const navigate = useNavigate()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-bookings", queryParams],
+    queryKey: ['admin-bookings', queryParams],
     queryFn: () =>
       bookingAdminApi
         .getAdminBookings(queryParams as BookingAdminListParams)
         .then((res) => res.data),
-    placeholderData: keepPreviousData,
-  });
+    placeholderData: keepPreviousData
+  })
 
-  const bookings: BookingAdmin[] = data?.content || [];
-  const totalPages = data?.totalPages || 0;
-  const currentPage = data?.number ?? 0;
+  const bookings: BookingAdmin[] = data?.content || []
+  const totalPages = data?.totalPages || 0
+  const currentPage = data?.number ?? 0
 
   const { data: stats } = useQuery({
     queryKey: [
-      "admin-bookings-stats",
-      { fromDate: queryParams.fromDate, toDate: queryParams.toDate },
+      'admin-bookings-stats',
+      { fromDate: queryParams.fromDate, toDate: queryParams.toDate }
     ],
     queryFn: () =>
       bookingAdminApi
         .getBookingStats({
           fromDate: queryParams.fromDate,
-          toDate: queryParams.toDate,
+          toDate: queryParams.toDate
         })
-        .then((res) => res.data),
-  });
+        .then((res) => res.data)
+  })
 
   const updateParams = (patch: Partial<ParsedBookingParams>) => {
     const merged = omitBy(
       {
         ...queryParams,
-        ...patch,
+        ...patch
       },
-      (v) => v === undefined || v === ""
-    );
-    setSearchParams(merged as any);
-  };
+      (v) => v === undefined || v === ''
+    )
+    setSearchParams(merged as any)
+  }
 
   const handlePageChange = (page: number) => {
-    updateParams({ page });
-  };
+    updateParams({ page })
+  }
 
   const handleRefresh = () => {
     updateParams({
       page: 0,
-      fromDate: "",  // sẽ bị xóa khỏi URL
-      toDate: "",    // sẽ bị xóa khỏi URL
-    });
-  };
-
+      fromDate: '', // sẽ bị xóa khỏi URL
+      toDate: '' // sẽ bị xóa khỏi URL
+    })
+  }
 
   const handleGetCustomerByTour = async () => {
-    navigate("/admin/manage-booking/tour-participants");
-  };
+    navigate('/admin/manage-booking/tour-participants')
+  }
 
   const handleProcessCancel = async () => {
-    navigate("/admin/manage-booking/canceled");
-  };
+    navigate('/admin/manage-booking/canceled')
+  }
 
   const handleViewBooking = (id: string) => {
-    navigate(`/admin/manage-booking/detail/${id}`);
-  };
-
+    navigate(`/admin/manage-booking/detail/${id}`)
+  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -191,9 +177,7 @@ const ManageBookingScreen: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Quản lý Booking</h1>
-          <p className="text-gray-500 text-sm">
-            Theo dõi và xử lý tất cả đơn đặt tour
-          </p>
+          <p className="text-gray-500 text-sm">Theo dõi và xử lý tất cả đơn đặt tour</p>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -273,27 +257,26 @@ const ManageBookingScreen: React.FC = () => {
           className="border border-gray-300 rounded-lg px-4 py-2 w-full lg:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
         /> */}
         <input
-  type="text"
-  placeholder="Tìm kiếm theo mã booking, tên khách hàng hoặc tour..."
-  value={queryParams.search || ""} // controlled input
-  onChange={(e) => {
-    updateParams({
-      search: e.target.value || undefined,
-      page: 0,
-    });
-  }}
-  className="border border-gray-300 rounded-lg px-4 py-2 w-full lg:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-/>
-
+          type="text"
+          placeholder="Tìm kiếm theo mã booking, tên khách hàng hoặc tour..."
+          value={queryParams.search || ''} // controlled input
+          onChange={(e) => {
+            updateParams({
+              search: e.target.value || undefined,
+              page: 0
+            })
+          }}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full lg:flex-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
 
         {/* status */}
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 min-w-[180px] text-sm"
-          value={queryParams.status || ""}
+          value={queryParams.status || ''}
           onChange={(e) =>
             updateParams({
               status: (e.target.value || undefined) as BookingStatus | undefined,
-              page: 0,
+              page: 0
             })
           }
         >
@@ -307,13 +290,11 @@ const ManageBookingScreen: React.FC = () => {
         {/* sort */}
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 min-w-[180px] text-sm"
-          value={queryParams.sort || ""}
+          value={queryParams.sort || ''}
           onChange={(e) =>
             updateParams({
-              sort: (e.target.value || undefined) as
-                | BookingAdminListParams["sort"]
-                | undefined,
-              page: 0,
+              sort: (e.target.value || undefined) as BookingAdminListParams['sort'] | undefined,
+              page: 0
             })
           }
         >
@@ -332,13 +313,10 @@ const ManageBookingScreen: React.FC = () => {
 
           <input
             type="date"
-            value={queryParams.fromDate || ""}   // <- thêm || ""
-            onChange={(e) =>
-              updateParams({ fromDate: e.target.value || undefined, page: 0 })
-            }
+            value={queryParams.fromDate || ''} // <- thêm || ""
+            onChange={(e) => updateParams({ fromDate: e.target.value || undefined, page: 0 })}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
           />
-
         </div>
 
         <div className="flex flex-col">
@@ -346,16 +324,12 @@ const ManageBookingScreen: React.FC = () => {
 
           <input
             type="date"
-            value={queryParams.toDate || ""}
-            onChange={(e) =>
-              updateParams({ toDate: e.target.value || undefined, page: 0 })
-            }
+            value={queryParams.toDate || ''}
+            onChange={(e) => updateParams({ toDate: e.target.value || undefined, page: 0 })}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
           />
-
         </div>
       </div>
-
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -364,19 +338,11 @@ const ManageBookingScreen: React.FC = () => {
             <tr>
               <th className="px-5 py-3 font-semibold text-black">Khách hàng</th>
               <th className="px-5 py-3 font-semibold text-black">Tour</th>
-              <th className="px-5 py-3 font-semibold text-black">
-                Ngày khởi hành
-              </th>
+              <th className="px-5 py-3 font-semibold text-black">Ngày khởi hành</th>
               <th className="px-5 py-3 font-semibold text-black">Giá</th>
-              <th className="px-5 py-3 font-semibold text-black">
-                Trạng thái
-              </th>
-              <th className="px-5 py-3 font-semibold text-black">
-                Thanh toán
-              </th>
-              <th className="px-5 py-3 font-semibold text-black text-center">
-                Thao tác
-              </th>
+              <th className="px-5 py-3 font-semibold text-black">Trạng thái</th>
+              <th className="px-5 py-3 font-semibold text-black">Thanh toán</th>
+              <th className="px-5 py-3 font-semibold text-black text-center">Thao tác</th>
             </tr>
           </thead>
           <tbody className="text-gray-800 text-sm">
@@ -400,12 +366,8 @@ const ManageBookingScreen: React.FC = () => {
                 >
                   <td className="px-5 py-4 align-top">
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 text-sm">
-                        {b.customerName}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {b.numGuests} khách
-                      </span>
+                      <span className="font-semibold text-gray-900 text-sm">{b.customerName}</span>
+                      <span className="text-xs text-gray-500">{b.numGuests} khách</span>
                     </div>
                   </td>
 
@@ -419,9 +381,7 @@ const ManageBookingScreen: React.FC = () => {
                   </td>
 
                   <td className="px-5 py-4 align-top">
-                    {b.departureDate
-                      ? new Date(b.departureDate).toLocaleDateString("vi-VN")
-                      : "-"}
+                    {b.departureDate ? new Date(b.departureDate).toLocaleDateString('vi-VN') : '-'}
                   </td>
 
                   <td className="px-5 py-4 align-top">
@@ -432,8 +392,9 @@ const ManageBookingScreen: React.FC = () => {
 
                   <td className="px-5 py-4 align-top">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusBadgeClassMap[b.status]
-                        }`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        statusBadgeClassMap[b.status]
+                      }`}
                     >
                       {statusLabelMap[b.status]}
                     </span>
@@ -441,8 +402,9 @@ const ManageBookingScreen: React.FC = () => {
 
                   <td className="px-5 py-4 align-top">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${paymentBadgeClassMap[b.paymentStatus]
-                        }`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        paymentBadgeClassMap[b.paymentStatus]
+                      }`}
                     >
                       {paymentLabelMap[b.paymentStatus]}
                     </span>
@@ -489,7 +451,7 @@ const ManageBookingScreen: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ManageBookingScreen;
+export default ManageBookingScreen

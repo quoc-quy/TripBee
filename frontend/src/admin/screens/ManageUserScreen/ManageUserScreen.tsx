@@ -1,28 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+'use client'
 
-import React, { useState, useEffect } from "react"
-import { useQuery, useMutation, keepPreviousData } from "@tanstack/react-query"
-import { PlusCircle, Edit2, Users, UserPlus, ShieldCheck, Lock } from "lucide-react"
-import { toast } from "react-toastify"
+import React, { useState, useEffect } from 'react'
+import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query'
+import { PlusCircle, Edit2, Users, UserPlus, ShieldCheck, Lock } from 'lucide-react'
+import { toast } from 'react-toastify'
 
-import { userAdminApi } from "@/admin/apis/userAdmin.api"
+import { userAdminApi } from '@/admin/apis/userAdmin.api'
 import type {
   UserAdmin,
   UserAdminListParams,
   UserCreatePayload,
-  UserUpdatePayload,
-} from "@/admin/types/userAdmin.type"
-
-// =========================
-// Helper type
-// =========================
-
-type ParsedUserParams = {
-  page: number
-  size: number
-  search?: string
-}
+  UserUpdatePayload
+} from '@/admin/types/userAdmin.type'
 
 // =========================
 // Modal wrapper giống Promotion
@@ -37,12 +27,12 @@ type SimpleModalProps = {
 const SimpleModal: React.FC<SimpleModalProps> = ({ isOpen, onClose, children }) => {
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden"
+      document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = "unset"
+      document.body.style.overflow = 'unset'
     }
     return () => {
-      document.body.style.overflow = "unset"
+      document.body.style.overflow = 'unset'
     }
   }, [isOpen])
 
@@ -67,38 +57,30 @@ const SimpleModal: React.FC<SimpleModalProps> = ({ isOpen, onClose, children }) 
 // Main screen
 // =========================
 
-const parseQueryParams = (search: string): ParsedUserParams => {
-  const urlParams = new URLSearchParams(search)
-  const page = urlParams.get("page") ? Number(urlParams.get("page")) : 0
-  const size = urlParams.get("size") ? Number(urlParams.get("size")) : 10
-  const searchText = urlParams.get("search") || undefined
-  return { page, size, search: searchText }
-}
-
 export default function ManageUserScreen() {
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, setSearchValue] = useState('')
   const [page, setPage] = useState(0)
   const size = 10
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [mode, setMode] = useState<"create" | "edit">("create")
+  const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [editingUser, setEditingUser] = useState<UserAdmin | null>(null)
 
   const queryParams: UserAdminListParams = {
     page,
     size,
-    search: searchValue.trim() || undefined,
+    search: searchValue.trim() || undefined
   }
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["adminUsers", queryParams],
+    queryKey: ['adminUsers', queryParams],
     queryFn: () => userAdminApi.getAllUsers(queryParams).then((res) => res.data),
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData
   })
 
   const { data: statsData } = useQuery({
-    queryKey: ["userStatsSummary"],
-    queryFn: () => userAdminApi.getUserStats().then((res) => res.data),
+    queryKey: ['userStatsSummary'],
+    queryFn: () => userAdminApi.getUserStats().then((res) => res.data)
   })
 
   const stats = statsData || {}
@@ -107,13 +89,13 @@ export default function ManageUserScreen() {
   const currentPage = data?.number || 0
 
   const openCreateModal = () => {
-    setMode("create")
+    setMode('create')
     setEditingUser(null)
     setIsModalOpen(true)
   }
 
   const openEditModal = (user: UserAdmin) => {
-    setMode("edit")
+    setMode('edit')
     setEditingUser(user)
     setIsModalOpen(true)
   }
@@ -132,7 +114,9 @@ export default function ManageUserScreen() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Quản lý Người dùng</h1>
-          <p className="text-gray-500 mt-1">Quản lý thông tin tài khoản người dùng trong hệ thống.</p>
+          <p className="text-gray-500 mt-1">
+            Quản lý thông tin tài khoản người dùng trong hệ thống.
+          </p>
         </div>
         <button
           onClick={openCreateModal}
@@ -155,7 +139,7 @@ export default function ManageUserScreen() {
             setPage(0)
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === 'Enter') {
               setPage(0)
             }
           }}
@@ -217,17 +201,20 @@ export default function ManageUserScreen() {
               </tr>
             ) : (
               users.map((u) => (
-                <tr key={u.userID} className="border-b border-gray-100 hover:bg-gray-50 transition-all">
+                <tr
+                  key={u.userID}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-all"
+                >
                   <td className="px-5 py-4 text-sm font-semibold text-gray-900 di">{u.name}</td>
                   <td className="px-5 py-4 text-sm text-gray-700">{u.email}</td>
-                  <td className="px-5 py-4 text-sm text-gray-700">{u.phoneNumber || "-"}</td>
+                  <td className="px-5 py-4 text-sm text-gray-700">{u.phoneNumber || '-'}</td>
                   <td className="px-5 py-4 text-center text-sm">
                     <span
                       className={`px-3 py-1.5 rounded-full font-medium ${
-                        u.locked ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                        u.locked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                       }`}
                     >
-                      {u.locked ? "Đã khóa" : "Hoạt động"}
+                      {u.locked ? 'Đã khóa' : 'Hoạt động'}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-center text-sm">
@@ -306,7 +293,7 @@ function StatCard({ title, value, icon, bgClass }: StatCardProps) {
 // =========================
 
 type UserFormProps = {
-  mode: "create" | "edit"
+  mode: 'create' | 'edit'
   user: UserAdmin | null
   onClose: (shouldRefetch?: boolean) => void
 }
@@ -319,20 +306,20 @@ type UserFormState = {
   password?: string
 }
 
-type UserFormErrors = Partial<Record<keyof UserFormState | "form", string>>
+type UserFormErrors = Partial<Record<keyof UserFormState | 'form', string>>
 
 const inputBase =
-  "w-full border border-gray-300 rounded-xl px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+  'w-full border border-gray-300 rounded-xl px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
 
 function UserForm({ mode, user, onClose }: UserFormProps) {
-  const isEdit = mode === "edit"
+  const isEdit = mode === 'edit'
 
   const [form, setForm] = useState<UserFormState>({
-    name: user?.name || "",
-    email: user?.email || "",
-    phoneNumber: user?.phoneNumber || "",
+    name: user?.name || '',
+    email: user?.email || '',
+    phoneNumber: user?.phoneNumber || '',
     locked: user?.locked ?? false,
-    password: "",
+    password: ''
   })
 
   const [errors, setErrors] = useState<UserFormErrors>({})
@@ -342,53 +329,51 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
       setForm({
         name: user.name,
         email: user.email,
-        phoneNumber: user.phoneNumber || "",
+        phoneNumber: user.phoneNumber || '',
         locked: user.locked,
-        password: "",
+        password: ''
       })
     } else if (!isEdit) {
       setForm({
-        name: "",
-        email: "",
-        phoneNumber: "",
+        name: '',
+        email: '',
+        phoneNumber: '',
         locked: false,
-        password: "",
+        password: ''
       })
     }
   }, [isEdit, user])
 
   const createMutation = useMutation({
-    mutationFn: (payload: UserCreatePayload) => userAdminApi.createUser(payload),
+    mutationFn: (payload: UserCreatePayload) => userAdminApi.createUser(payload)
   })
 
   const updateMutation = useMutation({
     mutationFn: (payload: UserUpdatePayload) => {
-      if (!user) throw new Error("Missing user for update")
+      if (!user) throw new Error('Missing user for update')
       return userAdminApi.updateUser(user.userID, payload)
-    },
+    }
   })
 
   const validate = (): UserFormErrors => {
     const newErrors: UserFormErrors = {}
 
-    if (!form.name.trim()) newErrors.name = "Tên là bắt buộc"
-    if (!form.email.trim()) newErrors.email = "Email là bắt buộc"
+    if (!form.name.trim()) newErrors.name = 'Tên là bắt buộc'
+    if (!form.email.trim()) newErrors.email = 'Email là bắt buộc'
 
     if (!isEdit) {
       if (!form.password || form.password.length < 6) {
-        newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự"
+        newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
       }
     }
 
     return newErrors
   }
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    if (name === "locked") {
-      setForm((prev) => ({ ...prev, locked: value === "true" }))
+    if (name === 'locked') {
+      setForm((prev) => ({ ...prev, locked: value === 'true' }))
     } else {
       setForm((prev) => ({ ...prev, [name]: value }))
     }
@@ -408,27 +393,25 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
         const payload: UserUpdatePayload = {
           name: form.name.trim(),
           phoneNumber: form.phoneNumber.trim() || undefined,
-          locked: form.locked,
+          email: ''
         }
         await updateMutation.mutateAsync(payload)
-        toast.success("Cập nhật người dùng thành công")
+        toast.success('Cập nhật người dùng thành công')
       } else {
         const payload: UserCreatePayload = {
           name: form.name.trim(),
           email: form.email.trim(),
-          password: form.password || "",
+          password: form.password || '',
           phoneNumber: form.phoneNumber.trim() || undefined,
-          locked: form.locked,
+          locked: form.locked
         }
         await createMutation.mutateAsync(payload)
-        toast.success("Tạo người dùng thành công")
+        toast.success('Tạo người dùng thành công')
       }
       onClose(true)
     } catch (error: any) {
       const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Lỗi lưu dữ liệu người dùng"
+        error?.response?.data?.message || error?.message || 'Lỗi lưu dữ liệu người dùng'
       setErrors((prev) => ({ ...prev, form: message }))
     }
   }
@@ -441,7 +424,7 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
       <div className="flex items-center justify-between p-6 border-b flex-shrink-0 bg-gray-50">
         <div>
           <h1 className="text-xl font-bold text-gray-800">
-            {isEdit ? "Chỉnh sửa người dùng" : "Tạo người dùng mới"}
+            {isEdit ? 'Chỉnh sửa người dùng' : 'Tạo người dùng mới'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Quản lý thông tin tài khoản người dùng trong hệ thống.
@@ -471,21 +454,15 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
 
       <form onSubmit={handleSubmit} className="flex flex-col h-full flex-1 overflow-hidden">
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {errors.form && (
-            <div className="mb-4 text-sm text-red-500">{errors.form}</div>
-          )}
+          {errors.form && <div className="mb-4 text-sm text-red-500">{errors.form}</div>}
 
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-800">Thông tin tài khoản</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Họ và tên
-                </label>
-                {errors.name && (
-                  <p className="text-xs text-red-500 mb-1">{errors.name}</p>
-                )}
+                <label className="block text-sm font-medium text-gray-600 mb-1">Họ và tên</label>
+                {errors.name && <p className="text-xs text-red-500 mb-1">{errors.name}</p>}
                 <input
                   name="name"
                   value={form.name}
@@ -496,12 +473,8 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Email
-                </label>
-                {errors.email && (
-                  <p className="text-xs text-red-500 mb-1">{errors.email}</p>
-                )}
+                <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                {errors.email && <p className="text-xs text-red-500 mb-1">{errors.email}</p>}
                 <input
                   name="email"
                   type="email"
@@ -516,16 +489,14 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
             {!isEdit && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Mật khẩu
-                  </label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Mật khẩu</label>
                   {errors.password && (
                     <p className="text-xs text-red-500 mb-1">{errors.password}</p>
                   )}
                   <input
                     name="password"
                     type="password"
-                    value={form.password || ""}
+                    value={form.password || ''}
                     onChange={handleChange}
                     className={inputBase}
                     disabled={isSaving}
@@ -549,12 +520,10 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Trạng thái
-                </label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Trạng thái</label>
                 <select
                   name="locked"
-                  value={form.locked ? "true" : "false"}
+                  value={form.locked ? 'true' : 'false'}
                   onChange={handleChange}
                   className={inputBase}
                   disabled={isSaving}
@@ -579,7 +548,7 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
           <button
             type="submit"
             className={`px-7 py-3 rounded-xl bg-blue-600 text-base text-white font-semibold flex items-center gap-2 ${
-              isSaving ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+              isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'
             }`}
             disabled={isSaving}
           >
@@ -605,7 +574,7 @@ function UserForm({ mode, user, onClose }: UserFormProps) {
                 ></path>
               </svg>
             )}
-            {isEdit ? "Lưu thay đổi" : "Tạo người dùng"}
+            {isEdit ? 'Lưu thay đổi' : 'Tạo người dùng'}
           </button>
         </div>
       </form>
