@@ -35,4 +35,6 @@ public interface TourRepository extends JpaRepository<Tour, String>, JpaSpecific
     Optional<Tour> findById(@Param("id") String id);
 
     List<Tour> findByStatus(TourStatus status);
+
+    List<Tour> findByTitleContainingIgnoreCase(String keyword);
 }
