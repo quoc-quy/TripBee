@@ -10,7 +10,6 @@ on:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    # Thêm dòng này để nói cho GitHub biết phải chui vào thư mục frontend để chạy lệnh
     defaults:
       run:
         working-directory: ./frontend
@@ -22,10 +21,12 @@ jobs:
       - name: 2. Cài đặt môi trường Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: 3. Cài đặt các thư viện (NPM Install)
-        run: npm install # Bắt buộc phải có bước này để máy chủ tải Vite về
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: 4. Cài đặt Vercel CLI
         run: npm install --global vercel@latest

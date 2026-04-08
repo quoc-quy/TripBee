@@ -68,8 +68,8 @@ public class BookingService {
         booking.setNumAdults(request.getNumAdults());
         booking.setNumChildren(request.getNumChildren());
         booking.setTotalPrice(totalPrice);
-        booking.setFinalAmount(totalPrice); // Có thể trừ khuyến mãi nếu có
-        booking.setStatus(BookingStatus.PROCESSING); // Trạng thái chờ thanh toán
+        booking.setFinalAmount(totalPrice); 
+        booking.setStatus(BookingStatus.PROCESSING); 
 
         // [NEW LOGIC] Xử lý danh sách người tham gia (Participants)
         if (request.getParticipants() != null && !request.getParticipants().isEmpty()) {

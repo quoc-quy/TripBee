@@ -20,8 +20,12 @@ jobs:
         with:
           node-version: '18'
 
-      - name: 3. Cài đặt Railway CLI
-        run: npm install -g @railway/cli
+      - name: 3. Ra lệnh cho Railway tiến hành Deploy
+        working-directory: ./backend
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
       - name: 4. Ra lệnh cho Railway tiến hành Deploy
         working-directory: ./backend # Trỏ đúng vào thư mục backend để chạy lệnh
