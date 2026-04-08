@@ -18,8 +18,12 @@ export default function TourCard({
   isFavoritePage?: boolean
 }) {
   const { isAuthenticated, favoriteIds, addFavoriteId, removeFavoriteId } = useContext(AppContext)
-  const isLiked = favoriteIds.has(tour.tourID)
   const queryClient = useQueryClient()
+
+  // BẢO VỆ ID: Xử lý lỗi mất ID do JSON parse từ Spring Boot
+  const safeId = tour.tourID || (tour as any).tourId || (tour as any).id || '';
+
+  const isLiked = favoriteIds.has(safeId)
 
   const addFavoriteMutation = useMutation({ mutationFn: favoriteApi.addFavorite })
   const removeFavoriteMutation = useMutation({ mutationFn: favoriteApi.removeFavorite })
@@ -42,9 +46,9 @@ export default function TourCard({
     }
 
     if (isLiked) {
-      removeFavoriteMutation.mutate(tour.tourID, {
+      removeFavoriteMutation.mutate(safeId, {
         onSuccess: () => {
-          removeFavoriteId(tour.tourID)
+          removeFavoriteId(safeId)
           toast.success('Đã xóa khỏi danh sách yêu thích!')
           queryClient.invalidateQueries({ queryKey: ['favoriteIds'] })
         },
@@ -52,17 +56,17 @@ export default function TourCard({
       })
     } else {
       addFavoriteMutation.mutate(
-        { tourId: tour.tourID },
+        { tourId: safeId },
         {
           onSuccess: () => {
-            addFavoriteId(tour.tourID)
+            addFavoriteId(safeId)
             toast.success('Đã thêm tour vào danh sách yêu thích!')
             queryClient.invalidateQueries({ queryKey: ['favoriteIds'] })
           },
           onError: (error: AxiosError | Error) => {
             const axiosError = error as AxiosError<{ message: string }>
             if (axiosError.response?.status === 409) {
-              addFavoriteId(tour.tourID)
+              addFavoriteId(safeId)
               toast.info('Bạn đã yêu thích tour này rồi.')
             } else {
               toast.error('Có lỗi xảy ra, vui lòng thử lại sau.')
@@ -77,7 +81,7 @@ export default function TourCard({
     <div className="bg-white rounded-[2rem] p-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.1)] transition-all duration-300 group border border-gray-100 flex flex-col h-full">
       {/* Wrapper Hình ảnh */}
       <div className="relative h-60 rounded-3xl overflow-hidden mb-4">
-        <Link to={`/tours/${tour.tourID}`} className="block w-full h-full">
+        <Link to={`/tours/${safeId}`} className="block w-full h-full">
           <img
             src={tour.imageURL}
             alt={tour.title}
@@ -86,11 +90,9 @@ export default function TourCard({
             }}
             className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
           />
-          {/* Lớp phủ mờ gradient đáy ảnh */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
         </Link>
 
-        {/* Nút thả tim (Glassmorphism) */}
         {!isFavoritePage && (
           <button
             onClick={handleFavoriteClick}
@@ -105,12 +107,12 @@ export default function TourCard({
           </button>
         )}
 
-        {/* Badge Loại Tour */}
-        <div className="absolute top-4 left-4 z-10 bg-black/40 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full capitalize shadow-sm">
-          {tour.tourTypeName?.toLowerCase().replace('tour ', '')}
-        </div>
+        {tour.tourTypeName && (
+          <div className="absolute top-4 left-4 z-10 bg-black/40 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full capitalize shadow-sm">
+            {tour.tourTypeName.toLowerCase().replace('tour ', '')}
+          </div>
+        )}
 
-        {/* Badge Giảm Giá */}
         {tour.discountPercentage > 0 && (
           <div className="absolute bottom-4 left-4 z-10 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
             Giảm {tour.discountPercentage}%
@@ -118,9 +120,7 @@ export default function TourCard({
         )}
       </div>
 
-      {/* Thông tin Tour */}
       <div className="px-3 flex flex-col flex-grow">
-        {/* Rating & Thời gian */}
         <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
           <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2 py-1 rounded-md font-medium">
             <FaStar />
@@ -133,20 +133,17 @@ export default function TourCard({
           </div>
         </div>
 
-        {/* Tiêu đề */}
         <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors flex-grow">
-          <Link to={`/tours/${tour.tourID}`}>{tour.title}</Link>
+          <Link to={`/tours/${safeId}`}>{tour.title}</Link>
         </h3>
 
-        {/* Địa điểm */}
         <div className="flex items-center text-sm text-gray-500 mb-4 font-medium">
           <FaMapMarkerAlt className="mr-2 text-blue-500" />
-          <span className="truncate">{tour.destinationName}</span>
+          <span className="truncate">{tour.destinationName || 'Đang cập nhật'}</span>
         </div>
 
         <div className="border-t border-gray-100 mb-4 w-full"></div>
 
-        {/* Giá và Nút */}
         <div className="mt-auto">
           <div className="flex flex-col items-end justify-end mb-4">
             <span className="text-xs text-gray-400 font-medium uppercase mb-0.5">Giá chỉ từ</span>
@@ -165,7 +162,7 @@ export default function TourCard({
           <div className="flex gap-2">
             <Button
               as="link"
-              to={`/tours/${tour.tourID}`}
+              to={`/tours/${safeId}`}
               variant="outline"
               className="flex-1 !rounded-xl !py-2.5 !text-sm !font-semibold border-2 border-gray-200 hover:border-blue-600 hover:bg-blue-50"
             >
@@ -173,7 +170,7 @@ export default function TourCard({
             </Button>
             <Button
               as="link"
-              to={`/tours/${tour.tourID}`}
+              to={`/tours/${safeId}`}
               variant="solid"
               className="flex-1 !rounded-xl !py-2.5 !text-sm !font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"
             >
