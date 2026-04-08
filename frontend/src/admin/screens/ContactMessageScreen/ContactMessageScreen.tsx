@@ -1,42 +1,42 @@
 // src/admin/screens/ContactMessageScreen/ContactMessageScreen.tsx
 
-import React, { useState, useMemo, useCallback } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Search, Mail, Phone, Calendar, User } from "lucide-react";
-import { contactAdminApi } from "../../apis/contactAdmin.api";
-import { debounce } from "lodash"; // Import debounce từ lodash
-import type { ContactMessageListParams } from "../../types/contactAdmin.type"; // Import type for better type safety
+import React, { useState, useMemo, useCallback } from 'react'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { Search, Mail, Phone, Calendar } from 'lucide-react'
+import { contactAdminApi } from '../../apis/contactAdmin.api'
+import { debounce } from 'lodash' // Import debounce từ lodash
+import type { ContactMessageListParams } from '../../types/contactAdmin.type' // Import type for better type safety
 
 // Helper để lấy ID an toàn
-const getMessageId = (msg: any) => msg.contactMessId || msg.id || "";
+const getMessageId = (msg: any) => msg.contactMessId || msg.id || ''
 
 // NEW HELPER: For date input formatting (copied from ManageBookingScreen.tsx logic)
 const toDateInputValue = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 // NEW: Initial date values
-const today = new Date();
-const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-const initialFromDate = toDateInputValue(firstOfMonth);
-const initialToDate = toDateInputValue(today);
+const today = new Date()
+const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+const initialFromDate = toDateInputValue(firstOfMonth)
+const initialToDate = toDateInputValue(today)
 
 // NEW TYPE: Extend params type locally (Backend API must also support these fields)
 type ExtendedContactMessageListParams = ContactMessageListParams & {
-  fromDate?: string;
-  toDate?: string;
-};
+  fromDate?: string
+  toDate?: string
+}
 
 const ContactMessageScreen = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [inputValue, setInputValue] = useState(""); // State riêng cho input để gõ mượt hơn
-  const [page, setPage] = useState(0);
-  const [fromDate, setFromDate] = useState(initialFromDate); // NEW STATE
-  const [toDate, setToDate] = useState(initialToDate); // NEW STATE
-  const SIZE = 10;
+  const [searchTerm, setSearchTerm] = useState('')
+  const [inputValue, setInputValue] = useState('') // State riêng cho input để gõ mượt hơn
+  const [page, setPage] = useState(0)
+  const [fromDate, setFromDate] = useState(initialFromDate) // NEW STATE
+  const [toDate, setToDate] = useState(initialToDate) // NEW STATE
+  const SIZE = 10
 
   const queryParams: ExtendedContactMessageListParams = useMemo(
     () => ({
@@ -44,83 +44,78 @@ const ContactMessageScreen = () => {
       size: SIZE,
       search: searchTerm,
       fromDate, // NEW PARAM
-      toDate, // NEW PARAM
+      toDate // NEW PARAM
     }),
     [page, searchTerm, fromDate, toDate]
-  );
+  )
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-contact-messages", queryParams], // UPDATE queryKey
+    queryKey: ['admin-contact-messages', queryParams], // UPDATE queryKey
     queryFn: () =>
       contactAdminApi
         // Truyền thêm date params (cần đảm bảo backend API có thể nhận)
         .getAllMessages(
           queryParams as ContactMessageListParams & {
-            fromDate?: string;
-            toDate?: string;
+            fromDate?: string
+            toDate?: string
           }
         )
         .then((res) => res.data),
-    placeholderData: keepPreviousData,
-  });
+    placeholderData: keepPreviousData
+  })
 
   const messages = useMemo(() => {
-    const list = data?.content || [];
+    const list = data?.content || []
     // Sắp xếp ngược lại theo ID (giả định ID tăng dần) để tin nhắn mới nhất lên đầu
     // Dùng ID: getMessageId(b).localeCompare(getMessageId(a), ...)
     // Hoặc nếu muốn sắp xếp theo thời gian gửi (sentAt)
     return [...list].sort((a, b) => {
       // Sắp xếp theo sentAt (mới nhất lên đầu)
-      const dateA = new Date(a.sentAt || 0).getTime();
-      const dateB = new Date(b.sentAt || 0).getTime();
-      return dateB - dateA;
-    });
-  }, [data]);
+      const dateA = new Date(a.sentAt || 0).getTime()
+      const dateB = new Date(b.sentAt || 0).getTime()
+      return dateB - dateA
+    })
+  }, [data])
 
-  const totalPages = data?.totalPages || 0;
+  const totalPages = data?.totalPages || 0
 
   // (GIỮ NGUYÊN) Sử dụng debounce của lodash để tối ưu việc gọi API
   const debouncedSearch = useCallback(
     debounce((value: string) => {
-      setSearchTerm(value);
-      setPage(0);
+      setSearchTerm(value)
+      setPage(0)
     }, 500),
     []
-  );
+  )
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value); // Cập nhật UI ngay lập tức
-    debouncedSearch(value); // Trì hoãn việc set searchTerm (gọi API)
-  };
+    const value = e.target.value
+    setInputValue(value) // Cập nhật UI ngay lập tức
+    debouncedSearch(value) // Trì hoãn việc set searchTerm (gọi API)
+  }
 
   // NEW FUNCTION: Handle date filter change
-  const handleDateChange = (type: "fromDate" | "toDate", value: string) => {
-    if (type === "fromDate") {
-      setFromDate(value);
+  const handleDateChange = (type: 'fromDate' | 'toDate', value: string) => {
+    if (type === 'fromDate') {
+      setFromDate(value)
     } else {
-      setToDate(value);
+      setToDate(value)
     }
-    setPage(0); // Reset page khi đổi filter
-  };
+    setPage(0) // Reset page khi đổi filter
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Tin nhắn liên hệ</h1>
-        <p className="text-gray-500">
-          Quản lý danh sách tin nhắn từ khách hàng
-        </p>
+        <p className="text-gray-500">Quản lý danh sách tin nhắn từ khách hàng</p>
       </div>
 
       {/* Search Bar + Date Filter (NEW BLOCK) */}
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap items-center gap-4">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md min-w-[200px]">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             value={inputValue} // Bind vào state inputValue
@@ -133,25 +128,21 @@ const ContactMessageScreen = () => {
         {/* Date Filter (NEW) */}
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <div className="flex flex-col">
-            <span className="mb-1 text-sm font-medium text-gray-700">
-              Từ ngày
-            </span>
+            <span className="mb-1 text-sm font-medium text-gray-700">Từ ngày</span>
             <input
               type="date"
               value={fromDate}
-              onChange={(e) => handleDateChange("fromDate", e.target.value)}
+              onChange={(e) => handleDateChange('fromDate', e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
 
           <div className="flex flex-col">
-            <span className="mb-1 text-sm font-medium text-gray-700">
-              Đến ngày
-            </span>
+            <span className="mb-1 text-sm font-medium text-gray-700">Đến ngày</span>
             <input
               type="date"
               value={toDate}
-              onChange={(e) => handleDateChange("toDate", e.target.value)}
+              onChange={(e) => handleDateChange('toDate', e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
@@ -167,9 +158,7 @@ const ContactMessageScreen = () => {
               <tr>
                 <th className="px-4 py-4 w-60">Liên hệ (Email/Phone)</th>
                 <th className="px-4 py-4">Nội dung tin nhắn</th>
-                <th className="px-4 py-4 w-48 whitespace-nowrap">
-                  Thời gian gửi
-                </th>
+                <th className="px-4 py-4 w-48 whitespace-nowrap">Thời gian gửi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -203,24 +192,13 @@ const ContactMessageScreen = () => {
                         {/* User Type/Name */}
 
                         {/* Email */}
-                        <div
-                          className="flex items-center gap-2 text-gray-700"
-                          title={msg.email}
-                        >
-                          <Mail
-                            size={14}
-                            className="text-blue-500 flex-shrink-0"
-                          />
-                          <span className="truncate max-w-[200px] text-xs">
-                            {msg.email}
-                          </span>
+                        <div className="flex items-center gap-2 text-gray-700" title={msg.email}>
+                          <Mail size={14} className="text-blue-500 flex-shrink-0" />
+                          <span className="truncate max-w-[200px] text-xs">{msg.email}</span>
                         </div>
                         {/* Phone */}
                         <div className="flex items-center gap-2 text-gray-700 text-xs">
-                          <Phone
-                            size={14}
-                            className="text-green-500 flex-shrink-0"
-                          />
+                          <Phone size={14} className="text-green-500 flex-shrink-0" />
                           <span>{msg.phone}</span>
                         </div>
                       </div>
@@ -228,10 +206,7 @@ const ContactMessageScreen = () => {
 
                     {/* Content - Keep */}
                     <td className="px-4 py-4 align-top">
-                      <p
-                        className="text-gray-800 line-clamp-3 text-sm"
-                        title={msg.message}
-                      >
+                      <p className="text-gray-800 line-clamp-3 text-sm" title={msg.message}>
                         {msg.message}
                       </p>
                     </td>
@@ -241,9 +216,7 @@ const ContactMessageScreen = () => {
                       <div className="flex items-center gap-1.5">
                         <Calendar size={14} className="flex-shrink-0" />
                         <span className="text-xs">
-                          {msg.sentAt
-                            ? new Date(msg.sentAt).toLocaleString("vi-VN")
-                            : "-"}
+                          {msg.sentAt ? new Date(msg.sentAt).toLocaleString('vi-VN') : '-'}
                         </span>
                       </div>
                     </td>
@@ -278,7 +251,7 @@ const ContactMessageScreen = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ContactMessageScreen;
+export default ContactMessageScreen

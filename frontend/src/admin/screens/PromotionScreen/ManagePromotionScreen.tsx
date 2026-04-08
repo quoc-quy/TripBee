@@ -2,9 +2,9 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useMemo } from 'react'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import {
   Edit2,
   PlusCircle,
@@ -14,32 +14,27 @@ import {
   Gift,
   CheckCircle,
   Ban,
-  PauseCircle,
-} from "lucide-react";
-import { omitBy, isUndefined } from "lodash";
-import { promotionAdminApi } from "../../apis/promotionAdmin.api";
-import type {
-  PromotionAdmin,
-  PromotionListAdminParams,
-} from "../../types/promotionAdmin";
-import { formatCurrency } from "../../../utils/utils";
-import FormPromotionScreen from "./FormPromotionScreen";
+  PauseCircle
+} from 'lucide-react'
+import { omitBy, isUndefined } from 'lodash'
+import { promotionAdminApi } from '../../apis/promotionAdmin.api'
+import type { PromotionAdmin, PromotionListAdminParams } from '../../types/promotionAdmin'
+import { formatCurrency } from '../../../utils/utils'
+import FormPromotionScreen from './FormPromotionScreen'
 
 // ==== Component StatCard (Giữ nguyên) ====
 type StatCardProps = {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-  bgClass: string;
-  isLoading?: boolean;
-};
+  title: string
+  value: number | string
+  icon: React.ReactNode
+  bgClass: string
+  isLoading?: boolean
+}
 
 function StatCard({ title, value, icon, bgClass, isLoading }: StatCardProps) {
   return (
     <div className="bg-white shadow-md rounded-3xl p-6 flex items-center gap-5 border border-gray-200 hover:shadow-lg transition">
-      <div
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center ${bgClass}`}
-      >
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${bgClass}`}>
         {icon}
       </div>
       <div>
@@ -51,74 +46,72 @@ function StatCard({ title, value, icon, bgClass, isLoading }: StatCardProps) {
         <p className="text-gray-600">{title}</p>
       </div>
     </div>
-  );
+  )
 }
 
 // ==== Constants & Helpers (Giữ nguyên) ====
 const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: "Đang hoạt động",
-  INACTIVE: "Không hoạt động",
-  EXPIRED: "Đã hết hạn",
-};
+  ACTIVE: 'Đang hoạt động',
+  INACTIVE: 'Không hoạt động',
+  EXPIRED: 'Đã hết hạn'
+}
 
 const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-700",
-  EXPIRED: "bg-red-100 text-red-700",
-};
+  ACTIVE: 'bg-green-100 text-green-700',
+  INACTIVE: 'bg-gray-100 text-gray-700',
+  EXPIRED: 'bg-red-100 text-red-700'
+}
 
 const DISCOUNT_TYPE_LABELS_MAP: Record<string, string> = {
-  PERCENTAGE: "Phần trăm",
-  FIXED_AMOUNT: "Cố định",
-};
+  PERCENTAGE: 'Phần trăm',
+  FIXED_AMOUNT: 'Cố định'
+}
 
 type ParsedPromotionParams = {
-  page: number;
-  size: number;
-  search?: string;
-  status?: string;
-  discountType?: string;
-};
+  page: number
+  size: number
+  search?: string
+  status?: string
+  discountType?: string
+}
 
-const parseSearchParams = (
-  searchParams: URLSearchParams
-): ParsedPromotionParams => {
+const parseSearchParams = (searchParams: URLSearchParams): ParsedPromotionParams => {
   const params = {
-    page: searchParams.get("page") ? Number(searchParams.get("page")) : 0,
-    size: searchParams.get("size") ? Number(searchParams.get("size")) : 10,
-    search: searchParams.get("search") || undefined,
-    status: searchParams.get("status") || undefined,
-    discountType: searchParams.get("discountType") || undefined,
-  };
-  return omitBy(params, isUndefined) as ParsedPromotionParams;
-};
+    page: searchParams.get('page') ? Number(searchParams.get('page')) : 0,
+    size: searchParams.get('size') ? Number(searchParams.get('size')) : 10,
+    search: searchParams.get('search') || undefined,
+    status: searchParams.get('status') || undefined,
+    discountType: searchParams.get('discountType') || undefined
+  }
+  return omitBy(params, isUndefined) as ParsedPromotionParams
+}
 
 const formatDate = (dateString: string) => {
   try {
-    return new Date(dateString).toLocaleDateString("vi-VN");
+    return new Date(dateString).toLocaleDateString('vi-VN')
   } catch (error) {
-    return dateString;
+    return dateString
   }
-};
+}
 
 // Helper Modal (Giữ nguyên)
 const SimpleModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}> = ({ isOpen, onClose, children }) => {
+  isOpen: boolean
+  onClose: () => void
+  children: React.ReactNode
+}> = ({ isOpen, children }) => {
   React.useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset'
     }
     return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
   return (
     <div className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4">
       <div
@@ -128,39 +121,35 @@ const SimpleModal: React.FC<{
         {children}
       </div>
     </div>
-  );
-};
+  )
+}
 
 // === START LOGIC MỚI ===
 
 // Hàm tính toán trạng thái hiển thị (Client-side)
 const calculateDisplayStatus = (promotion: PromotionAdmin): string => {
-  const now = new Date();
-  const endDate = new Date(promotion.endDate);
+  const now = new Date()
+  const endDate = new Date(promotion.endDate)
 
   // Logic ưu tiên:
   // 1. Nếu status DB là "INACTIVE" -> Inactive
-  if (promotion.status === "INACTIVE") {
-    return "INACTIVE";
+  if (promotion.status === 'INACTIVE') {
+    return 'INACTIVE'
   }
   // 2. Nếu date > endDate HOẶC status DB là "EXPIRED" -> Expired
-  if (now > endDate || promotion.status === "EXPIRED") {
-    return "EXPIRED";
+  if (now > endDate || promotion.status === 'EXPIRED') {
+    return 'EXPIRED'
   }
   // 3. Còn lại -> Active
-  return "ACTIVE";
-};
+  return 'ACTIVE'
+}
 
 export default function ManagePromotionScreen() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const queryParams = parseSearchParams(searchParams);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams()
+  const queryParams = parseSearchParams(searchParams)
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPromotionId, setEditingPromotionId] = useState<
-    string | undefined
-  >(undefined);
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingPromotionId, setEditingPromotionId] = useState<string | undefined>(undefined)
 
   // 1. TẠO QUERY PARAMS CHO API: Bỏ status=ACTIVE/EXPIRED để API trả về hết
   const apiQueryParams = useMemo(() => {
@@ -168,133 +157,121 @@ export default function ManagePromotionScreen() {
       page: queryParams.page,
       size: queryParams.size,
       search: queryParams.search,
-      discountType: queryParams.discountType,
-    };
+      discountType: queryParams.discountType
+    }
 
     // Nếu filter là INACTIVE, gửi thẳng xuống API để API lọc
-    if (queryParams.status === "INACTIVE") {
-      return { ...params, status: "INACTIVE" };
+    if (queryParams.status === 'INACTIVE') {
+      return { ...params, status: 'INACTIVE' }
     }
 
     // Nếu filter là ACTIVE, EXPIRED, hoặc ALL, KHÔNG gửi status.
     // Chúng ta sẽ lọc trên Client sau khi có dữ liệu thô.
-    return params;
-  }, [queryParams]);
+    return params
+  }, [queryParams])
 
   // 2. Query lấy dữ liệu cho Bảng (Sử dụng apiQueryParams mới)
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["admin-promotions", apiQueryParams],
+    queryKey: ['admin-promotions', apiQueryParams],
     queryFn: () =>
       promotionAdminApi
         .getAllPromotions(apiQueryParams as PromotionListAdminParams)
         .then((res) => res.data),
-    placeholderData: keepPreviousData,
-  });
+    placeholderData: keepPreviousData
+  })
 
   // 3. Query lấy TẤT CẢ dữ liệu để tính toán thống kê chính xác
   const {
     data: allPromotionsData,
     isLoading: isLoadingStats,
-    refetch: refetchStats,
+    refetch: refetchStats
   } = useQuery({
-    queryKey: ["admin-all-promotions-stats"],
-    queryFn: () =>
-      promotionAdminApi
-        .getAllPromotions({ size: 1000 })
-        .then((res) => res.data),
-    staleTime: 1000 * 60 * 5,
-  });
+    queryKey: ['admin-all-promotions-stats'],
+    queryFn: () => promotionAdminApi.getAllPromotions({ size: 1000 }).then((res) => res.data),
+    staleTime: 1000 * 60 * 5
+  })
 
   // 4. Logic tính toán Stats tại Client (Giữ nguyên)
   const stats = useMemo(() => {
-    const list = allPromotionsData?.content || [];
-    const total = allPromotionsData?.totalElements || 0;
+    const list = allPromotionsData?.content || []
+    const total = allPromotionsData?.totalElements || 0
 
-    let active = 0;
-    let inactive = 0;
-    let expired = 0;
+    let active = 0
+    let inactive = 0
+    let expired = 0
 
     list.forEach((p) => {
-      const displayStatus = calculateDisplayStatus(p);
-      if (displayStatus === "INACTIVE") {
-        inactive++;
-      } else if (displayStatus === "EXPIRED") {
-        expired++;
-      } else if (displayStatus === "ACTIVE") {
-        active++;
+      const displayStatus = calculateDisplayStatus(p)
+      if (displayStatus === 'INACTIVE') {
+        inactive++
+      } else if (displayStatus === 'EXPIRED') {
+        expired++
+      } else if (displayStatus === 'ACTIVE') {
+        active++
       }
-    });
+    })
 
-    return { total, active, inactive, expired };
-  }, [allPromotionsData]);
+    return { total, active, inactive, expired }
+  }, [allPromotionsData])
 
-  const rawPromotions: PromotionAdmin[] = data?.content || [];
-  const totalPages = data?.totalPages || 0;
-  const currentPage = data?.number || 0;
+  const rawPromotions: PromotionAdmin[] = data?.content || []
+  const totalPages = data?.totalPages || 0
+  const currentPage = data?.number || 0
 
   // 5. LỌC THÊM TRÊN CLIENT DỰA TRÊN TRẠNG THÁI HIỂN THỊ
   const promotions = useMemo(() => {
     // Nếu filter là INACTIVE, API đã lọc, chỉ cần trả về kết quả
-    if (queryParams.status === "INACTIVE") return rawPromotions;
+    if (queryParams.status === 'INACTIVE') return rawPromotions
 
     // Nếu không có filter status, hoặc filter là ALL, giữ nguyên danh sách
-    if (!queryParams.status || queryParams.status === "") return rawPromotions;
+    if (!queryParams.status || queryParams.status === '') return rawPromotions
 
     // Lọc lại dựa trên trạng thái hiển thị được tính toán trên Client
-    return rawPromotions.filter(
-      (p) => calculateDisplayStatus(p) === queryParams.status
-    );
-  }, [rawPromotions, queryParams.status]);
+    return rawPromotions.filter((p) => calculateDisplayStatus(p) === queryParams.status)
+  }, [rawPromotions, queryParams.status])
 
   const handlePageChange = (page: number) => {
-    const newParams = { ...queryParams, page };
-    setSearchParams(newParams as any);
-  };
+    const newParams = { ...queryParams, page }
+    setSearchParams(newParams as any)
+  }
 
-  const handleFilterChange = (
-    key: keyof ParsedPromotionParams,
-    value: string | undefined
-  ) => {
-    const newParams = { ...queryParams, [key]: value, page: 0 };
-    setSearchParams(omitBy(newParams, isUndefined) as any);
-  };
+  const handleFilterChange = (key: keyof ParsedPromotionParams, value: string | undefined) => {
+    const newParams = { ...queryParams, [key]: value, page: 0 }
+    setSearchParams(omitBy(newParams, isUndefined) as any)
+  }
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleFilterChange("search", e.currentTarget.value || undefined);
+    if (e.key === 'Enter') {
+      handleFilterChange('search', e.currentTarget.value || undefined)
     }
-  };
+  }
 
   const handleCreate = () => {
-    setEditingPromotionId(undefined);
-    setIsModalOpen(true);
-  };
+    setEditingPromotionId(undefined)
+    setIsModalOpen(true)
+  }
 
   const handleEdit = (id: string) => {
-    setEditingPromotionId(id);
-    setIsModalOpen(true);
-  };
+    setEditingPromotionId(id)
+    setIsModalOpen(true)
+  }
 
   const handleCloseModal = (shouldRefetch: boolean = false) => {
-    setIsModalOpen(false);
-    setEditingPromotionId(undefined);
+    setIsModalOpen(false)
+    setEditingPromotionId(undefined)
     if (shouldRefetch) {
-      refetch();
-      refetchStats(); // Cập nhật lại thống kê khi có thay đổi
+      refetch()
+      refetchStats() // Cập nhật lại thống kê khi có thay đổi
     }
-  };
+  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Quản lý Khuyến mãi
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Danh sách mã khuyến mãi đang hoạt động
-          </p>
+          <h1 className="text-2xl font-bold text-gray-800">Quản lý Khuyến mãi</h1>
+          <p className="text-gray-500 mt-1">Danh sách mã khuyến mãi đang hoạt động</p>
         </div>
         <button
           onClick={handleCreate}
@@ -309,17 +286,15 @@ export default function ManagePromotionScreen() {
         <input
           type="text"
           placeholder="Tìm kiếm theo mã, mô tả..."
-          defaultValue={queryParams.search || ""}
+          defaultValue={queryParams.search || ''}
           onKeyDown={handleSearch}
           className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
 
         <select
           className="border border-gray-300 rounded-lg p-2 min-w-[150px]"
-          value={queryParams.discountType || ""}
-          onChange={(e) =>
-            handleFilterChange("discountType", e.target.value || undefined)
-          }
+          value={queryParams.discountType || ''}
+          onChange={(e) => handleFilterChange('discountType', e.target.value || undefined)}
         >
           <option value="">Loại khuyến mãi</option>
           <option value="PERCENTAGE">Phần trăm (%)</option>
@@ -329,10 +304,8 @@ export default function ManagePromotionScreen() {
         {/* --- Bộ lọc Trạng thái --- */}
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 min-w-[150px]"
-          value={queryParams.status || ""}
-          onChange={(e) =>
-            handleFilterChange("status", e.target.value || undefined)
-          }
+          value={queryParams.status || ''}
+          onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
         >
           <option value="">Tất cả trạng thái</option>
           <option value="ACTIVE">Đang hoạt động</option>
@@ -382,18 +355,10 @@ export default function ManagePromotionScreen() {
               <th className="px-5 py-3 font-bold text-black">Mã KM</th>
               <th className="px-5 py-3 font-bold text-black">Loại/Giá trị</th>
               <th className="px-5 py-3 font-bold text-black">Thời gian</th>
-              <th className="px-5 py-3 text-center font-bold text-black">
-                SL Giới hạn
-              </th>
-              <th className="px-5 py-3 text-center font-bold text-black">
-                SL Đã dùng
-              </th>
-              <th className="px-5 py-3 text-center font-bold text-black">
-                Trạng thái
-              </th>
-              <th className="px-5 py-3 text-center font-bold text-black">
-                Thao tác
-              </th>
+              <th className="px-5 py-3 text-center font-bold text-black">SL Giới hạn</th>
+              <th className="px-5 py-3 text-center font-bold text-black">SL Đã dùng</th>
+              <th className="px-5 py-3 text-center font-bold text-black">Trạng thái</th>
+              <th className="px-5 py-3 text-center font-bold text-black">Thao tác</th>
             </tr>
           </thead>
 
@@ -413,41 +378,37 @@ export default function ManagePromotionScreen() {
             ) : (
               promotions.map((promotion: PromotionAdmin) => {
                 // SỬ DỤNG HÀM MỚI ĐỂ ĐỒNG BỘ TRẠNG THÁI HIỂN THỊ
-                const displayStatus = calculateDisplayStatus(promotion);
+                const displayStatus = calculateDisplayStatus(promotion)
 
-                const label = STATUS_LABELS[displayStatus] || displayStatus;
-                const color =
-                  STATUS_COLORS[displayStatus] || "bg-gray-100 text-gray-700";
+                const label = STATUS_LABELS[displayStatus] || displayStatus
+                const color = STATUS_COLORS[displayStatus] || 'bg-gray-100 text-gray-700'
 
                 const isPercentage =
-                  promotion.discountType === "PERCENTAGE" ||
-                  promotion.discountPercentage > 0;
+                  promotion.discountType === 'PERCENTAGE' || promotion.discountPercentage > 0
 
                 const discountValue = isPercentage
                   ? `${promotion.discountPercentage}%`
                   : promotion.discountAmount
-                  ? formatCurrency(promotion.discountAmount)
-                  : "N/A";
+                    ? formatCurrency(promotion.discountAmount)
+                    : 'N/A'
 
                 const discountTypeLabel = isPercentage
-                  ? "Phần trăm"
-                  : promotion.discountType === "FIXED_AMOUNT" ||
-                    (promotion.discountAmount && promotion.discountAmount > 0)
-                  ? "Cố định"
-                  : DISCOUNT_TYPE_LABELS_MAP[promotion.discountType] || "N/A";
+                  ? 'Phần trăm'
+                  : promotion.discountType === 'FIXED_AMOUNT' ||
+                      (promotion.discountAmount && promotion.discountAmount > 0)
+                    ? 'Cố định'
+                    : DISCOUNT_TYPE_LABELS_MAP[promotion.discountType] || 'N/A'
                 return (
                   <tr
                     key={promotion.promotionID}
                     className={`border-b border-gray-100 transition-all ${
-                      displayStatus === "EXPIRED"
-                        ? "bg-gray-50 opacity-60 grayscale-[0.5]"
-                        : "hover:bg-gray-50"
+                      displayStatus === 'EXPIRED'
+                        ? 'bg-gray-50 opacity-60 grayscale-[0.5]'
+                        : 'hover:bg-gray-50'
                     }`}
                   >
                     <td className="px-5 py-4">
-                      <p className="font-semibold text-gray-900 text-sm">
-                        {promotion.title}
-                      </p>
+                      <p className="font-semibold text-gray-900 text-sm">{promotion.title}</p>
                       <p className="text-gray-500 text-sm line-clamp-1 max-w-xs">
                         {promotion.description}
                       </p>
@@ -458,9 +419,7 @@ export default function ManagePromotionScreen() {
                           <Tag size={16} className="text-blue-500" />
                           {discountTypeLabel}
                         </div>
-                        <span className="font-bold text-base ">
-                          {discountValue}
-                        </span>
+                        <span className="font-bold text-base ">{discountValue}</span>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-sm">
@@ -470,34 +429,26 @@ export default function ManagePromotionScreen() {
                       </div>
                       <div
                         className={`flex items-center gap-1 ${
-                          displayStatus === "EXPIRED"
-                            ? "text-red-600 font-medium"
-                            : "text-gray-700"
+                          displayStatus === 'EXPIRED' ? 'text-red-600 font-medium' : 'text-gray-700'
                         }`}
                       >
                         <Clock
                           size={14}
-                          className={
-                            displayStatus === "EXPIRED"
-                              ? "text-red-500"
-                              : "text-gray-500"
-                          }
+                          className={displayStatus === 'EXPIRED' ? 'text-red-500' : 'text-gray-500'}
                         />
                         {formatDate(promotion.endDate)}
                       </div>
                     </td>
                     <td className="px-5 py-4 text-center text-sm font-semibold">
                       {promotion.limitUsage === 0
-                        ? "Vô hạn"
+                        ? 'Vô hạn'
                         : promotion.limitUsage.toLocaleString()}
                     </td>
                     <td className="px-5 py-4 text-center text-sm font-semibold">
                       {promotion.currentUsage.toLocaleString()}
                     </td>
                     <td className="px-5 py-4 text-center text-sm">
-                      <span
-                        className={`px-3 py-1.5 rounded-full font-medium ${color}`}
-                      >
+                      <span className={`px-3 py-1.5 rounded-full font-medium ${color}`}>
                         {label}
                       </span>
                     </td>
@@ -513,7 +464,7 @@ export default function ManagePromotionScreen() {
                       </div>
                     </td>
                   </tr>
-                );
+                )
               })
             )}
           </tbody>
@@ -553,5 +504,5 @@ export default function ManagePromotionScreen() {
         />
       </SimpleModal>
     </div>
-  );
+  )
 }

@@ -26,12 +26,12 @@ export default function RegisterScreen() {
   })
 
   const registerMutation = useMutation({
-    mutationFn: (body: Omit<FormData, 'confirm_password'>) => registerAccount(body)
+    mutationFn: (body: Omit<FormData, 'confirm_password'>) => registerAccount(body as any)
   })
 
   const onSubmit = handleSubmit((data) => {
-    const body = omit(data, ['confirm_password'])
-    registerMutation.mutate(body, {
+    const body = omit(data, ['confirm_password']) as Omit<FormData, 'confirm_password'>
+    registerMutation.mutate(body as any, {
       onSuccess: (data) => {
         toast.success('Đăng ký tài khoản thành công!', { autoClose: 2000 })
         setIsAuthenticated(true)

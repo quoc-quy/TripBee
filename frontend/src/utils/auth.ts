@@ -1,38 +1,37 @@
-import type { SimpleProfile, User } from "../types/user.type";
+import type { SimpleProfile } from '../types/user.type'
 
 export const saveAccessTokenToLS = (access_token: string) => {
-  localStorage.setItem("access_token", access_token);
-};
+  localStorage.setItem('access_token', access_token)
+}
 
 export const clearLS = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("profile");
-};
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('profile')
+}
 
-export const getAccessTokenFromLS = () =>
-  localStorage.getItem("access_token") || "";
+export const getAccessTokenFromLS = () => localStorage.getItem('access_token') || ''
 
 export const getProfileFromLS = (): SimpleProfile | null => {
-  const result = localStorage.getItem("profile");
+  const result = localStorage.getItem('profile')
 
-  if (!result || result === "undefined") {
-    localStorage.removeItem("profile");
-    return null;
+  if (!result || result === 'undefined') {
+    localStorage.removeItem('profile')
+    return null
   }
 
   try {
-    return JSON.parse(result);
+    return JSON.parse(result)
   } catch (error) {
-    console.error("Lỗi phân tích JSON từ LocalStorage (profile):", error);
-    localStorage.removeItem("profile");
-    return null;
+    console.error('Lỗi phân tích JSON từ LocalStorage (profile):', error)
+    localStorage.removeItem('profile')
+    return null
   }
-};
+}
 
 export const setProfileToLS = (profile: SimpleProfile) => {
   if (profile) {
-    localStorage.setItem("profile", JSON.stringify(profile));
+    localStorage.setItem('profile', JSON.stringify(profile))
   } else {
-    localStorage.removeItem("profile");
+    localStorage.removeItem('profile')
   }
-};
+}

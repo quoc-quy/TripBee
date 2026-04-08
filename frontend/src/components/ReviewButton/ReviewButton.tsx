@@ -1,33 +1,39 @@
-import React, { useState, useCallback, useContext } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AppContext } from "../../contexts/app.context";
-import { reviewApi } from "../../apis/review.api";
-import ReviewModal from "../ReviewModel";
+import { useState, useCallback, useContext } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { AppContext } from '../../contexts/app.context'
+import { reviewApi } from '../../apis/review.api'
+import ReviewModal from '../ReviewModel'
 
-export const ReviewButton = ({ tourId, tourTitle, status }) => {
-  const { isAuthenticated } = useContext(AppContext);
-  const [showModal, setShowModal] = useState(false);
+interface ReviewButtonProps {
+  tourId: string
+  tourTitle: string
+  status: string
+}
+
+export const ReviewButton = ({ tourId, tourTitle, status }: ReviewButtonProps) => {
+  const { isAuthenticated } = useContext(AppContext)
+  const [showModal, setShowModal] = useState(false)
 
   const {
     data: reviewedData,
     isLoading: isLoadingReviewed,
-    refetch,
+    refetch
   } = useQuery({
-    queryKey: ["hasReviewed", tourId],
+    queryKey: ['hasReviewed', tourId],
     queryFn: () => reviewApi.hasReviewed(tourId),
-    enabled: isAuthenticated && status === "COMPLETED",
-    staleTime: 5000,
-  });
+    enabled: isAuthenticated && status === 'COMPLETED',
+    staleTime: 5000
+  })
 
-  const isReviewed = reviewedData?.data === true;
-  const canReview = status === "COMPLETED" && !isReviewed;
+  const isReviewed = reviewedData?.data === true
+  const canReview = status === 'COMPLETED' && !isReviewed
 
   const handleSuccess = useCallback(() => {
-    refetch();
-  }, [refetch]);
+    refetch()
+  }, [refetch])
 
-  if (!isAuthenticated || status !== "COMPLETED") {
-    return null;
+  if (!isAuthenticated || status !== 'COMPLETED') {
+    return null
   }
 
   if (isLoadingReviewed) {
@@ -38,7 +44,7 @@ export const ReviewButton = ({ tourId, tourTitle, status }) => {
       >
         Đang kiểm tra...
       </button>
-    );
+    )
   }
 
   if (isReviewed) {
@@ -49,7 +55,7 @@ export const ReviewButton = ({ tourId, tourTitle, status }) => {
       >
         Đã đánh giá
       </button>
-    );
+    )
   }
 
   if (canReview) {
@@ -70,8 +76,8 @@ export const ReviewButton = ({ tourId, tourTitle, status }) => {
           />
         )}
       </>
-    );
+    )
   }
 
-  return null;
-};
+  return null
+}
