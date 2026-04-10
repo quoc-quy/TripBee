@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { dashboardApi } from '../apis/dashboard.api'
 import type { DashboardStats } from '../types/dashboard.type'
@@ -196,10 +197,10 @@ export default function DashboardScreen() {
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value: number) => `${value / 1000000}M`}
+                  tickFormatter={(value: any) => `${Number(value) / 1000000}M`}
                 />
                 <Tooltip
-                  formatter={(value: number) => value.toLocaleString('vi-VN') + ' ₫'}
+                  formatter={(value: any) => Number(value).toLocaleString('vi-VN') + ' ₫'}
                   labelFormatter={(label) => `Tháng ${label}`}
                 />
                 <Area
@@ -269,10 +270,10 @@ export default function DashboardScreen() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value: number) => `${value / 1000000}M`}
+                tickFormatter={(value: any) => `${Number(value) / 1000000}M`}
               />
               <Tooltip
-                formatter={(value: number) => value.toLocaleString('vi-VN') + ' ₫'}
+                formatter={(value: any) => Number(value).toLocaleString('vi-VN') + ' ₫'}
                 cursor={{ fill: 'transparent' }}
               />
               <Bar
