@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tours") // API này đã được permitAll() trong SecurityConfig
-@CrossOrigin(origins = "*")
+// @CrossOrigin(origins = "*")
 public class TourController {
 
     private final TourService tourService;
