@@ -58,13 +58,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/api/ai/chat").permitAll()
 
-                        .requestMatchers("/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
+                        .requestMatchers("/api/tours", "/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
                         .requestMatchers("/api/reviews/**").permitAll()
                         .requestMatchers("/api/webhooks/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/contact-messages").permitAll()
 
                         .requestMatchers("/api/admin/**", "/api/admin/tours/**").permitAll()
+                        .requestMatchers("/error").permitAll()
 
                         .anyRequest().authenticated()
                 );

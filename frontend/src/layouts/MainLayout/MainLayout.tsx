@@ -13,11 +13,10 @@ export default function MainLayout({ children }: Props) {
   return (
     <div>
       <Header />
-      <main className='mt-24'>{children}</main>
+      <main>{children}</main>
       <Outlet />
       <Footer />
-      
-      {/* 2. THÊM COMPONENT CHATBOX VÀO ĐÂY */}
+
       <Chatbox />
     </div>
   )
