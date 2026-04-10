@@ -11,6 +11,8 @@ import com.tripbee.backend.repository.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.annotation.Backoff;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -113,6 +115,11 @@ public class BookingService {
     }
 
     // 2. Logic Xử lý Webhook Thanh toán
+    @Retryable(
+        retryFor = {RuntimeException.class },
+        maxAttempts=3,
+        backoff = @Backoff(delay = 3000, maxDelay = 5000)
+    )
     @Transactional
     public void processPaymentWebhook(String bookingId, BigDecimal amount, String transactionInfo) {
         // Tìm Booking theo ID nhận được từ nội dung chuyển khoản
