@@ -15,20 +15,18 @@ jobs:
       - name: 1. Clone code từ GitHub về máy chủ ảo
         uses: actions/checkout@v3
 
-      - name: 2. Cài đặt Node.js (cần thiết để chạy Railway CLI)
+      - name: 2. Cài đặt Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: 3. Ra lệnh cho Railway tiến hành Deploy
-        working-directory: ./backend
-        run: railway up --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      # BƯỚC NÀY RẤT QUAN TRỌNG: Dùng npm để cài đặt công cụ Railway CLI
+      - name: 3. Cài đặt Railway CLI
+        run: npm install -g @railway/cli
 
       - name: 4. Ra lệnh cho Railway tiến hành Deploy
         working-directory: ./backend # Trỏ đúng vào thư mục backend để chạy lệnh
         run: railway up --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
