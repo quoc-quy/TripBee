@@ -25,7 +25,6 @@ public class DestinationService {
     }
 
     public List<DestinationResponse> getPopularDestinations() {
-        // Lấy 6 điểm đến, có thể thay đổi logic sau
         return destinationRepository.findAll().stream()
                 .limit(6)
                 .map(this::convertToDestinationResponse)
@@ -39,7 +38,6 @@ public class DestinationService {
     }
 
     public List<DestinationResponse> getAllDestinations(String region) {
-        // Dùng phương thức mới của repository để lọc
         return destinationRepository.findAllByRegion(region).stream()
                 .map(this::convertToDestinationResponse)
                 .collect(Collectors.toList());
