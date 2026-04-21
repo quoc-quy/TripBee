@@ -32,14 +32,12 @@ public class DestinationService {
                 .collect(Collectors.toList());
     }
 
-    // (SỬA LỖI 1) Phương thức này cho trường hợp không có region
     public List<DestinationResponse> getAllDestinations() {
         return destinationRepository.findAll().stream()
                 .map(this::convertToDestinationResponse)
                 .collect(Collectors.toList());
     }
 
-    // (SỬA LỖI 1) Thêm phương thức mới này để xử lý khi có region
     public List<DestinationResponse> getAllDestinations(String region) {
         // Dùng phương thức mới của repository để lọc
         return destinationRepository.findAllByRegion(region).stream()
@@ -59,7 +57,7 @@ public class DestinationService {
         response.setNameDes(destination.getNameDes());
         response.setLocation(destination.getLocation());
         response.setCountry(destination.getCountry());
-        response.setRegion(destination.getRegion()); // Đã có từ lần sửa trước
+        response.setRegion(destination.getRegion());
 
         response.setImageURLs(destination.getImages().stream()
                 .map(Image::getUrl)
