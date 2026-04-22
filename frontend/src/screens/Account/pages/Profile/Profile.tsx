@@ -95,7 +95,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="md:col-span-2">
             <label htmlFor="email" className="block text-sm font-bold mb-2 text-gray-700 ml-1">
-              Email đăng nhập (Không thể thay đổi)
+              Email đăng nhập
             </label>
             <input
               type="email"
