@@ -23,3 +23,18 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --detach --service tripbee-backend
+
+      - name: Health Check (đợi Railway deploy xong)
+        run: |
+          echo "⏳ Đợi 60 giây để Railway build và deploy..."
+          sleep 60
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://tripbee-backend-production.up.railway.app/api/destinations \
+            --max-time 30)
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
+            echo "✅ Backend đang chạy bình thường! (Status: $STATUS)"
+          else
+            echo "❌ Backend có vấn đề! (Status: $STATUS)"
+            exit 1
+          fi

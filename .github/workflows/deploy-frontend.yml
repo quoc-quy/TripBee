@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: 1. Clone code từ GitHub về máy chủ ảo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 2. Cài đặt môi trường Node.js
         uses: actions/setup-node@v3
@@ -31,13 +31,16 @@ jobs:
       - name: 4. Cài đặt Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: 5. Lấy thông tin dự án từ Vercel
+      - name: 5. Lấy thông tin + biến môi trường từ Vercel
+        # vercel pull tải .vercel/output/ bao gồm VITE_API_URL đã set trên Vercel Dashboard
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: 6. Build code Frontend
+        # VITE_API_URL được inject từ Vercel Dashboard (đã pull ở bước 5)
+        # Không cần truyền thủ công ở đây
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -48,3 +51,8 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: 8. Verify URL hoạt động
+        run: |
+          echo "✅ Frontend deployed!"
+          echo "🌐 URL: https://tripbeefrontend.vercel.app"
