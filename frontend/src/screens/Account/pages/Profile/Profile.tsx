@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -34,7 +35,6 @@ export default function Profile() {
     }
   })
 
-  // FIX LỖI: Cập nhật form values trong useEffect để tránh infinite re-render
   useEffect(() => {
     if (userData?.data) {
       setValue('name', userData.data.name || '')

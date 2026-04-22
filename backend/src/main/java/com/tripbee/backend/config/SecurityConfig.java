@@ -36,7 +36,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Trim whitespace từ mỗi origin (tránh lỗi nếu có khoảng trắng sau dấu phẩy)
         String[] origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .toArray(String[]::new);
