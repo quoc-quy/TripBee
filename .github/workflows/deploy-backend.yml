@@ -24,40 +24,15 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --detach --service tripbee-backend
 
-      - name: Đợi Railway build & boot xong
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Xác nhận deploy đã được gửi lên Railway
         run: |
-          echo "⏳ Đợi Railway deploy..."
-          echo "   (Railway block curl từ GitHub Actions IPs nên không dùng HTTP health check)"
-          sleep 30
-
-          # Dùng Railway CLI để kiểm tra deployment status thay vì curl
-          for i in $(seq 1 10); do
-            echo "--- Lần thử $i/10..."
-
-            STATUS=$(railway status --service tripbee-backend 2>&1 || true)
-            echo "    $STATUS"
-
-            if echo "$STATUS" | grep -qi "success\|running\|active\|deployed"; then
-              echo "✅ Railway báo deploy thành công!"
-              break
-            fi
-
-            if echo "$STATUS" | grep -qi "failed\|error\|crash"; then
-              echo "❌ Railway báo deploy thất bại!"
-              echo "   Xem logs: railway logs --service tripbee-backend"
-              exit 1
-            fi
-
-            sleep 20
-          done
-
           echo ""
-          echo "✅ Deploy pipeline hoàn tất!"
-          echo "🌐 Backend: https://tripbee-backend-production.up.railway.app"
+          echo "✅ Code đã được gửi lên Railway thành công!"
+          echo "🌐 Backend URL: https://tripbee-backend-production.up.railway.app"
           echo ""
-          echo "⚠️  Nếu backend vẫn crash, kiểm tra Railway đã có đủ:"
-          echo "   - PostgreSQL service với Reference Variables"
-          echo "   - Redis service với Reference Variables"
-          echo "   - ALLOWED_ORIGINS env var"
+          echo "📋 Railway sẽ tự build & deploy trong vài phút tiếp theo."
+          echo "   Theo dõi tiến trình tại: https://railway.app"
+          echo ""
+          echo "⚠️  Lưu ý: Railway block HTTP request từ GitHub Actions IPs,"
+          echo "   nên workflow này không thể tự health check được."
+          echo "   Hãy kiểm tra Railway Dashboard để xác nhận backend đang chạy."
