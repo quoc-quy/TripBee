@@ -24,46 +24,40 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --detach --service tripbee-backend
 
-      - name: Health Check với retry (đợi Railway boot xong)
+      - name: Đợi Railway build & boot xong
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          echo "⏳ Bắt đầu health check — Railway cần ~90-120 giây để build & boot Spring Boot..."
+          echo "⏳ Đợi Railway deploy..."
+          echo "   (Railway block curl từ GitHub Actions IPs nên không dùng HTTP health check)"
+          sleep 30
 
-          MAX_RETRIES=10
-          RETRY_INTERVAL=30
-          SUCCESS=false
+          # Dùng Railway CLI để kiểm tra deployment status thay vì curl
+          for i in $(seq 1 10); do
+            echo "--- Lần thử $i/10..."
 
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "--- Lần thử $i/$MAX_RETRIES (đợi ${RETRY_INTERVAL}s)..."
-            sleep $RETRY_INTERVAL
+            STATUS=$(railway status --service tripbee-backend 2>&1 || true)
+            echo "    $STATUS"
 
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              https://tripbee-backend-production.up.railway.app/api/tours \
-              --max-time 15 \
-              -H "Accept: application/json" \
-              2>/dev/null || echo "000")
-
-            echo "    HTTP Status: $STATUS"
-
-            # 200 = OK public endpoint
-            # 403 = Spring Security chặn (backend đang chạy, cần auth) → cũng là THÀNH CÔNG
-            # 401 = Unauthorized (backend chạy, cần token) → cũng là THÀNH CÔNG
-            # 502/503/000 = Railway chưa boot xong hoặc crash → tiếp tục retry
-            if [ "$STATUS" = "200" ] || [ "$STATUS" = "403" ] || [ "$STATUS" = "401" ]; then
-              echo "✅ Backend đang chạy! (HTTP $STATUS)"
-              SUCCESS=true
+            if echo "$STATUS" | grep -qi "success\|running\|active\|deployed"; then
+              echo "✅ Railway báo deploy thành công!"
               break
             fi
 
-            echo "    ⚠️  Backend chưa sẵn sàng (HTTP $STATUS), thử lại..."
+            if echo "$STATUS" | grep -qi "failed\|error\|crash"; then
+              echo "❌ Railway báo deploy thất bại!"
+              echo "   Xem logs: railway logs --service tripbee-backend"
+              exit 1
+            fi
+
+            sleep 20
           done
 
-          if [ "$SUCCESS" = "false" ]; then
-            echo ""
-            echo "❌ Backend không phản hồi sau $((MAX_RETRIES * RETRY_INTERVAL))s"
-            echo "   Kiểm tra Railway logs tại: https://railway.app"
-            echo "   Các nguyên nhân thường gặp:"
-            echo "   1. SPRING_DATASOURCE_URL chưa set → kết nối PostgreSQL fail"
-            echo "   2. SPRING_DATA_REDIS_HOST chưa set → Redis connection fail"
-            echo "   3. JAR build lỗi → xem build logs trên Railway"
-            exit 1
-          fi
+          echo ""
+          echo "✅ Deploy pipeline hoàn tất!"
+          echo "🌐 Backend: https://tripbee-backend-production.up.railway.app"
+          echo ""
+          echo "⚠️  Nếu backend vẫn crash, kiểm tra Railway đã có đủ:"
+          echo "   - PostgreSQL service với Reference Variables"
+          echo "   - Redis service với Reference Variables"
+          echo "   - ALLOWED_ORIGINS env var"

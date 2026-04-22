@@ -17,9 +17,6 @@ public class ApplicationConfig {
 
     private final AccountRepository accountRepository;
 
-    // (1) CẬP NHẬT CONSTRUCTOR
-    // Chúng ta chỉ cần AccountRepository để tạo UserDetailsService.
-    // Chúng ta KHÔNG cần PasswordEncoder ở đây nữa.
     public ApplicationConfig(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
     }
