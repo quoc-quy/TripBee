@@ -21,23 +21,18 @@ public class ApplicationConfig {
         this.accountRepository = accountRepository;
     }
 
-    // (2) Bean PasswordEncoder vẫn nằm ở đây, đây là nơi nó được tạo
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
 
-    // (3) Bean UserDetailsService vẫn như cũ
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> accountRepository.findByUserName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 
-    // (4) CẬP NHẬT PHƯƠNG THỨC NÀY
-    // Thay vì dùng biến "this.passwordEncoder", chúng ta yêu cầu Spring
-    // tiêm (inject) bean PasswordEncoder làm tham số trực tiếp cho phương thức này.
     @Bean
     public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -46,7 +41,6 @@ public class ApplicationConfig {
         return authProvider;
     }
 
-    // (5) Bean AuthenticationManager vẫn như cũ
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
