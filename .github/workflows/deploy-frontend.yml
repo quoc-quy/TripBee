@@ -15,34 +15,27 @@ jobs:
         working-directory: ./frontend
 
     steps:
-      - name: 1. Clone code từ GitHub về máy chủ ảo
+      - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 2. Cài đặt môi trường Node.js
+      - name: 2. Cài đặt Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      - name: 3. Cài đặt các thư viện (NPM Install)
+      - name: 3. Cài đặt thư viện
         run: npm install
 
-      - name: 4. Build Frontend với VITE_API_URL
-        # Vite bake biến môi trường vào file JS lúc build
-        # VITE_API_URL phải được truyền trực tiếp ở đây
+      - name: 4. Build với VITE_API_URL
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: 5. Cài đặt Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: 6. Deploy thư mục dist lên Vercel
-        run: vercel deploy ./dist --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: 7. Verify deployment
-        run: |
-          echo "✅ Frontend deployed!"
-          echo "🌐 URL: https://tripbeefrontend.vercel.app"
+      - name: 5. Deploy thư mục dist lên Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend/dist
