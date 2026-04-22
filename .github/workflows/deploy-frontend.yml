@@ -24,32 +24,25 @@ jobs:
           node-version: '20'
 
       - name: 3. Cài đặt các thư viện (NPM Install)
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+        run: npm install
 
-      - name: 4. Cài đặt Vercel CLI
+      - name: 4. Build Frontend với VITE_API_URL
+        # Vite bake biến môi trường vào file JS lúc build
+        # VITE_API_URL phải được truyền trực tiếp ở đây
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: 5. Cài đặt Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: 5. Lấy thông tin + biến môi trường từ Vercel
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: 6. Deploy thư mục dist lên Vercel
+        run: vercel deploy ./dist --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: 6. Build code Frontend
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: 7. Deploy lên Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: 8. Verify deployment
+      - name: 7. Verify deployment
         run: |
           echo "✅ Frontend deployed!"
           echo "🌐 URL: https://tripbeefrontend.vercel.app"
