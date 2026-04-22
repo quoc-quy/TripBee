@@ -1,19 +1,16 @@
 name: Deploy Frontend to Vercel
-
 on:
   push:
     branches:
       - main
     paths:
       - 'frontend/**'
-
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./frontend
-
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
@@ -23,8 +20,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. Cài đặt thư viện
-        run: npm install
+      - name: 3. Cài đặt thư viện (clean install để fix rollup native deps)
+        run: |
+          rm -f package-lock.json
+          npm install
 
       - name: 4. Build với VITE_API_URL
         run: npm run build
