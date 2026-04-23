@@ -328,7 +328,6 @@ export default function TourDetailScreen() {
             className="fixed inset-0 backdrop-blur-xl bg-black/95 z-50 flex items-center justify-center p-4"
             onClick={closeLightbox}
           >
-            {/* Các nút điều khiển Lightbox giữ nguyên */}
             <button
               onClick={closeLightbox}
               className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors z-[52]"

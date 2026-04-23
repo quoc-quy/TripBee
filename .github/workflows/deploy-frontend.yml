@@ -30,7 +30,20 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: 5. Deploy thư mục dist lên Vercel
+      - name: 5. Tạo vercel.json trong dist (serve static + fix React Router)
+        run: |
+          cat > ./dist/vercel.json << 'EOF'
+          {
+            "buildCommand": null,
+            "installCommand": null,
+            "framework": null,
+            "rewrites": [
+              { "source": "/(.*)", "destination": "/index.html" }
+            ]
+          }
+          EOF
+
+      - name: 6. Deploy thư mục dist lên Vercel
         run: |
           npm install -g vercel@latest
           vercel deploy --prod --yes \
