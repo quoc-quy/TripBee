@@ -24,24 +24,10 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-        run: |
-          railway up --detach --service tripbee-backend
+        run: railway up --detach --service tripbee-backend
 
       - name: 4. Thông báo kết quả
         run: |
-          echo ""
-          echo "✅ Backend source code đã gửi lên Railway thành công!"
-          echo "🌐 Backend URL: https://tripbee-backend-production.up.railway.app"
-          echo ""
-          echo "📋 Railway đang tự build & deploy từ Dockerfile..."
-          echo "   Theo dõi tại: https://railway.app/project/${{ secrets.RAILWAY_PROJECT_ID }}"
-          echo ""
-          echo "⚠️  Quan trọng: Đảm bảo các biến môi trường sau đã được set trên Railway:"
-          echo "   - SPRING_DATASOURCE_URL (từ PostgreSQL plugin)"
-          echo "   - SPRING_DATASOURCE_USERNAME"
-          echo "   - SPRING_DATASOURCE_PASSWORD"
-          echo "   - SPRING_DATA_REDIS_HOST (từ Redis plugin)"
-          echo "   - SPRING_DATA_REDIS_PORT"
-          echo "   - SPRING_DATA_REDIS_PASSWORD"
-          echo "   - ALLOWED_ORIGINS=https://tripbeefrontend.vercel.app"
-          echo "   - JWT_SECRET_KEY"
+          echo "✅ Backend source đã gửi lên Railway!"
+          echo "🌐 URL: https://tripbee-backend-production.up.railway.app"
+          echo "📋 Railway đang build từ Dockerfile — theo dõi tại https://railway.app"

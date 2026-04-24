@@ -269,7 +269,6 @@ export default function TourDetailScreen() {
               />
             </div>
 
-            {/* Lịch trình chi tiết */}
             <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white">
               <h2 className="text-2xl font-extrabold text-gray-900 mb-8 tracking-tight">
                 Hành trình chi tiết

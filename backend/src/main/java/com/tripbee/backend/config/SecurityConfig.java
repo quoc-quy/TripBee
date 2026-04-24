@@ -49,7 +49,6 @@ public class SecurityConfig {
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // FIX: Áp dụng CORS cho cả /api/** và /images/**
         source.registerCorsConfiguration("/api/**", configuration);
         source.registerCorsConfiguration("/images/**", configuration);
         return source;
@@ -64,6 +63,8 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        // FIX: Cho phép Railway healthcheck không cần auth
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/api/ai/chat").permitAll()
                         .requestMatchers("/api/tours", "/api/tours/**", "/api/destinations/**", "/api/tour-types/**").permitAll()
