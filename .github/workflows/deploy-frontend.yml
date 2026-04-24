@@ -11,9 +11,6 @@ on:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
 
     steps:
       - name: 1. Checkout code
@@ -24,27 +21,33 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 3. Cài đặt Vercel CLI
+      - name: 3. Cài đặt Vercel CLI global
         run: npm install -g vercel@latest
 
-      # Xoá package-lock.json cũ (Windows) để tránh lỗi rollup native modules
-      - name: 4. Cài đặt dependencies
+      - name: 4. Cài đặt dependencies frontend
+        working-directory: ./frontend
         run: |
           rm -f package-lock.json
           npm install --platform=linux --arch=x64 --include=optional
 
       - name: 5. Build với vercel build
-        run: vercel build --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          vercel build --prod --yes \
+            --cwd ./frontend \
+            --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: 6. Deploy lên Vercel Production
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          vercel deploy --prebuilt --prod \
+            --cwd ./frontend \
+            --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: 7. Thông báo kết quả
-        run: echo "✅ Frontend đã deploy thành công lên https://tripbeefrontend.vercel.app"
+        run: echo "✅ Frontend deployed tới https://tripbeefrontend.vercel.app"

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets; // (1) THÊM IMPORT NÀY
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,10 +19,10 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret-key}")
+    @Value("${jwt.secret-key:EiuU1v3b9gHjS8wLpQdRtVfGkYnJ3r5u7x!A%D*G-KaPdSgVkYp3s6v8y/B?E(H}")
     private String SECRET_KEY;
 
-    @Value("${jwt.expiration-ms}")
+    @Value("${jwt.expiration-ms:86400000}")
     private long EXPIRATION_MS;
 
     public String extractUsername(String token) {
@@ -69,10 +69,7 @@ public class JwtService {
                 .getBody();
     }
 
-    // (2) SỬA PHƯƠNG THỨC NÀY
     private Key getSignInKey() {
-        // THAY VÌ: byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-        // DÙNG:
         byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
