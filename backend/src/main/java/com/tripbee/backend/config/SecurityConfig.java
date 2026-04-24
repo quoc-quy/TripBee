@@ -1,7 +1,5 @@
 package com.tripbee.backend.config;
 
-import com.tripbee.backend.model.enums.RoleType;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +14,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -33,37 +30,45 @@ public class SecurityConfig {
         this.authenticationProvider = authenticationProvider;
     }
 
+    // 1. Cấu hình CorsConfigurationSource (Bắt buộc phải có @Bean)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        String[] origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toArray(String[]::new);
-
-        configuration.setAllowedOrigins(Arrays.asList(origins));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("*"));
+        
+        // Cho phép Frontend ở Localhost và Vercel truy cập
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:5173", 
+            "https://tripbeefrontend.vercel.app"
+        ));
+        
+        // Cho phép các phương thức HTTP
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        
+        // Cho phép các Header (rất quan trọng cho Token)
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        
+        // Cho phép gửi Cookie/Credentials
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
-        source.registerCorsConfiguration("/images/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // Áp dụng quy tắc CORS này cho TẤT CẢ api
         return source;
     }
 
+    // 2. Cấu hình SecurityFilterChain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                
+                // THÊM CORS VÀO ĐÂY:
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        // FIX: Cho phép Railway healthcheck không cần auth
+                        // Phân quyền API
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**", "/api/ai/chat").permitAll()
