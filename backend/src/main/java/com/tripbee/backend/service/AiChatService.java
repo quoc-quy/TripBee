@@ -26,10 +26,10 @@ import java.util.Map;
 @Service
 public class AiChatService {
 
-    @Value("${ai.api.key}")
+    @Value("${ai.api.key:disabled}")
     private String apiKey;
 
-    @Value("${ai.model}")
+    @Value("${ai.model:meta-llama/llama-3-8b-instruct}")
     private String aiModel;
 
     private final String apiUrl = "https://openrouter.ai/api/v1/chat/completions";
@@ -173,6 +173,9 @@ public class AiChatService {
     */
 
     private String callOpenRouter(List<ChatMessage> messages, String systemInstruction) {
+        if ("disabled".equals(apiKey)) {
+            return "Tính năng AI chat chưa được cấu hình. Vui lòng liên hệ quản trị viên.";
+        }
         String aiReply = "Xin lỗi, hiện tại mình đang bận. Bạn vui lòng thử lại sau nhé!";
         try {
             HttpHeaders headers = new HttpHeaders();
