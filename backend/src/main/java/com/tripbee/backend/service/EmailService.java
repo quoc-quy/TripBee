@@ -5,9 +5,9 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,11 @@ import java.util.Locale;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final JavaMailSenderImpl javaMailSenderImpl;
-    private final JavaMailSender javaMailSender;
 
-    public EmailService(JavaMailSender mailSender, JavaMailSenderImpl javaMailSenderImpl, JavaMailSender javaMailSender) {
+    public EmailService(
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            JavaMailSender mailSender) {
         this.mailSender = mailSender;
-        this.javaMailSenderImpl = javaMailSenderImpl;
-        this.javaMailSender = javaMailSender;
     }
 
     @Data
@@ -42,7 +40,6 @@ public class EmailService {
         private Double finalAmount;
     }
 
-    //  DTO cho email hủy booking
     @Data
     @Builder
     public static class BookingCanceledEmailData {
@@ -56,14 +53,22 @@ public class EmailService {
         private Double finalAmount;
     }
 
+    // Helper kiểm tra mail có sẵn sàng không
+    private boolean isMailAvailable() {
+        if (mailSender == null) {
+            System.err.println("[EmailService] JavaMailSender not configured — skipping email.");
+            return false;
+        }
+        return true;
+    }
+
     @Async
     public void sendRegistrationSuccessEmail(String toEmail, String userName) {
+        if (!isMailAvailable()) return;
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-
             message.setTo(toEmail);
             message.setSubject("Chào mừng bạn đến với TripBee - Du lịch Việt Nam!");
-
             String body = String.format(
                     "Xin chào %s,\n\n" +
                             "Cảm ơn bạn đã đăng ký tài khoản tại TripBee!\n" +
@@ -74,12 +79,9 @@ public class EmailService {
                             "Trân trọng,\n" +
                             "Đội ngũ TripBee",
                     userName, toEmail);
-
             message.setText(body);
-
             mailSender.send(message);
             System.out.println("Registration success email sent to: " + toEmail);
-
         } catch (Exception e) {
             System.err.println("Error sending registration email to " + toEmail + ": " + e.getMessage());
         }
@@ -87,18 +89,16 @@ public class EmailService {
 
     @Async
     public void sendPaymentSuccessEmail(PaymentSuccessEmailData data) {
+        if (!isMailAvailable()) return;
         try {
-            MimeMessage message = javaMailSenderImpl.createMimeMessage();
+            MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
             helper.setTo(data.getToEmail());
             helper.setSubject(String.format("Xác nhận thanh toán thành công - Mã đơn: %s", data.getBookingId()));
 
-            // Format tiền tệ
             NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
             String formattedAmount = currencyFormatter.format(data.getFinalAmount());
 
-            // Template HTML
             String htmlTemplate = """
                 <h3>Xin chào %s,</h3>
                 <p>TripBee xin thông báo giao dịch thanh toán của bạn đã được xác nhận <b>THÀNH CÔNG</b>.</p>
@@ -116,45 +116,30 @@ public class EmailService {
                 <p>Trân trọng,<br/>Đội ngũ TripBee 🐝</p>
                 """;
 
-            // Fill dữ liệu vào template
             String htmlContent = String.format(htmlTemplate,
-                    data.getCustomerName(),
-                    data.getBookingId(),
-                    data.getTourTitle(),
-                    data.getStartDate(),
-                    data.getNumAdults(),
-                    data.getNumChildren(),
-                    formattedAmount
-            );
+                    data.getCustomerName(), data.getBookingId(), data.getTourTitle(),
+                    data.getStartDate(), data.getNumAdults(), data.getNumChildren(), formattedAmount);
 
-            helper.setText(htmlContent, true); // true để bật chế độ HTML
-
-            javaMailSender.send(message);
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
             System.out.println("Payment success email sent to: " + data.getToEmail());
-
         } catch (MessagingException e) {
             System.err.println("Failed to send payment email: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
-    // Email xác nhận hủy booking (admin duyệt hủy)
     @Async
     public void sendBookingCanceledEmail(BookingCanceledEmailData data) {
+        if (!isMailAvailable()) return;
         try {
-            MimeMessage message = javaMailSenderImpl.createMimeMessage();
+            MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
             helper.setTo(data.getToEmail());
-            helper.setSubject(String.format(
-                    "Xác nhận hủy đơn đặt tour - Mã đơn: %s",
-                    data.getBookingId()
-            ));
+            helper.setSubject(String.format("Xác nhận hủy đơn đặt tour - Mã đơn: %s", data.getBookingId()));
 
             NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
             String formattedAmount = currencyFormatter.format(
-                    data.getFinalAmount() != null ? data.getFinalAmount() : 0.0
-            );
+                    data.getFinalAmount() != null ? data.getFinalAmount() : 0.0);
 
             String htmlTemplate = """
                 <h3>Xin chào %s,</h3>
@@ -169,29 +154,19 @@ public class EmailService {
                         <li><b>Số tiền đơn hàng:</b> <span style='color: #b91c1c; font-weight: bold;'>%s</span></li>
                     </ul>
                 </div>
-                <p>Nếu bạn đã thanh toán trước đó, các bước hoàn tiền (nếu có) sẽ được bộ phận kế toán xử lý theo chính sách của TripBee.</p>
-                <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ bộ phận hỗ trợ của chúng tôi.</p>
+                <p>Nếu bạn đã thanh toán trước đó, các bước hoàn tiền (nếu có) sẽ được xử lý theo chính sách của TripBee.</p>
                 <p>Trân trọng,<br/>Đội ngũ TripBee</p>
                 """;
 
-            String htmlContent = String.format(
-                    htmlTemplate,
-                    data.getCustomerName(),
-                    data.getBookingId(),
-                    data.getTourTitle(),
-                    data.getStartDate(),       // có thể format lại nếu muốn "dd/MM/yyyy"
-                    data.getNumAdults(),
-                    data.getNumChildren(),
-                    formattedAmount
-            );
+            String htmlContent = String.format(htmlTemplate,
+                    data.getCustomerName(), data.getBookingId(), data.getTourTitle(),
+                    data.getStartDate(), data.getNumAdults(), data.getNumChildren(), formattedAmount);
 
             helper.setText(htmlContent, true);
-            javaMailSender.send(message);
+            mailSender.send(message);
             System.out.println("Booking canceled email sent to: " + data.getToEmail());
-
         } catch (MessagingException e) {
             System.err.println("Failed to send booking canceled email: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }
