@@ -282,7 +282,6 @@ export default function TourDetailScreen() {
                       key={item.dayNumber}
                       className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
                     >
-                      {/* Timeline Dot */}
                       <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-blue-500 text-white font-bold shadow-md shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                         {item.dayNumber}
                       </div>
