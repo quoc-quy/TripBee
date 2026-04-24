@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -38,16 +39,19 @@ public class SecurityConfig {
 
         String[] origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
+                .filter(s -> !s.isEmpty())
                 .toArray(String[]::new);
 
         configuration.setAllowedOrigins(Arrays.asList(origins));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // FIX: Áp dụng CORS cho cả /api/** và /images/**
         source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/images/**", configuration);
         return source;
     }
 

@@ -6,33 +6,42 @@ on:
       - main
     paths:
       - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Railway CLI
+      - name: 2. Cài đặt Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Deploy to Railway
+      - name: 3. Deploy backend lên Railway
         working-directory: ./backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --detach --service tripbee-backend
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        run: |
+          railway up --detach --service tripbee-backend
 
-      - name: Xác nhận deploy đã được gửi lên Railway
+      - name: 4. Thông báo kết quả
         run: |
           echo ""
-          echo "✅ Code đã được gửi lên Railway thành công!"
+          echo "✅ Backend source code đã gửi lên Railway thành công!"
           echo "🌐 Backend URL: https://tripbee-backend-production.up.railway.app"
           echo ""
-          echo "📋 Railway sẽ tự build & deploy trong vài phút tiếp theo."
-          echo "   Theo dõi tiến trình tại: https://railway.app"
+          echo "📋 Railway đang tự build & deploy từ Dockerfile..."
+          echo "   Theo dõi tại: https://railway.app/project/${{ secrets.RAILWAY_PROJECT_ID }}"
           echo ""
-          echo "⚠️  Lưu ý: Railway block HTTP request từ GitHub Actions IPs,"
-          echo "   nên workflow này không thể tự health check được."
-          echo "   Hãy kiểm tra Railway Dashboard để xác nhận backend đang chạy."
+          echo "⚠️  Quan trọng: Đảm bảo các biến môi trường sau đã được set trên Railway:"
+          echo "   - SPRING_DATASOURCE_URL (từ PostgreSQL plugin)"
+          echo "   - SPRING_DATASOURCE_USERNAME"
+          echo "   - SPRING_DATASOURCE_PASSWORD"
+          echo "   - SPRING_DATA_REDIS_HOST (từ Redis plugin)"
+          echo "   - SPRING_DATA_REDIS_PORT"
+          echo "   - SPRING_DATA_REDIS_PASSWORD"
+          echo "   - ALLOWED_ORIGINS=https://tripbeefrontend.vercel.app"
+          echo "   - JWT_SECRET_KEY"
