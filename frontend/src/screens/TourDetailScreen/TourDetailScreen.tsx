@@ -1,5 +1,3 @@
-// frontend-demo/src/screens/TourDetailScreen/TourDetailScreen.tsx
-
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { tourApi } from '../../apis/tour'
@@ -11,6 +9,7 @@ import TourCard from '../../components/TourCard'
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import TourReviewSection from '../../components/TourReviewSection'
+import { getImageUrl } from '../../utils/utils'
 
 function RelatedToursSection({
   tourTypeId,
@@ -143,7 +142,7 @@ export default function TourDetailScreen() {
           <AnimatePresence mode="wait">
             <motion.img
               key={currentImageIndex}
-              src={allImages[currentImageIndex].url}
+              src={getImageUrl(allImages[currentImageIndex].url)} // Đã cập nhật
               alt={allImages[currentImageIndex].caption}
               className="w-full h-full object-cover cursor-pointer"
               initial={{ opacity: 0, scale: 1.05 }}
@@ -348,7 +347,7 @@ export default function TourDetailScreen() {
               <AnimatePresence mode="wait">
                 <motion.img
                   key={lightboxIndex}
-                  src={allImages[lightboxIndex].url}
+                  src={getImageUrl(allImages[lightboxIndex].url)} // Đã cập nhật
                   alt={allImages[lightboxIndex].caption}
                   className="max-w-full max-h-[90vh] rounded-2xl object-contain shadow-2xl"
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
