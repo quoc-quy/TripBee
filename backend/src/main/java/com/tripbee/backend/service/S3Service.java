@@ -15,10 +15,10 @@ public class S3Service {
 
     private final S3Client s3Client;
 
-    @Value("${aws.s3.bucket-name}")
+    @Value("${AWS_S3_BUCKET_NAME:${aws.s3.bucket-name:tripbee-media-bucket}}")
     private String bucketName;
 
-    @Value("${aws.region}")
+    @Value("${AWS_REGION:${aws.region:ap-southeast-1}}")
     private String region;
 
     public S3Service(S3Client s3Client) {
@@ -26,7 +26,6 @@ public class S3Service {
     }
 
     public String uploadFile(MultipartFile file) throws IOException {
-        // Tạo tên file unique để không bị trùng lặp
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename().replaceAll("\\s+", "_");
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -35,10 +34,8 @@ public class S3Service {
                 .contentType(file.getContentType())
                 .build();
 
-        // Thực hiện upload lên S3
         s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
-        // Trả về URL public của file vừa upload
         return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + fileName;
     }
 }
