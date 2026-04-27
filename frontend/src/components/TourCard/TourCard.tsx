@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link } from 'react-router-dom'
 import type { Tour } from '../../types/tour'
-import { formatCurrency } from '../../utils/utils'
+import { formatCurrency, getImageUrl } from '../../utils/utils' // Thêm getImageUrl
 import { FaMapMarkerAlt, FaStar, FaClock, FaHeart } from 'react-icons/fa'
 import Button from '../Button'
 import React, { useContext } from 'react'
@@ -21,7 +22,7 @@ export default function TourCard({
   const queryClient = useQueryClient()
 
   // BẢO VỆ ID: Xử lý lỗi mất ID do JSON parse từ Spring Boot
-  const safeId = tour.tourID || (tour as any).tourId || (tour as any).id || '';
+  const safeId = tour.tourID || (tour as any).tourId || (tour as any).id || ''
 
   const isLiked = favoriteIds.has(safeId)
 
@@ -83,7 +84,7 @@ export default function TourCard({
       <div className="relative h-60 rounded-3xl overflow-hidden mb-4">
         <Link to={`/tours/${safeId}`} className="block w-full h-full">
           <img
-            src={tour.imageURL}
+            src={getImageUrl(tour.imageURL)} // ĐÃ CẬP NHẬT Ở ĐÂY
             alt={tour.title}
             onError={(e) => {
               e.currentTarget.src = 'https://placehold.co/400x256/E5E7EB/6B7280?text=Tour'
