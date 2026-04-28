@@ -16,3 +16,6 @@ export const loginAccount = (body: { email: string; password: string }) =>
 export const logout = () => http.post("auth/logout");
 
 export const getProfile = () => http.get<User>("auth/me");
+
+export const loginAdmin = (body: { email: string; password: string }) =>
+  http.post<AuthResponse>("auth/admin/login", body);

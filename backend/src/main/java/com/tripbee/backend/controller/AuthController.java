@@ -2,8 +2,13 @@ package com.tripbee.backend.controller;
 
 import com.tripbee.backend.dto.*;
 import com.tripbee.backend.model.Account; // (2) THÊM IMPORT
+import com.tripbee.backend.model.enums.RoleType;
 import com.tripbee.backend.service.AuthService;
 import com.tripbee.backend.service.UserService;
+import jakarta.servlet.http.Cookie;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // (3) THÊM IMPORT
@@ -98,5 +103,32 @@ public class AuthController {
         // khi nó xóa token. Backend chỉ cần trả về thành công.
         // Token sẽ hết hạn theo thời gian (EXPIRATION_MS).
         return ResponseEntity.ok(new LoginResponse(true, "Logout successful"));
+    }
+
+    // backend/src/main/java/com/tripbee/backend/controller/AuthController.java
+
+    @PostMapping("/admin/login")
+    public ResponseEntity<?> adminLogin(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+        LoginResponse loginResponse = authService.login(loginRequest);
+
+        // Kiểm tra Role bằng String
+        if (loginResponse.getRole() == null || !loginResponse.getRole().equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền truy cập admin");
+        }
+
+        // Xử lý Token để bỏ chữ "Bearer " trước khi lưu vào Cookie
+        String rawToken = loginResponse.getToken();
+        if (rawToken != null && rawToken.startsWith("Bearer ")) {
+            rawToken = rawToken.substring(7);
+        }
+
+        Cookie adminCookie = new Cookie("admin_access_token", rawToken);
+        adminCookie.setHttpOnly(true);
+        adminCookie.setSecure(false); // Để false khi chạy localhost
+        adminCookie.setPath("/");
+        adminCookie.setMaxAge(86400);
+
+        response.addCookie(adminCookie);
+        return ResponseEntity.ok(loginResponse);
     }
 }
