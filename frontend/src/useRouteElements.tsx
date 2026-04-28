@@ -36,6 +36,8 @@ import ManageBookingScreen from "./admin/screens/ManageBookingScreen/ManageBooki
 import BookingDetailAdminScreen from "./admin/screens/ManageBookingScreen/BookingDetailAdminScreen";
 import TourParticipantsScreen from "./admin/screens/ManageBookingScreen/TourParticipantsScreen";
 import CanceledBookingsScreen from "./admin/screens/ManageBookingScreen/CanceledBookingsScreen";
+import AdminProtectedRoute from "./admin/screens/AdminProtectedRoute";
+import AdminLoginScreen from "./screens/AdminLoginScreen";
 
 export default function useRouteElements() {
   const rootElements = useRoutes([
@@ -121,52 +123,68 @@ export default function useRouteElements() {
       ),
     },
     {
+      path: "/admin/login",
+      element: <AdminLoginScreen />,
+    },
+    {
       path: "/admin",
-      element: <AdminScreen />,
+      element: <AdminProtectedRoute />,
       children: [
-        { path: "dashboard", element: <DashboardScreen /> },
-        { path: "manage-tour", element: <ManageTourScreen /> },
-        { path: "tours/new", element: <FormTourScreen /> },
-        { path: "tours/:id/edit", element: <FormTourScreen /> },
-        { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
-        { path: "manage-destination", element: <ManageDestinationScreen /> },
         {
-          path: "manage-destination/:id/edit",
-          element: <FormDestinationScreen />,
-        },
-        { path: "manage-destination/new", element: <FormDestinationScreen /> },
-        {
-          path: "manage-destination/detail/:id",
-          element: <DestinationDeatilScreen />,
-        },
-        { path: "promotions", element: <ManagePromotionScreen /> },
-        { path: "users", element: <UserAdminScreen /> },
-        // { path: "users/:id", element: <UserDetailScreen /> },
-        // { path: "users/:id/edit", element: <UserEditScreen /> },
-        { path: "contact-messages", element: <ContactMessageScreen /> },
-        {
-          path: "/admin/reviews",
-          element: <ManageReviewScreen />,
-        },
-        { path: "tour-types", element: <ManageTourTypeScreen /> },
-        { path: "tour-types/new", element: <FormTourTypeScreen /> },
-        { path: "tour-types/:id/edit", element: <FormTourTypeScreen /> },
-        {
-          path: "tour-types/detail/:id",
-          element: <TourTypeDetailAdminScreen />,
-        },
-        { path: "manage-booking", element: <ManageBookingScreen /> },
-        {
-          path: "manage-booking/detail/:id",
-          element: <BookingDetailAdminScreen />,
-        },
-        {
-          path: "manage-booking/tour-participants",
-          element: <TourParticipantsScreen />,
-        },
-        {
-          path: "manage-booking/canceled",
-          element: <CanceledBookingsScreen />,
+          path: "",
+          element: <AdminScreen />,
+          children: [
+            { path: "dashboard", element: <DashboardScreen /> },
+            { path: "manage-tour", element: <ManageTourScreen /> },
+            { path: "tours/new", element: <FormTourScreen /> },
+            { path: "tours/:id/edit", element: <FormTourScreen /> },
+            { path: "tours/details/:id", element: <TourDetailAdminScreen /> },
+            {
+              path: "manage-destination",
+              element: <ManageDestinationScreen />,
+            },
+            {
+              path: "manage-destination/:id/edit",
+              element: <FormDestinationScreen />,
+            },
+            {
+              path: "manage-destination/new",
+              element: <FormDestinationScreen />,
+            },
+            {
+              path: "manage-destination/detail/:id",
+              element: <DestinationDeatilScreen />,
+            },
+            { path: "promotions", element: <ManagePromotionScreen /> },
+            { path: "users", element: <UserAdminScreen /> },
+            // { path: "users/:id", element: <UserDetailScreen /> },
+            // { path: "users/:id/edit", element: <UserEditScreen /> },
+            { path: "contact-messages", element: <ContactMessageScreen /> },
+            {
+              path: "/admin/reviews",
+              element: <ManageReviewScreen />,
+            },
+            { path: "tour-types", element: <ManageTourTypeScreen /> },
+            { path: "tour-types/new", element: <FormTourTypeScreen /> },
+            { path: "tour-types/:id/edit", element: <FormTourTypeScreen /> },
+            {
+              path: "tour-types/detail/:id",
+              element: <TourTypeDetailAdminScreen />,
+            },
+            { path: "manage-booking", element: <ManageBookingScreen /> },
+            {
+              path: "manage-booking/detail/:id",
+              element: <BookingDetailAdminScreen />,
+            },
+            {
+              path: "manage-booking/tour-participants",
+              element: <TourParticipantsScreen />,
+            },
+            {
+              path: "manage-booking/canceled",
+              element: <CanceledBookingsScreen />,
+            },
+          ],
         },
       ],
     },
