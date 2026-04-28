@@ -126,7 +126,7 @@ public class AuthController {
         adminCookie.setHttpOnly(true);
         adminCookie.setSecure(false); // Để false khi chạy localhost
         adminCookie.setPath("/");
-        adminCookie.setMaxAge(86400);
+        adminCookie.setMaxAge(-1);
 
         response.addCookie(adminCookie);
         return ResponseEntity.ok(loginResponse);

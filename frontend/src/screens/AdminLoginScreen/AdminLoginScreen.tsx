@@ -11,6 +11,7 @@ import { useContext } from "react";
 import { AppContext } from "../../contexts/app.context";
 import type { SimpleProfile } from "../../types/user.type";
 import { isAxiosError } from "axios";
+import { toast } from "react-toastify";
 
 type FormData = Omit<Schema, "confirm_password">;
 const loginSchema = schema.omit(["confirm_password"]);
@@ -21,7 +22,6 @@ export default function AdminLoginScreen() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(loginSchema),
@@ -42,20 +42,22 @@ export default function AdminLoginScreen() {
           email: authData.email,
           role: authData.role,
         };
-
+        toast.success("Đăng nhập quản trị thành công!");
         setProfile(simpleProfile);
         navigate("/admin/dashboard");
       },
       onError: (error) => {
-        if (isAxiosError(error) && error.response?.status === 401) {
-          setError("email", {
-            type: "manual",
-            message: "Email hoặc mật khẩu không chính xác.",
-          });
-          setError("password", {
-            type: "manual",
-            message: "Email hoặc mật khẩu không chính xác.",
-          });
+        if (isAxiosError(error)) {
+          if (error.response?.status === 403) {
+            const message =
+              error.response.data ||
+              "Bạn không có quyền truy cập trang quản trị!";
+            toast.error(message);
+          } else if (error.response?.status === 401) {
+            toast.error("Email hoặc mật khẩu không chính xác.");
+          } else {
+            toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+          }
         }
       },
     });
