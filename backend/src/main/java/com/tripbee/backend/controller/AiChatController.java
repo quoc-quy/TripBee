@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.POST, RequestMethod.GET})
+@CrossOrigin(origins = {"http://localhost:5173", "https://tripbeefrontend.vercel.app"}, allowedHeaders = "*", methods = {RequestMethod.POST, RequestMethod.GET})
 public class AiChatController {
 
     @Autowired
