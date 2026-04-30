@@ -31,8 +31,14 @@ export default function PaymentScreen() {
   useEffect(() => {
     if (!booking || booking.status === 'CONFIRMED') return
 
+    // Ép trình duyệt luôn hiểu chuỗi thời gian này là múi giờ Việt Nam (GMT+7)
+    let dateStr = booking.bookingDate
+    if (!dateStr.includes('+') && !dateStr.endsWith('Z')) {
+      dateStr += '+07:00'
+    }
+
     // Tính thời gian hết hạn: Thời gian tạo + 3 phút
-    const bookingTime = new Date(booking.bookingDate).getTime() // Đảm bảo bookingDate là chuỗi ISO chuẩn
+    const bookingTime = new Date(dateStr).getTime()
     const expireTime = bookingTime + 3 * 60 * 1000 // 3 phút = 180000ms
 
     const interval = setInterval(() => {
