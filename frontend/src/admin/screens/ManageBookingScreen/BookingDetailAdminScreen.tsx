@@ -1,7 +1,8 @@
 // src/admin/pages/BookingDetailAdminScreen.tsx
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import {
   ArrowLeft,
   User,
@@ -11,6 +12,9 @@ import {
   CreditCard,
   Users,
   Tag,
+  Edit2,
+  Save,
+  X
 } from "lucide-react";
 
 import { bookingAdminApi } from "../../apis/bookingAdmin.api";
@@ -65,6 +69,11 @@ const BookingDetailAdminScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editStatus, setEditStatus] = React.useState<BookingStatus>("PROCESSING");
+  const [editParticipants, setEditParticipants] = React.useState<any[]>([]);
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-booking-detail", id],
     enabled: !!id,
@@ -74,6 +83,46 @@ const BookingDetailAdminScreen: React.FC = () => {
       return res.data;
     },
   });
+
+  React.useEffect(() => {
+    if (data) {
+      setEditStatus(data.status);
+      setEditParticipants(data.participants || []);
+    }
+  }, [data]);
+
+  const updateBookingMutation = useMutation({
+    mutationFn: async () => {
+      if (!id) throw new Error("Missing ID");
+      await bookingAdminApi.updateBooking(id, {
+        status: editStatus,
+        participants: editParticipants,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật booking thành công!");
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-booking-detail", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Cập nhật booking thất bại!");
+    },
+  });
+
+  const handleParticipantChange = (index: number, field: string, value: string) => {
+    setEditParticipants((prev) =>
+      prev.map((p, idx) => (idx === index ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const handleCancelEdit = () => {
+    if (data) {
+      setEditStatus(data.status);
+      setEditParticipants(data.participants || []);
+    }
+    setIsEditing(false);
+  };
 
   const handleBack = () => navigate("/admin/bookings");
 
@@ -105,7 +154,7 @@ const BookingDetailAdminScreen: React.FC = () => {
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/manage-booking")}
@@ -120,12 +169,59 @@ const BookingDetailAdminScreen: React.FC = () => {
           </div>
         </div>
 
-        <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusBadgeClassMap[booking.status]
-            }`}
-        >
-          {statusLabelMap[booking.status]}
-        </span>
+        <div className="flex items-center gap-3">
+          {isEditing ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-500">Trạng thái:</span>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as BookingStatus)}
+                  className="bg-white border border-gray-300 rounded-xl px-3 py-1.5 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="PROCESSING">Đang xử lý</option>
+                  <option value="CONFIRMED">Đã xác nhận</option>
+                  <option value="COMPLETED">Hoàn thành</option>
+                  <option value="CANCELED">Đã hủy</option>
+                  <option value="CANCELLATION_REQUESTED">Chờ duyệt hủy</option>
+                </select>
+              </div>
+
+              <button
+                onClick={() => updateBookingMutation.mutate()}
+                disabled={updateBookingMutation.isPending}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Save size={16} />
+                Lưu
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all active:scale-[0.98] flex items-center gap-1.5"
+              >
+                <X size={16} />
+                Hủy
+              </button>
+            </>
+          ) : (
+            <>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusBadgeClassMap[booking.status]
+                  }`}
+              >
+                {statusLabelMap[booking.status]}
+              </span>
+
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 shadow-sm transition-all active:scale-[0.98] flex items-center gap-1.5"
+              >
+                <Edit2 size={16} className="text-gray-500" />
+                Chỉnh sửa
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Grid trên: 2 cột */}
@@ -377,33 +473,81 @@ const BookingDetailAdminScreen: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-gray-800">
-                {booking.participants.map((p) => (
-                  <tr key={p.participantID} className="border-b border-gray-100">
-                    <td className="px-4 py-2">{p.customerName}</td>
-                    <td className="px-4 py-2">
-                      {p.customerPhone || <span className="text-gray-400">-</span>}
-                    </td>
-                    <td className="px-4 py-2">
-                      {p.identification || <span className="text-gray-400">-</span>}
-                    </td>
-                    <td className="px-4 py-2">
-                      {p.gender ? (
-                        genderLabelMap[p.gender] || p.gender
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-
-                    <td className="px-4 py-2">
-                      {p.participantType ? (
-                        participantTypeLabelMap[p.participantType] || p.participantType
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-
-                  </tr>
-                ))}
+                {isEditing
+                  ? editParticipants.map((p, index) => (
+                      <tr key={p.participantID || index} className="border-b border-gray-100">
+                        <td className="px-4 py-2">
+                          <input
+                            type="text"
+                            value={p.customerName || ""}
+                            onChange={(e) => handleParticipantChange(index, "customerName", e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium"
+                          />
+                        </td>
+                        <td className="px-4 py-2">
+                          <input
+                            type="text"
+                            value={p.customerPhone || ""}
+                            onChange={(e) => handleParticipantChange(index, "customerPhone", e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+                          />
+                        </td>
+                        <td className="px-4 py-2">
+                          <input
+                            type="text"
+                            value={p.identification || ""}
+                            onChange={(e) => handleParticipantChange(index, "identification", e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+                          />
+                        </td>
+                        <td className="px-4 py-2">
+                          <select
+                            value={p.gender || ""}
+                            onChange={(e) => handleParticipantChange(index, "gender", e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
+                          >
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
+                          </select>
+                        </td>
+                        <td className="px-4 py-2">
+                          <select
+                            value={p.participantType || ""}
+                            onChange={(e) => handleParticipantChange(index, "participantType", e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium"
+                          >
+                            <option value="ADULT">Người lớn</option>
+                            <option value="CHILD">Trẻ em</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  : booking.participants.map((p) => (
+                      <tr key={p.participantID} className="border-b border-gray-100">
+                        <td className="px-4 py-2">{p.customerName}</td>
+                        <td className="px-4 py-2">
+                          {p.customerPhone || <span className="text-gray-400">-</span>}
+                        </td>
+                        <td className="px-4 py-2">
+                          {p.identification || <span className="text-gray-400">-</span>}
+                        </td>
+                        <td className="px-4 py-2">
+                          {p.gender ? (
+                            genderLabelMap[p.gender] || p.gender
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2">
+                          {p.participantType ? (
+                            participantTypeLabelMap[p.participantType] || p.participantType
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>

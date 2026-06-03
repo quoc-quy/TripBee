@@ -13,6 +13,9 @@ import com.tripbee.backend.exception.ResourceNotFoundException;
 import com.tripbee.backend.model.*;
 import com.tripbee.backend.model.enums.BookingStatus;
 import com.tripbee.backend.model.enums.PaymentStatus;
+import com.tripbee.backend.model.enums.Gender;
+import com.tripbee.backend.model.enums.ParticipantType;
+import com.tripbee.backend.admin.dto.request.BookingUpdateRequest;
 import com.tripbee.backend.repository.BookingRepository;
 import com.tripbee.backend.service.EmailService;
 import jakarta.persistence.criteria.Predicate;
@@ -30,15 +33,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+
 @Service
 public class BookingAdminService {
 
     private final BookingRepository bookingRepository;
     private final EmailService emailService;
+    private final CacheManager cacheManager;
 
-    public BookingAdminService(BookingRepository bookingRepository, EmailService emailService) {
+    public BookingAdminService(BookingRepository bookingRepository, EmailService emailService, CacheManager cacheManager) {
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
+        this.cacheManager = cacheManager;
+    }
+
+    private void evictTourCache(String tourId) {
+        try {
+            Cache toursCache = cacheManager.getCache("tours");
+            if (toursCache != null) {
+                toursCache.evict(tourId);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to evict tours cache: " + e.getMessage());
+        }
     }
 
     /**
@@ -462,6 +481,7 @@ public class BookingAdminService {
         // cập nhật trạng thái
         booking.setStatus(BookingStatus.CANCELED);
         bookingRepository.save(booking);
+        evictTourCache(booking.getTour().getTourID());
 
         // chuẩn bị data email
         if (booking.getUser() != null && booking.getUser().getEmail() != null) {
@@ -493,6 +513,7 @@ public class BookingAdminService {
             booking.setStatus(BookingStatus.CANCELED);
             // TODO: Thêm logic hoàn tiền (Refund) ở đây nếu cần
             bookingRepository.save(booking);
+            evictTourCache(booking.getTour().getTourID());
         }
     }
 
@@ -507,9 +528,108 @@ public class BookingAdminService {
 
         // Chuyển về CONFIRMED
         booking.setStatus(BookingStatus.CONFIRMED);
-        bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        evictTourCache(savedBooking.getTour().getTourID());
 
+        // Gửi email thông báo từ chối hủy
+        try {
+            if (savedBooking.getUser() != null && savedBooking.getUser().getEmail() != null) {
+                var user = savedBooking.getUser();
+                var tour = savedBooking.getTour();
+
+                EmailService.BookingCanceledEmailData emailData =
+                        EmailService.BookingCanceledEmailData.builder()
+                                .toEmail(user.getEmail())
+                                .customerName(user.getName())
+                                .bookingId(savedBooking.getBookingID())
+                                .tourTitle(tour != null ? tour.getTitle() : "(Không rõ tên tour)")
+                                .startDate(tour != null ? tour.getStartDate() : null)
+                                .numAdults(savedBooking.getNumAdults())
+                                .numChildren(savedBooking.getNumChildren())
+                                .finalAmount(savedBooking.getFinalAmount())
+                                .build();
+
+                emailService.sendCancellationRejectedEmail(emailData);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send cancellation rejected email: " + e.getMessage());
+        }
     }
 
+    @Transactional
+    public void updateBooking(String bookingId, BookingUpdateRequest request) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 
+        if (request.getStatus() != null) {
+            booking.setStatus(request.getStatus());
+        }
+
+        if (request.getParticipants() != null) {
+            java.util.Map<String, Participant> existingMap = new java.util.HashMap<>();
+            if (booking.getParticipants() != null) {
+                for (Participant p : booking.getParticipants()) {
+                    if (p.getParticipantID() != null) {
+                        existingMap.put(p.getParticipantID(), p);
+                    }
+                }
+            }
+
+            java.util.Set<Participant> updatedSet = new java.util.HashSet<>();
+
+            for (BookingUpdateRequest.ParticipantUpdateDto dto : request.getParticipants()) {
+                Participant participant;
+                if (dto.getParticipantID() != null && existingMap.containsKey(dto.getParticipantID())) {
+                    participant = existingMap.get(dto.getParticipantID());
+                } else {
+                    participant = new Participant();
+                    participant.setBooking(booking);
+                }
+                participant.setCustomerName(dto.getCustomerName());
+                participant.setCustomerPhone(dto.getCustomerPhone());
+                participant.setIdentification(dto.getIdentification());
+                participant.setGender(dto.getGender());
+                participant.setParticipantType(dto.getParticipantType());
+                updatedSet.add(participant);
+            }
+
+            if (booking.getParticipants() == null) {
+                booking.setParticipants(new java.util.HashSet<>());
+            }
+            booking.getParticipants().clear();
+            booking.getParticipants().addAll(updatedSet);
+
+            int adults = 0;
+            int children = 0;
+            for (Participant p : updatedSet) {
+                if (p.getParticipantType() == ParticipantType.ADULT) {
+                    adults++;
+                } else {
+                    children++;
+                }
+            }
+            booking.setNumAdults(adults);
+            booking.setNumChildren(children);
+
+            Tour tour = booking.getTour();
+            double priceAdult = tour.getPriceAdult() != null ? tour.getPriceAdult() : 0.0;
+            double priceChild = tour.getPriceChild() != null ? tour.getPriceChild() : 0.0;
+            double totalPrice = (priceAdult * adults) + (priceChild * children);
+            double discountAmount = 0.0;
+            if (booking.getPromotion() != null) {
+                discountAmount = totalPrice * (booking.getPromotion().getDiscountPercentage() / 100.0);
+            }
+            booking.setTotalPrice(totalPrice);
+            booking.setDiscountAmount(discountAmount);
+            booking.setFinalAmount(totalPrice - discountAmount);
+
+            if (booking.getInvoice() != null) {
+                booking.getInvoice().setTotalAmount(totalPrice - discountAmount);
+            }
+        }
+
+        bookingRepository.save(booking);
+
+        evictTourCache(booking.getTour().getTourID());
+    }
 }

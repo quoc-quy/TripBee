@@ -169,4 +169,89 @@ public class EmailService {
             System.err.println("Failed to send booking canceled email: " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendCancellationRequestEmail(BookingCanceledEmailData data) {
+        if (!isMailAvailable()) return;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(data.getToEmail());
+            helper.setSubject(String.format("Yêu cầu hủy đơn đặt tour đã được tiếp nhận - Mã đơn: %s", data.getBookingId()));
+
+            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+            String formattedAmount = currencyFormatter.format(
+                    data.getFinalAmount() != null ? data.getFinalAmount() : 0.0);
+
+            String htmlTemplate = """
+                <h3>Xin chào %s,</h3>
+                <p>TripBee xin thông báo yêu cầu hủy booking của bạn đã được <b>TIẾP NHẬN</b> và đang chờ ban quản trị phê duyệt.</p>
+                <div style='background-color: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #fed7aa;'>
+                    <h4>Thông tin booking:</h4>
+                    <ul>
+                        <li><b>Mã booking:</b> %s</li>
+                        <li><b>Tour du lịch:</b> %s</li>
+                        <li><b>Ngày khởi hành dự kiến:</b> %s</li>
+                        <li><b>Số lượng:</b> %d Người lớn, %d Trẻ em</li>
+                        <li><b>Số tiền đơn hàng:</b> <span style='color: #ea580c; font-weight: bold;'>%s</span></li>
+                    </ul>
+                </div>
+                <p>Chúng tôi sẽ kiểm tra và phản hồi lại kết quả duyệt hủy cho bạn sớm nhất có thể.</p>
+                <p>Trân trọng,<br/>Đội ngũ TripBee</p>
+                """;
+
+            String htmlContent = String.format(htmlTemplate,
+                    data.getCustomerName(), data.getBookingId(), data.getTourTitle(),
+                    data.getStartDate(), data.getNumAdults(), data.getNumChildren(), formattedAmount);
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            System.out.println("Booking cancel request email sent to: " + data.getToEmail());
+        } catch (MessagingException e) {
+            System.err.println("Failed to send booking cancel request email: " + e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendCancellationRejectedEmail(BookingCanceledEmailData data) {
+        if (!isMailAvailable()) return;
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(data.getToEmail());
+            helper.setSubject(String.format("Yêu cầu hủy đơn đặt tour bị từ chối - Mã đơn: %s", data.getBookingId()));
+
+            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+            String formattedAmount = currencyFormatter.format(
+                    data.getFinalAmount() != null ? data.getFinalAmount() : 0.0);
+
+            String htmlTemplate = """
+                <h3>Xin chào %s,</h3>
+                <p>TripBee xin thông báo yêu cầu hủy booking của bạn đã <b>BỊ TỪ CHỐI</b> bởi ban quản trị.</p>
+                <p>Đơn đặt tour của bạn vẫn được giữ nguyên trạng thái <b>ĐÃ XÁC NHẬN (CONFIRMED)</b> để tiếp tục hành trình.</p>
+                <div style='background-color: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;'>
+                    <h4>Thông tin booking:</h4>
+                    <ul>
+                        <li><b>Mã booking:</b> %s</li>
+                        <li><b>Tour du lịch:</b> %s</li>
+                        <li><b>Ngày khởi hành:</b> %s</li>
+                        <li><b>Số lượng:</b> %d Người lớn, %d Trẻ em</li>
+                        <li><b>Số tiền đơn hàng:</b> <span style='color: #16a34a; font-weight: bold;'>%s</span></li>
+                    </ul>
+                </div>
+                <p>Hẹn gặp lại bạn trong chuyến hành trình sắp tới. Chúc bạn có một chuyến đi vui vẻ!</p>
+                <p>Trân trọng,<br/>Đội ngũ TripBee</p>
+                """;
+
+            String htmlContent = String.format(htmlTemplate,
+                    data.getCustomerName(), data.getBookingId(), data.getTourTitle(),
+                    data.getStartDate(), data.getNumAdults(), data.getNumChildren(), formattedAmount);
+
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            System.out.println("Booking cancel rejected email sent to: " + data.getToEmail());
+        } catch (MessagingException e) {
+            System.err.println("Failed to send booking cancel rejected email: " + e.getMessage());
+        }
+    }
 }

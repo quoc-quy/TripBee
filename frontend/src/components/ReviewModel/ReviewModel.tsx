@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { FaStar } from "react-icons/fa";
@@ -55,7 +56,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
     });
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-6">
         <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-4">
@@ -124,7 +125,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

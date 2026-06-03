@@ -50,4 +50,7 @@ export const bookingAdminApi = {
   },
   keepBooking: (id: string) =>
     http.put<void>(`/admin/bookings/${id}/keep`, {}),
+
+  updateBooking: (id: string, data: { status: string; participants: any[] }) =>
+    http.put<void>(`/admin/bookings/${id}`, data),
 };

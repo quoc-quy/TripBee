@@ -1,10 +1,15 @@
 package com.tripbee.backend.controller;
 
 import com.tripbee.backend.dto.SeePayWebhookRequest;
+import com.tripbee.backend.model.PendingPayment;
+import com.tripbee.backend.model.enums.PendingPaymentStatus;
+import com.tripbee.backend.repository.PendingPaymentRepository;
 import com.tripbee.backend.service.BookingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,9 +18,11 @@ import java.util.regex.Pattern;
 public class WebhookController {
 
     private final BookingService bookingService;
+    private final PendingPaymentRepository pendingPaymentRepository;
 
-    public WebhookController(BookingService bookingService) {
+    public WebhookController(BookingService bookingService, PendingPaymentRepository pendingPaymentRepository) {
         this.bookingService = bookingService;
+        this.pendingPaymentRepository = pendingPaymentRepository;
     }
 
     @PostMapping("/seepay")
@@ -26,50 +33,80 @@ public class WebhookController {
                 return ResponseEntity.ok("Ignored: Not an incoming transfer");
             }
 
+            String transactionCode = webhookData.getReferenceCode();
+            if (transactionCode == null || transactionCode.isBlank()) {
+                transactionCode = String.valueOf(webhookData.getId());
+            }
+
             String content = webhookData.getContent();
             String bookingId = null;
 
-            // 2. [CẬP NHẬT REGEX] Tìm chuỗi có tiền tố 'tbbk'
-            // Cấu trúc: tbbk (có thể viết hoa/thường) + tùy chọn dấu cách/gạch ngang + chuỗi Hex UUID
-            // Ví dụ khớp: "tbbkc494...", "TBBK-c494...", "tbbk c494..."
+            // 2. Tìm chuỗi có tiền tố 'tbbk' và chuẩn hóa UUID
             if (content != null) {
-                // Regex này chia thành các nhóm (groups) để dễ dàng tái tạo lại định dạng chuẩn
-                // Group 1: tbbk
-                // Group 2-6: Các phần của UUID
-                String regex = "(?i)(tbbk)[\\s-]?([a-f0-9]{8})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{12})";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(content);
+                String advancedRegex = "(?i)(tbbk)[\\s-]?([a-f0-9]{8})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{4})[\\s-]?([a-f0-9]{12})";
+                Pattern advancedPattern = Pattern.compile(advancedRegex);
+                Matcher advancedMatcher = advancedPattern.matcher(content);
 
-                if (matcher.find()) {
-                    // Tái tạo lại chuỗi theo định dạng chuẩn của Database: tbbk-xxxxxxxx-xxxx-...
+                if (advancedMatcher.find()) {
                     bookingId = String.format("%s-%s-%s-%s-%s-%s",
-                            matcher.group(1).toLowerCase(), // tbbk (ép về chữ thường cho chuẩn)
-                            matcher.group(2),
-                            matcher.group(3),
-                            matcher.group(4),
-                            matcher.group(5),
-                            matcher.group(6)
+                            advancedMatcher.group(1).toLowerCase(),
+                            advancedMatcher.group(2),
+                            advancedMatcher.group(3),
+                            advancedMatcher.group(4),
+                            advancedMatcher.group(5),
+                            advancedMatcher.group(6)
                     );
+                } else {
+                    Pattern basicPattern = Pattern.compile("tbbk-[a-zA-Z0-9-]+");
+                    Matcher basicMatcher = basicPattern.matcher(content);
+                    if (basicMatcher.find()) {
+                        bookingId = basicMatcher.group();
+                    }
                 }
             }
 
-            if (bookingId == null) {
-                System.out.println("Regex mismatch. Content: " + content);
-                return ResponseEntity.ok("Ignored: Booking ID (tbbk-...) pattern not found in content" + content);
+            // Kiểm tra trùng lặp giao dịch đã xử lý thành công
+            Optional<PendingPayment> existingOpt = pendingPaymentRepository.findByTransactionCode(transactionCode);
+            if (existingOpt.isPresent() && existingOpt.get().getStatus() == PendingPaymentStatus.RESOLVED) {
+                return ResponseEntity.ok("Webhook already processed (RESOLVED)");
             }
 
-            System.out.println("Final Processing Booking ID: " + bookingId);
-            System.out.println("content: " + content);
+            // Lưu log giao dịch tạm thời ở trạng thái PENDING
+            PendingPayment paymentLog;
+            if (existingOpt.isPresent()) {
+                paymentLog = existingOpt.get();
+                paymentLog.setBookingID(bookingId);
+                paymentLog.setTransferInfo(content);
+            } else {
+                paymentLog = new PendingPayment(
+                        transactionCode,
+                        webhookData.getTransferAmount().doubleValue(),
+                        bookingId,
+                        content,
+                        PendingPaymentStatus.PENDING,
+                        LocalDateTime.now()
+                );
+                paymentLog = pendingPaymentRepository.save(paymentLog);
+            }
 
-            // 3. Gọi Service xử lý
+            if (bookingId == null) {
+                return ResponseEntity.ok("Booking ID not found in content (logged as PENDING)");
+            }
+
+            System.out.println("Processing webhook payment for booking: " + bookingId + " with amount: " + webhookData.getTransferAmount());
+
+            // Gọi service xử lý thanh toán
             bookingService.processPaymentWebhook(
                     bookingId,
                     webhookData.getTransferAmount(),
-                    webhookData.getReferenceCode()
+                    transactionCode
             );
 
-            return ResponseEntity.ok("Webhook processed successfully");
+            // Cập nhật trạng thái thành RESOLVED sau khi xử lý thành công
+            paymentLog.setStatus(PendingPaymentStatus.RESOLVED);
+            pendingPaymentRepository.save(paymentLog);
 
+            return ResponseEntity.ok("Webhook processed successfully");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok("Error processing webhook: " + e.getMessage());

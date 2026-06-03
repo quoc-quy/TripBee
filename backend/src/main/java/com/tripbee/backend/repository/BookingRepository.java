@@ -54,4 +54,8 @@ public interface BookingRepository extends JpaRepository<Booking, String>, JpaSp
     List<Booking> findByTour_TourIDAndStatusNot(String tourID, BookingStatus status);
 
     Page<Booking> findByStatus(BookingStatus status, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(b.numAdults + b.numChildren), 0) FROM Booking b " +
+           "WHERE b.tour.tourID = :tourId AND b.status IN (com.tripbee.backend.model.enums.BookingStatus.CONFIRMED, com.tripbee.backend.model.enums.BookingStatus.PROCESSING, com.tripbee.backend.model.enums.BookingStatus.CANCELLATION_REQUESTED)")
+    long countBookedSeatsForTour(@Param("tourId") String tourId);
 }
