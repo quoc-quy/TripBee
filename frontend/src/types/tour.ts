@@ -107,6 +107,7 @@ export interface TourDetails {
     finalPriceAdult: number; // <-- (MỚI) Thêm giá cuối cùng
     finalPriceChild: number; // <-- (MỚI) Thêm giá cuối cùng
     maxParticipants: number;
+    availableSlots: number;
     imageURL: string;
     status: string;
     ranking: number;

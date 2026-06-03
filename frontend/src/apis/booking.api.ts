@@ -40,6 +40,17 @@ export const bookingApi = {
   },
   requestCancelBooking: (id: string) => {
     return http.put(`/bookings/${id}/cancel-request`, {})
+  },
+  getCancelEstimation: (id: string) => {
+    return http.get<{
+      bookingID: string
+      tourTitle: string
+      startDate: string
+      daysRemaining: number
+      feePercentage: number
+      feeAmount: number
+      refundAmount: number
+    }>(`/bookings/${id}/cancel-estimation`)
   }
 }
 // Thêm function gọi API gửi yêu cầu hủy

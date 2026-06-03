@@ -20,6 +20,7 @@ import com.tripbee.backend.model.TourDestination;
 import com.tripbee.backend.model.TourPromotion;
 import com.tripbee.backend.model.TourType;
 import com.tripbee.backend.model.enums.TourStatus;
+import com.tripbee.backend.repository.BookingRepository;
 import com.tripbee.backend.repository.TourRepository;
 
 import jakarta.persistence.criteria.Fetch;
@@ -30,10 +31,12 @@ import jakarta.persistence.criteria.Predicate;
 public class TourService {
 
     private final TourRepository tourRepository;
+    private final BookingRepository bookingRepository;
 
     // (1) Dùng constructor để Spring tiêm (inject)
-    public TourService(TourRepository tourRepository) {
+    public TourService(TourRepository tourRepository, BookingRepository bookingRepository) {
         this.tourRepository = tourRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     // (CẬP NHẬT) Thêm tham số 'region'
@@ -64,7 +67,10 @@ public class TourService {
 
         // --- SỬA LỖI TẠI ĐÂY ---
         // Thay vì gọi "new", chúng ta gọi phương thức static "build"
-        return TourDetailsResponse.build(tour);
+        TourDetailsResponse response = TourDetailsResponse.build(tour);
+        long bookedSeats = bookingRepository.countBookedSeatsForTour(tourId);
+        response.setAvailableSlots(Math.max(0, tour.getMaxParticipants() - bookedSeats));
+        return response;
     }
 
     // (CẬP NHẬT) Thêm tham số 'region'

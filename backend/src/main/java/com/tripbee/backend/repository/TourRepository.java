@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query; // (MỚI)
 import org.springframework.data.repository.query.Param; // (MỚI)
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional; // (MỚI)
 
@@ -37,4 +39,8 @@ public interface TourRepository extends JpaRepository<Tour, String>, JpaSpecific
     List<Tour> findByStatus(TourStatus status);
 
     List<Tour> findByTitleContainingIgnoreCase(String keyword);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Tour t WHERE t.tourID = :id")
+    Optional<Tour> findByIdWithLock(@Param("id") String id);
 }

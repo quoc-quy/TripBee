@@ -37,6 +37,7 @@ public class TourDetailsResponse implements Serializable  {
     private List<DestinationDto> destinations;
     private List<TourImageDto> tourImages;
     private List<ItineraryDto> itineraries;
+    private long availableSlots;
 
     public TourDetailsResponse() {}
 
@@ -160,4 +161,6 @@ public class TourDetailsResponse implements Serializable  {
     public void setTourImages(List<TourImageDto> tourImages) { this.tourImages = tourImages; }
     public List<ItineraryDto> getItineraries() { return itineraries; }
     public void setItineraries(List<ItineraryDto> itineraries) { this.itineraries = itineraries; }
+    public long getAvailableSlots() { return availableSlots; }
+    public void setAvailableSlots(long availableSlots) { this.availableSlots = availableSlots; }
 }

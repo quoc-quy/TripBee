@@ -86,7 +86,8 @@ export default function TourBookingSection({ tour }: Props) {
     }
   }
 
-  const maxParticipants = tour.maxParticipants || 20
+  const availableSlots = tour.availableSlots !== undefined ? tour.availableSlots : (tour.maxParticipants || 20)
+  const isFullyBooked = availableSlots <= 0
   const isProcessing = addFavoriteMutation.isPending || removeFavoriteMutation.isPending
 
   return (
@@ -115,7 +116,7 @@ export default function TourBookingSection({ tour }: Props) {
         <div className="flex justify-between items-center border-t border-gray-200 pt-3">
           <span className="text-gray-500 font-medium text-sm">Trẻ em</span>
           <span className="font-extrabold text-lg text-gray-900">
-            {formatCurrency(tour.finalPriceChild)}
+             {formatCurrency(tour.finalPriceChild)}
           </span>
         </div>
       </div>
@@ -130,16 +131,17 @@ export default function TourBookingSection({ tour }: Props) {
             control={control}
             rules={{
               min: { value: 1, message: 'Tối thiểu 1' },
-              validate: (value) => value + children <= maxParticipants || `Quá số lượng`
+              validate: (value) => value + children <= availableSlots || `Chỉ còn ${availableSlots} chỗ`
             }}
             render={({ field }) => (
               <input
                 type="number"
-                className="w-full px-2 pb-2 text-lg font-bold bg-transparent border-none focus:ring-0 outline-none"
+                disabled={isFullyBooked}
+                className="w-full px-2 pb-2 text-lg font-bold bg-transparent border-none focus:ring-0 outline-none disabled:opacity-50"
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 min="1"
-                max={maxParticipants}
+                max={availableSlots}
               />
             )}
           />
@@ -153,16 +155,17 @@ export default function TourBookingSection({ tour }: Props) {
             control={control}
             rules={{
               min: { value: 0, message: 'Không âm' },
-              validate: (value) => adults + value <= maxParticipants || `Quá số lượng`
+              validate: (value) => adults + value <= availableSlots || `Chỉ còn ${availableSlots} chỗ`
             }}
             render={({ field }) => (
               <input
                 type="number"
-                className="w-full px-2 pb-2 text-lg font-bold bg-transparent border-none focus:ring-0 outline-none"
+                disabled={isFullyBooked}
+                className="w-full px-2 pb-2 text-lg font-bold bg-transparent border-none focus:ring-0 outline-none disabled:opacity-50"
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 min="0"
-                max={maxParticipants - adults}
+                max={Math.max(0, availableSlots - adults)}
               />
             )}
           />
@@ -175,20 +178,32 @@ export default function TourBookingSection({ tour }: Props) {
         </div>
       )}
 
-      <div className="mb-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center text-blue-800">
-        <Calendar size={20} className="mr-3 text-blue-500" />
-        <div>
-          <div className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-0.5">
-            Khởi hành
-          </div>
-          <div className="font-semibold">
-            {tour.startDate}{' '}
-            <span className="text-blue-500 text-sm font-normal">
-              (Còn {tour.maxParticipants - (adults + children)} chỗ)
-            </span>
+      {isFullyBooked ? (
+        <div className="mb-6 p-4 bg-red-50 rounded-xl border border-red-100 flex items-center text-red-800">
+          <Calendar size={20} className="mr-3 text-red-500" />
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-red-400 mb-0.5">
+              Tình trạng
+            </div>
+            <div className="font-semibold">Tour đã hết chỗ trống</div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mb-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center text-blue-800">
+          <Calendar size={20} className="mr-3 text-blue-500" />
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-0.5">
+              Khởi hành
+            </div>
+            <div className="font-semibold">
+              {tour.startDate}{' '}
+              <span className="text-blue-500 text-sm font-normal">
+                (Còn {availableSlots - (adults + children)} chỗ)
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-between items-end mb-6 px-2">
         <span className="text-gray-500 font-bold">Tổng cộng</span>
@@ -201,10 +216,10 @@ export default function TourBookingSection({ tour }: Props) {
         <button
           type="button"
           className="w-full text-lg font-bold py-4 bg-gradient-to-r from-orange-400 to-rose-500 hover:from-orange-500 hover:to-rose-600 text-white rounded-xl shadow-lg shadow-orange-500/30 transform transition-all active:scale-[0.98] disabled:opacity-50"
-          disabled={!!errors.adults || !!errors.children}
+          disabled={!!errors.adults || !!errors.children || isFullyBooked}
           onClick={handleOpenBookingModal}
         >
-          Đặt Tour Ngay
+          {isFullyBooked ? 'Hết Chỗ' : 'Đặt Tour Ngay'}
         </button>
 
         <button

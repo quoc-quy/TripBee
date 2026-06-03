@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { bookingApi } from '../../../../apis/booking.api'
 import { formatCurrency } from '../../../../utils/utils'
 import { FaCalendarAlt, FaUsers } from 'react-icons/fa'
@@ -42,6 +43,34 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function HistoryTour() {
   const [confirmBookingId, setConfirmBookingId] = useState<string | null>(null)
+  const [cancelEstimation, setCancelEstimation] = useState<{
+    bookingID: string
+    tourTitle: string
+    startDate: string
+    daysRemaining: number
+    feePercentage: number
+    feeAmount: number
+    refundAmount: number
+  } | null>(null)
+  const [loadingEstimation, setLoadingEstimation] = useState(false)
+
+  useEffect(() => {
+    if (confirmBookingId) {
+      setLoadingEstimation(true)
+      bookingApi.getCancelEstimation(confirmBookingId)
+        .then((res) => {
+          setCancelEstimation(res.data)
+        })
+        .catch((err) => {
+          console.error(err)
+        })
+        .finally(() => {
+          setLoadingEstimation(false)
+        })
+    } else {
+      setCancelEstimation(null)
+    }
+  }, [confirmBookingId])
 
   const {
     data: historyData,
@@ -148,35 +177,69 @@ export default function HistoryTour() {
       )}
 
       {/* MODAL XÁC NHẬN HỦY */}
-      {confirmBookingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl w-[360px] p-6 shadow-lg">
-            <h3 className="text-lg font-semibold mb-2">Xác nhận hủy tour</h3>
+      {confirmBookingId &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl w-[480px] p-8 shadow-2xl">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Xác nhận hủy tour</h3>
 
-            <p className="text-sm text-gray-600 mb-6">
-              Bạn có chắc muốn yêu cầu hủy tour này không
-            </p>
+              {loadingEstimation ? (
+                <p className="text-base text-gray-500 mb-6">Đang tính toán phí hủy tour...</p>
+              ) : cancelEstimation ? (
+                <div className="text-base text-gray-600 mb-6 space-y-3">
+                  <p className="font-medium text-gray-700">Bạn có chắc muốn yêu cầu hủy tour này không?</p>
+                  <div className="bg-orange-50/70 border border-orange-200 rounded-2xl p-4 text-sm text-orange-900 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">📅 Khởi hành:</span>
+                      <span className="font-semibold text-gray-800">{new Date(cancelEstimation.startDate).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">⏳ Còn lại:</span>
+                      <span className="font-semibold text-gray-800">{cancelEstimation.daysRemaining} ngày</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">⚠️ Mức phạt hủy:</span>
+                      <span className="font-bold text-red-600">{cancelEstimation.feePercentage}%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">💸 Phí phạt:</span>
+                      <span className="font-bold text-red-600">{formatCurrency(cancelEstimation.feeAmount)}</span>
+                    </div>
+                    <hr className="my-2 border-orange-200" />
+                    <div className="flex justify-between items-center text-base">
+                      <span className="font-bold text-gray-700">💵 Số tiền hoàn dự kiến:</span>
+                      <span className="font-extrabold text-green-700 text-lg">{formatCurrency(cancelEstimation.refundAmount)}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-base text-gray-600 mb-6">
+                  Bạn có chắc muốn yêu cầu hủy tour này không
+                </p>
+              )}
 
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setConfirmBookingId(null)}>
-                Không
-              </Button>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setConfirmBookingId(null)}>
+                  Không
+                </Button>
 
-              <Button
-                variant="destructive"
-                className="text-white"
-                onClick={async () => {
-                  await bookingApi.requestCancelBooking(confirmBookingId)
-                  setConfirmBookingId(null)
-                  refetch()
-                }}
-              >
-                Đồng ý hủy
-              </Button>
+                <Button
+                  variant="destructive"
+                  className="text-white"
+                  onClick={async () => {
+                    await bookingApi.requestCancelBooking(confirmBookingId)
+                    setConfirmBookingId(null)
+                    refetch()
+                  }}
+                  disabled={loadingEstimation}
+                >
+                  Đồng ý hủy
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ package com.tripbee.backend.controller;
 
 import com.tripbee.backend.dto.BookingHistoryResponse;
 import com.tripbee.backend.dto.BookingRequest;
+import com.tripbee.backend.dto.CancelEstimationResponse;
 import com.tripbee.backend.model.Account;
 import com.tripbee.backend.model.Booking;
 import com.tripbee.backend.service.BookingService;
@@ -93,4 +94,13 @@ public class BookingController {
         return ResponseEntity.ok("Đã gửi yêu cầu hủy thành công");
     }
 
+    @GetMapping("/{id}/cancel-estimation")
+    public ResponseEntity<?> getCancelEstimation(@PathVariable String id) {
+        try {
+            CancelEstimationResponse estimation = bookingService.getCancelEstimation(id);
+            return ResponseEntity.ok(estimation);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to estimate cancel fee: " + e.getMessage());
+        }
+    }
 }

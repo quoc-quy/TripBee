@@ -5,6 +5,7 @@ import com.tripbee.backend.admin.dto.response.booking.BookingDetailResponse;
 import com.tripbee.backend.admin.dto.response.booking.BookingStatsResponse;
 import com.tripbee.backend.admin.dto.response.tour.TourParticipantsResponse;
 import com.tripbee.backend.admin.service.BookingAdminService;
+import com.tripbee.backend.admin.dto.request.BookingUpdateRequest;
 import com.tripbee.backend.model.enums.BookingStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -118,5 +119,12 @@ public class BookingAdminController {
         return ResponseEntity.ok().build();
     }
 
-
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateBooking(
+            @PathVariable String id,
+            @RequestBody BookingUpdateRequest request
+    ) {
+        bookingAdminService.updateBooking(id, request);
+        return ResponseEntity.ok().build();
+    }
 }
