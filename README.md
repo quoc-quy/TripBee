@@ -12,7 +12,6 @@
 
 ## 📷 Ảnh chụp giao diện (Screenshots)
 
-_(Chèn 2-3 hình ảnh/GIF đẹp nhất của dự án vào đây để tạo ấn tượng thị giác đầu tiên)_
 ![TripBee Homepage](./assets/homepage.png)
 ![Partner Dashboard](./assets/dashboard.png)
 
